@@ -1,0 +1,1336 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CarePath AI · UI demo (srpski)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500&display=swap">
+<style>
+body{margin:0;background:#F4F6F8;font-family:'IBM Plex Sans',system-ui,'Segoe UI',sans-serif}
+a{color:#2457C5}a:hover{color:#1A3F91}
+#Maria a,#Busta a,#Rivelazione a{color:#7FD1C7}
+#Busta a[aria-label]{color:#14212B}
+#Maria a[href="#Busta"]{color:#10262F}
+.steps{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:8px 12px;background:#0B1B21;border-bottom:1px solid #2A4B58;font-size:13px}
+.steps strong{color:#7FD1C7;margin-right:8px;font-weight:600}
+.steps a{color:#C9D6DD;text-decoration:none;padding:6px 10px;border-radius:6px}
+.steps a:hover{background:#1E3C48;color:#fff}
+.steps a.on{background:#7FD1C7;color:#0B1B21;font-weight:600}
+.steps .nav{margin-left:auto;display:flex;gap:4px}
+.steps button{font:inherit;font-size:13px;min-height:32px;padding:0 12px;border-radius:6px;border:1px solid #2A4B58;background:#163440;color:#E8EEF1;cursor:pointer}
+button{cursor:pointer}
+</style>
+</head>
+<body>
+<div class="steps" role="navigation" aria-label="Koraci demoa"><strong>CarePath AI · koraci</strong><a href="#Maria" data-tab="Maria">1 · Marija</a><a href="#Busta" data-tab="Busta">2 · Koverta</a><a href="#Main" data-tab="Main">3 · Pregled</a><a href="#Mappa" data-tab="Mappa">4 · Mapa</a><a href="#Chiedi" data-tab="Chiedi">5 · Istraga</a><a href="#Confronto" data-tab="Confronto">6 · Poređenje</a><a href="#WhatIf" data-tab="WhatIf">7 · Šta ako</a><a href="#NuovaPatologia" data-tab="NuovaPatologia">8 · Nova bolest</a><a href="#ListaChiamate" data-tab="ListaChiamate">9a · Pozivi</a><a href="#Paziente360" data-tab="Paziente360">9b · Maria 360</a><a href="#PostiLetto" data-tab="PostiLetto">9c · Kreveti</a><a href="#Rivelazione" data-tab="Rivelazione">10 · Koverta otvorena</a>
+<span class="nav"><button type="button" id="prev">← Nazad</button><button type="button" id="next">Dalje →</button></span></div>
+<section class="screen" id="Maria" hidden>
+
+<div style="min-height: 900px; background: #10262F; color: #E8EEF1; font-family: 'IBM Plex Sans', system-ui, sans-serif; display: flex; flex-direction: column; box-sizing: border-box; padding: 40px 48px">
+  <div style="display: flex; align-items: center; gap: 10px">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#7FD1C7" stroke-width="2"></circle><path d="M6 15h5l2-5 3 9 2-4h4" fill="none" stroke="#7FD1C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    <span style="font-weight: 600; font-size: 16px">CarePath AI</span>
+    <div style="flex: 1 1 auto"></div>
+    <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #1E3C48; color: #E8EEF1">Sintetička pacijentkinja</span>
+  </div>
+  <div role="note" aria-label="Vodič" style="display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 24px; background: #FFF8D6; color: #4A3B00; font-size: 13px; line-height: 1.5; margin-top: 20px; border-radius: 10px; border: 1px solid #EAD27A;"><strong style="flex: 0 0 auto">Vodič · Korak 1 · Priča o Mariji</strong><span style="flex: 1 1 420px; min-width: 0"><strong>Šta se dešava:</strong> Uvod. Pričamo priču o Mariji: ima plan lečenja (PAI), ali niko svakog dana ne proverava da li ga prati, pa 47. dana završi ponovo u bolnici.</span><span style="flex: 1 1 260px; min-width: 0"><strong>Klikni:</strong> „Pokreni simulaciju” → ekran sa kovertama.</span></div>
+  <div style="flex: 1 1 auto; max-width: 1200px; width: 100%; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 56px; padding: 40px 0">
+    <div style="flex: 1 1 380px; min-width: 0">
+      <div style="font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9BCC6">Gospođa Maria</div>
+      <h1 style="margin: 12px 0 20px; font-family: 'IBM Plex Serif', Georgia, serif; font-weight: 500; font-size: 52px; line-height: 1.1">Svaki hronični pacijent ima PAI. Ali ko svakog dana proverava da li se sprovodi?</h1>
+      <p style="margin: 0 0 28px; font-size: 18px; line-height: 1.55; color: #C9D6DD">81 godina, živi sama, 45 km od bolnice. Srčana insuficijencija i dijabetes tip 2. Ima plan lečenja, ali niko svakog dana ne vidi da li ga se pridržava.</p>
+      <a href="#Busta" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 10px; background: #7FD1C7; color: #10262F; text-decoration: none; font-size: 16px; font-weight: 600">Pokreni simulaciju</a>
+    </div>
+    <section aria-labelledby="h-senza" style="flex: 1 1 420px; min-width: 0; background: #163440; border: 1px solid #2A4B58; border-radius: 16px; padding: 28px">
+      <h2 id="h-senza" style="margin: 0 0 4px; font-size: 18px; font-weight: 600">Bez sistema koji prati</h2>
+      <div style="font-size: 14px; color: #A9BCC6; margin-bottom: 20px">Marijin put, dan po dan</div>
+      <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0">
+        <li style="display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #2A4B58">
+          <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #A9BCC6">Dan 0</span>
+          <span style="font-size: 15px">Otpuštena iz bolnice zbog srčane insuficijencije</span>
+        </li>
+        <li style="display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #2A4B58">
+          <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #A9BCC6">Dan 30</span>
+          <span style="font-size: 15px">Analiza HbA1c za dijabetes kasni</span>
+        </li>
+        <li style="display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #2A4B58">
+          <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #A9BCC6">Dan 31</span>
+          <span style="font-size: 15px">Već 30 dana ne podiže furosemid. Niko to ne primećuje.</span>
+        </li>
+        <li style="display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #2A4B58">
+          <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #A9BCC6">Dan 40</span>
+          <span style="font-size: 15px">Težina raste, podaci telemonitoringa stižu, ali ih niko ne gleda</span>
+        </li>
+        <li style="display: flex; gap: 16px; padding: 14px 0 0">
+          <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #F2B49A">Dan 47</span>
+          <span style="font-size: 16px; font-weight: 600; color: #F7D0BF">Vraća se u bolnicu. Ponovni prijem.</span>
+        </li>
+      </ol>
+    </section>
+  </div>
+</div>
+</section><section class="screen" id="Busta" hidden>
+
+<div style="min-height: 900px; background: #10262F; color: #E8EEF1; font-family: 'IBM Plex Sans', system-ui, sans-serif; display: flex; flex-direction: column; box-sizing: border-box; padding: 40px 48px">
+  <div style="display: flex; align-items: center; gap: 10px">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#7FD1C7" stroke-width="2"></circle><path d="M6 15h5l2-5 3 9 2-4h4" fill="none" stroke="#7FD1C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    <span style="font-weight: 600; font-size: 16px">CarePath AI</span>
+    <div style="flex: 1 1 auto"></div>
+    <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #1E3C48; color: #E8EEF1">Simulacija već teče</span>
+  </div>
+  <div role="note" aria-label="Vodič" style="display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 24px; background: #FFF8D6; color: #4A3B00; font-size: 13px; line-height: 1.5; margin-top: 20px; border-radius: 10px; border: 1px solid #EAD27A;"><strong style="flex: 0 0 auto">Vodič · Korak 2 · Izbor koverte</strong><span style="flex: 1 1 420px; min-width: 0"><strong>Šta se dešava:</strong> Publika bira kovertu 1, 2 ili 3. U svakoj je isti teritorij, ali su problemi na drugom mestu. Operater pritisne isti broj na tastaturi; agenti ne znaju koja je izabrana.</span><span style="flex: 1 1 260px; min-width: 0"><strong>Klikni:</strong> bilo koju kovertu → Pregled (simulacija već teče).</span></div>
+  <div style="flex: 1 1 auto; max-width: 1200px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; gap: 32px; padding: 40px 0">
+    <div style="max-width: 820px">
+      <div style="font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9BCC6">Vi birate</div>
+      <h1 style="margin: 12px 0 16px; font-family: 'IBM Plex Serif', Georgia, serif; font-weight: 500; font-size: 48px; line-height: 1.1">Vi birate gde su problemi.</h1>
+      <p style="margin: 0; font-size: 18px; line-height: 1.55; color: #C9D6DD">Pripremili smo tri verzije istog teritorija. U svakoj su problemi na drugom mestu. Izaberite kovertu i držite je zatvorenu: agenti ne znaju koju ste izabrali.</p>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 24px">
+      <a href="#Main" aria-label="Koverta 1" style="flex: 1 1 260px; min-height: 220px; display: flex; flex-direction: column; justify-content: space-between; padding: 24px; border-radius: 16px; background: #F4F1E8; color: #14212B; text-decoration: none; border: 2px solid #E0D8C3">
+        <svg width="56" height="40" viewBox="0 0 56 40" aria-hidden="true"><rect x="2" y="2" width="52" height="36" rx="4" fill="none" stroke="#8C7B55" stroke-width="2"></rect><path d="M2 6l26 18L54 6" fill="none" stroke="#8C7B55" stroke-width="2" stroke-linejoin="round"></path></svg>
+        <div>
+          <div style="font-family: 'IBM Plex Serif', Georgia, serif; font-size: 64px; line-height: 1">1</div>
+          <div style="font-size: 14px; color: #5B6B78; margin-top: 8px">Zatvorena koverta</div>
+        </div>
+      </a>
+      <a href="#Main" aria-label="Koverta 2" style="flex: 1 1 260px; min-height: 220px; display: flex; flex-direction: column; justify-content: space-between; padding: 24px; border-radius: 16px; background: #F4F1E8; color: #14212B; text-decoration: none; border: 2px solid #E0D8C3">
+        <svg width="56" height="40" viewBox="0 0 56 40" aria-hidden="true"><rect x="2" y="2" width="52" height="36" rx="4" fill="none" stroke="#8C7B55" stroke-width="2"></rect><path d="M2 6l26 18L54 6" fill="none" stroke="#8C7B55" stroke-width="2" stroke-linejoin="round"></path></svg>
+        <div>
+          <div style="font-family: 'IBM Plex Serif', Georgia, serif; font-size: 64px; line-height: 1">2</div>
+          <div style="font-size: 14px; color: #5B6B78; margin-top: 8px">Zatvorena koverta</div>
+        </div>
+      </a>
+      <a href="#Main" aria-label="Koverta 3" style="flex: 1 1 260px; min-height: 220px; display: flex; flex-direction: column; justify-content: space-between; padding: 24px; border-radius: 16px; background: #F4F1E8; color: #14212B; text-decoration: none; border: 2px solid #E0D8C3">
+        <svg width="56" height="40" viewBox="0 0 56 40" aria-hidden="true"><rect x="2" y="2" width="52" height="36" rx="4" fill="none" stroke="#8C7B55" stroke-width="2"></rect><path d="M2 6l26 18L54 6" fill="none" stroke="#8C7B55" stroke-width="2" stroke-linejoin="round"></path></svg>
+        <div>
+          <div style="font-family: 'IBM Plex Serif', Georgia, serif; font-size: 64px; line-height: 1">3</div>
+          <div style="font-size: 14px; color: #5B6B78; margin-top: 8px">Zatvorena koverta</div>
+        </div>
+      </a>
+    </div>
+    <p style="margin: 0; font-size: 15px; color: #A9BCC6">U svakoj koverti: bolnica sa uskim grlom, rizične opštine i grupa MMG (izabranih lekara) sa slabim pridržavanjem terapije. Otvaramo je na kraju.</p>
+  </div>
+</div>
+</section><section class="screen" id="Main" hidden>
+
+<div style="min-height: 900px; display: flex; flex-wrap: wrap; background: #F4F6F8; color: #14212B; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+  <nav aria-label="Glavna navigacija" style="flex: 1 1 200px; max-width: 232px; min-width: 200px; background: #10262F; color: #E8EEF1; padding: 20px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#7FD1C7" stroke-width="2"></circle><path d="M6 15h5l2-5 3 9 2-4h4" fill="none" stroke="#7FD1C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <div>
+        <div style="font-weight: 600; font-size: 16px">CarePath AI</div>
+        <div style="font-size: 12px; color: #A9BCC6">ATS della Val Padana</div>
+      </div>
+    </div>
+    <a href="#Main" style="padding: 10px 12px; border-radius: 8px; color: #FFFFFF; background: #1E3C48; font-weight: 600; text-decoration: none; font-size: 14px">Pregled</a>
+    <a href="#Mappa" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Mapa</a>
+    <a href="#Chiedi" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pitaj</a>
+    <a href="#Confronto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Poređenje</a>
+    <a href="#WhatIf" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Šta ako</a>
+    <a href="#NuovaPatologia" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Putevi</a>
+    <a href="#ListaChiamate" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pozivi</a>
+    <a href="#PostiLetto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Kreveti</a>
+    <a href="#Paziente360" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pacijenti</a>
+    <div style="margin-top: auto; padding: 12px; font-size: 12px; color: #A9BCC6; line-height: 1.5">Lokalni modeli · nema stvarnih podataka</div>
+  </nav>
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 24px; background: #FFFFFF; border-bottom: 1px solid #DDE3E8">
+      <h1 style="margin: 0; font-size: 20px; font-weight: 600">Pregled</h1>
+      <span style="font-size: 13px; padding: 4px 10px; border-radius: 999px; background: #EEF2F5; color: #3D4C57">Srčana insuficijencija</span>
+      <div style="flex: 1 1 auto"></div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">Dan 23</span>
+      <span style="font-size: 13px; color: #5B6B78">Brzina ×1</span>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #FFF4E0; color: #8A4B08; font-weight: 500">Sintetički podaci</span>
+    </header>
+    <div role="note" aria-label="Vodič" style="display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 24px; background: #FFF8D6; color: #4A3B00; font-size: 13px; line-height: 1.5; border-bottom: 1px solid #EAD27A;"><strong style="flex: 0 0 auto">Vodič · Korak 3 · Pregled</strong><span style="flex: 1 1 420px; min-width: 0"><strong>Šta se dešava:</strong> Simulacija je već na danu 23. Agenti sami prate 10.000 pacijenata, šalju podsetnike, računaju rizik i prave listu poziva. Levo meni, desno uživo aktivnost agenata.</span><span style="flex: 1 1 260px; min-width: 0"><strong>Klikni:</strong> „Mapa” u meniju (korak 4). Opciono: „Proceni predlog” vodi na novu bolest (korak 8).</span></div>
+    <div style="flex: 1 1 auto; display: flex; flex-wrap: wrap">
+      <section style="flex: 999 1 520px; min-width: 0; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+        <p style="margin: 0; font-size: 15px; color: #3D4C57">Dok smo pričali, agenti su obradili 23 dana podataka za 10.000 pacijenata.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 16px">
+          <div style="flex: 1 1 200px; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+            <div style="font-size: 13px; color: #5B6B78">Praćeni pacijenti</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 30px; margin-top: 6px">10.000</div>
+            <div style="font-size: 12px; color: #5B6B78; margin-top: 4px">PDTA srčana insuficijencija</div>
+          </div>
+          <div style="flex: 1 1 200px; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+            <div style="font-size: 13px; color: #5B6B78">U skladu sa PAI</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 30px; margin-top: 6px">58%</div>
+            <div style="font-size: 12px; color: #A33B12; margin-top: 4px">−6 poena za 3 nedelje</div>
+          </div>
+          <div style="flex: 1 1 200px; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+            <div style="font-size: 13px; color: #5B6B78">Akcije agenata</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 30px; margin-top: 6px">143</div>
+            <div style="font-size: 12px; color: #5B6B78; margin-top: 4px">od početka simulacije</div>
+          </div>
+          <div style="flex: 1 1 200px; background: #EAF0FB; border: 1px solid #B9CBEF; border-radius: 12px; padding: 16px 18px">
+            <div style="font-size: 13px; color: #1A3F91">Čeka odobrenje</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 30px; margin-top: 6px; color: #1A3F91">12</div>
+            <div style="font-size: 12px; color: #1A3F91; margin-top: 4px">vi odlučujete</div>
+          </div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 16px">
+          <section aria-labelledby="h-approva" style="flex: 3 1 420px; min-width: 0; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+            <h2 id="h-approva" style="margin: 0 0 12px; font-size: 16px; font-weight: 600">Čeka odobrenje</h2>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px; border: 1px solid #E6EBEF; border-radius: 10px">
+                <div style="flex: 1 1 260px; min-width: 0">
+                  <div style="font-size: 14px; font-weight: 500">Prebaciti 18 ehokardiografija u druge ustanove</div>
+                  <div style="font-size: 13px; color: #5B6B78">Intervention · 18 pacijenata kasni u Bolnici B · nivo 2</div>
+                </div>
+                <button type="button" style="min-height: 44px; padding: 0 16px; border-radius: 8px; border: none; background: #2457C5; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600">Odobri</button>
+                <button type="button" style="min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #C9D2D9; background: #FFFFFF; color: #14212B; font: inherit; font-size: 14px">Odbij</button>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px; border: 1px solid #E6EBEF; border-radius: 10px">
+                <div style="flex: 1 1 260px; min-width: 0">
+                  <div style="font-size: 14px; font-weight: 500">Obavestiti MMG za 7 pacijenata bez telemonitoringa</div>
+                  <div style="font-size: 13px; color: #5B6B78">Intervention · rok od 7 dana prekoračen · nivo 1</div>
+                </div>
+                <button type="button" style="min-height: 44px; padding: 0 16px; border-radius: 8px; border: none; background: #2457C5; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600">Odobri</button>
+                <button type="button" style="min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #C9D2D9; background: #FFFFFF; color: #14212B; font: inherit; font-size: 14px">Odbij</button>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px; border: 1px solid #E6EBEF; border-radius: 10px">
+                <div style="flex: 1 1 260px; min-width: 0">
+                  <div style="font-size: 14px; font-weight: 500">Današnja lista poziva za Centar usluga</div>
+                  <div style="font-size: 13px; color: #5B6B78">Daily Worklist · 20 pacijenata, rizik i razlog · nivo 2</div>
+                </div>
+                <button type="button" style="min-height: 44px; padding: 0 16px; border-radius: 8px; border: none; background: #2457C5; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600">Odobri</button>
+                <button type="button" style="min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #C9D2D9; background: #FFFFFF; color: #14212B; font: inherit; font-size: 14px">Odbij</button>
+              </div>
+            </div>
+          </section>
+          <div style="flex: 2 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+            <section aria-labelledby="h-pne" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+              <h2 id="h-pne" style="margin: 0; font-size: 16px; font-weight: 600">Ponovni prijemi u roku od 30 dana</h2>
+              <div style="font-size: 13px; color: #5B6B78; margin-top: 2px">PNE indikator, srčana insuficijencija</div>
+              <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 10px">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 28px">13,8%</span>
+                <span style="font-size: 13px; color: #5B6B78">cilj ATS ≤ 12%</span>
+              </div>
+            </section>
+            <section aria-labelledby="h-sugg" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+              <h2 id="h-sugg" style="margin: 0; font-size: 16px; font-weight: 600">Predlog: nova bolest</h2>
+              <div style="font-size: 13px; color: #5B6B78; margin-top: 2px">Enrollment Advisor</div>
+              <p style="margin: 10px 0 12px; font-size: 14px; line-height: 1.5">Dijabetes tip 2: 2.980 pacijenata, 38% bez HbA1c duže od 6 meseci, 910 ima i srčanu insuficijenciju.</p>
+              <a href="#NuovaPatologia" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #2457C5; color: #2457C5; text-decoration: none; font-size: 14px; font-weight: 600">Proceni predlog</a>
+            </section>
+          </div>
+        </div>
+      </section>
+      <aside aria-labelledby="h-feed" style="flex: 1 1 280px; max-width: 340px; min-width: 260px; background: #FFFFFF; border-left: 1px solid #DDE3E8; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #1F7A4D"></span>
+          <h2 id="h-feed" style="margin: 0; font-size: 14px; font-weight: 600">Aktivnost agenata · uživo</h2>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Monitoring</div><div style="color: #5B6B78">7 pacijenata preko roka za telemonitoring</div><div style="color: #5B6B78; font-size: 12px">Dan 23 · 08:02</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Risk</div><div style="color: #5B6B78">Rizik ažuriran za 312 pacijenata sa novim događajima</div><div style="color: #5B6B78; font-size: 12px">Dan 23 · 08:02</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Intervention · nivo 3</div><div style="color: #5B6B78">Podsetnik poslat za 14 pacijenata za kardiološki pregled</div><div style="color: #5B6B78; font-size: 12px">Dan 23 · 08:03</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #B45309; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Intervention · čeka</div><div style="color: #5B6B78">Predlog: prebaciti 18 ehokardiografija u druge ustanove</div><div style="color: #5B6B78; font-size: 12px">Dan 23 · 08:04</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Daily Worklist</div><div style="color: #5B6B78">Lista od 20 poziva spremna za Centar usluga</div><div style="color: #5B6B78; font-size: 12px">Dan 23 · 08:05</div></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</section><section class="screen" id="Mappa" hidden>
+
+<div style="min-height: 900px; display: flex; flex-wrap: wrap; background: #F4F6F8; color: #14212B; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+  <nav aria-label="Glavna navigacija" style="flex: 1 1 200px; max-width: 232px; min-width: 200px; background: #10262F; color: #E8EEF1; padding: 20px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#7FD1C7" stroke-width="2"></circle><path d="M6 15h5l2-5 3 9 2-4h4" fill="none" stroke="#7FD1C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <div>
+        <div style="font-weight: 600; font-size: 16px">CarePath AI</div>
+        <div style="font-size: 12px; color: #A9BCC6">ATS della Val Padana</div>
+      </div>
+    </div>
+    <a href="#Main" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pregled</a>
+    <a href="#Mappa" style="padding: 10px 12px; border-radius: 8px; color: #FFFFFF; background: #1E3C48; font-weight: 600; text-decoration: none; font-size: 14px">Mapa</a>
+    <a href="#Chiedi" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pitaj</a>
+    <a href="#Confronto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Poređenje</a>
+    <a href="#WhatIf" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Šta ako</a>
+    <a href="#NuovaPatologia" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Putevi</a>
+    <a href="#ListaChiamate" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pozivi</a>
+    <a href="#PostiLetto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Kreveti</a>
+    <a href="#Paziente360" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pacijenti</a>
+    <div style="margin-top: auto; padding: 12px; font-size: 12px; color: #A9BCC6; line-height: 1.5">Lokalni modeli · nema stvarnih podataka</div>
+  </nav>
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 24px; background: #FFFFFF; border-bottom: 1px solid #DDE3E8">
+      <h1 style="margin: 0; font-size: 20px; font-weight: 600">Mapa teritorije</h1>
+      <span style="font-size: 13px; padding: 4px 10px; border-radius: 999px; background: #EEF2F5; color: #3D4C57">Srčana insuficijencija</span>
+      <div style="flex: 1 1 auto"></div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">Dan 35</span>
+      <span style="font-size: 13px; color: #14212B; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #EAF0FB">Brzina ×4</span>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #FFF4E0; color: #8A4B08; font-weight: 500">Sintetički podaci</span>
+    </header>
+    <div role="note" aria-label="Vodič" style="display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 24px; background: #FFF8D6; color: #4A3B00; font-size: 13px; line-height: 1.5; border-bottom: 1px solid #EAD27A;"><strong style="flex: 0 0 auto">Vodič · Korak 4 · Mapa i alarm</strong><span style="flex: 1 1 420px; min-width: 0"><strong>Šta se dešava:</strong> Brzina ×4, dan 35. Monitoring je sam podigao alarm: čekanje na eho u Bolnici B je 41 dan (prag PDTA je 30). Investigator je sam pokrenuo istragu. Crveni okviri su rizične opštine.</span><span style="flex: 1 1 260px; min-width: 0"><strong>Klikni:</strong> „Otvori istragu” (korak 5).</span></div>
+    <div style="flex: 1 1 auto; display: flex; flex-wrap: wrap">
+      <section style="flex: 999 1 520px; min-width: 0; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+        <div role="alert" style="display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 12px; background: #FFF1E6; border: 1px solid #F0B88A">
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2L12 3z" fill="none" stroke="#A33B12" stroke-width="2" stroke-linejoin="round"></path><path d="M12 10v5M12 18v.5" stroke="#A33B12" stroke-width="2" stroke-linecap="round"></path></svg>
+          <div style="flex: 1 1 280px; min-width: 0">
+            <div style="font-size: 15px; font-weight: 600; color: #7A2C0D">Alarm · Čekanje na ehokardiografiju u Bolnici B: 41 dan</div>
+            <div style="font-size: 13px; color: #7A2C0D">Prag PDTA 30 dana · 46 pacijenata pogođeno · istraga pokrenuta automatski</div>
+          </div>
+          <a href="#Chiedi" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 8px; background: #A33B12; color: #FFFFFF; text-decoration: none; font-size: 14px; font-weight: 600">Otvori istragu</a>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; font-size: 13px; color: #3D4C57">
+          <span>Pridržavanje PDTA po opštini:</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 4px; background: #D9EFE2; border: 1px solid #9CCFB2"></span>visoko (≥ 70%)</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 4px; background: #FBE3B9; border: 1px solid #E6B868"></span>srednje (50–69%)</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 4px; background: #F2B49A; border: 1px solid #D9825F"></span>nisko (&lt; 50%)</span>
+        </div>
+        <section aria-labelledby="h-mn" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin-bottom: 12px">
+            <h2 id="h-mn" style="margin: 0; font-size: 15px; font-weight: 600">ASST Mantova</h2>
+            <span style="font-size: 13px; color: #5B6B78">Bolnica A · čekanje na eho 22 dana</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px">
+            <div style="padding: 10px 12px; border-radius: 8px; background: #D9EFE2; font-size: 13px"><div style="font-weight: 600">Mantova</div><div>Pridržavanje 74%</div></div>
+            <div style="padding: 10px 12px; border-radius: 8px; background: #D9EFE2; font-size: 13px"><div style="font-weight: 600">Castiglione d. Stiviere</div><div>Pridržavanje 72%</div></div>
+            <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Suzzara</div><div>Pridržavanje 63%</div></div>
+            <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Viadana</div><div>Pridržavanje 61%</div></div>
+            <div style="padding: 10px 12px; border-radius: 8px; background: #D9EFE2; font-size: 13px"><div style="font-weight: 600">Goito</div><div>Pridržavanje 71%</div></div>
+            <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Asola</div><div>Pridržavanje 58%</div></div>
+            <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Gonzaga</div><div>Pridržavanje 60%</div></div>
+            <div style="padding: 10px 12px; border-radius: 8px; background: #F2B49A; font-size: 13px; outline: 2px solid #A33B12"><div style="font-weight: 600">Ostiglia</div><div>Pridržavanje 44%</div></div>
+            <div style="padding: 10px 12px; border-radius: 8px; background: #F2B49A; font-size: 13px; outline: 2px solid #A33B12"><div style="font-weight: 600">Poggio Rusco</div><div>Pridržavanje 41%</div></div>
+            <div style="padding: 10px 12px; border-radius: 8px; background: #F2B49A; font-size: 13px; outline: 2px solid #A33B12"><div style="font-weight: 600">Sermide e Felonica</div><div>Pridržavanje 38%</div></div>
+            <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Quistello</div><div>Pridržavanje 55%</div></div>
+            <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Sabbioneta</div><div>Pridržavanje 57%</div></div>
+          </div>
+        </section>
+        <div style="display: flex; flex-wrap: wrap; gap: 18px">
+          <section aria-labelledby="h-cr" style="flex: 1 1 300px; min-width: 0; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+            <div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin-bottom: 12px">
+              <h2 id="h-cr" style="margin: 0; font-size: 15px; font-weight: 600">ASST Cremona</h2>
+              <span style="font-size: 13px; color: #A33B12; font-weight: 600">Bolnica B · čekanje na eho 41 dan</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px">
+              <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Cremona</div><div>Pridržavanje 59%</div></div>
+              <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Casalmaggiore</div><div>Pridržavanje 52%</div></div>
+              <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Soresina</div><div>Pridržavanje 56%</div></div>
+              <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Pizzighettone</div><div>Pridržavanje 54%</div></div>
+              <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Piadena Drizzona</div><div>Pridržavanje 53%</div></div>
+              <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Pescarolo ed Uniti</div><div>Pridržavanje 55%</div></div>
+            </div>
+          </section>
+          <section aria-labelledby="h-cm" style="flex: 1 1 300px; min-width: 0; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+            <div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin-bottom: 12px">
+              <h2 id="h-cm" style="margin: 0; font-size: 15px; font-weight: 600">ASST Crema</h2>
+              <span style="font-size: 13px; color: #1F7A4D; font-weight: 600">Bolnica C · slobodni termini za eho: 34</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px">
+              <div style="padding: 10px 12px; border-radius: 8px; background: #D9EFE2; font-size: 13px"><div style="font-weight: 600">Crema</div><div>Pridržavanje 76%</div></div>
+              <div style="padding: 10px 12px; border-radius: 8px; background: #D9EFE2; font-size: 13px"><div style="font-weight: 600">Castelleone</div><div>Pridržavanje 71%</div></div>
+              <div style="padding: 10px 12px; border-radius: 8px; background: #D9EFE2; font-size: 13px"><div style="font-weight: 600">Rivolta d'Adda</div><div>Pridržavanje 73%</div></div>
+              <div style="padding: 10px 12px; border-radius: 8px; background: #D9EFE2; font-size: 13px"><div style="font-weight: 600">Pandino</div><div>Pridržavanje 70%</div></div>
+              <div style="padding: 10px 12px; border-radius: 8px; background: #FBE3B9; font-size: 13px"><div style="font-weight: 600">Soncino</div><div>Pridržavanje 66%</div></div>
+              <div style="padding: 10px 12px; border-radius: 8px; background: #D9EFE2; font-size: 13px"><div style="font-weight: 600">Offanengo</div><div>Pridržavanje 72%</div></div>
+            </div>
+          </section>
+        </div>
+      </section>
+      <aside aria-labelledby="h-feed" style="flex: 1 1 280px; max-width: 340px; min-width: 260px; background: #FFFFFF; border-left: 1px solid #DDE3E8; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #1F7A4D"></span>
+          <h2 id="h-feed" style="margin: 0; font-size: 14px; font-weight: 600">Aktivnost agenata · uživo</h2>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #B45309; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Monitoring · regionalni alarm</div><div style="color: #5B6B78">Čekanje na ehokardiografiju u Bolnici B preko praga PDTA</div><div style="color: #5B6B78; font-size: 12px">Dan 35 · 08:01</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Investigator</div><div style="color: #5B6B78">Istraga pokrenuta na alarm iz Bolnice B</div><div style="color: #5B6B78; font-size: 12px">Dan 35 · 08:01</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Risk</div><div style="color: #5B6B78">Visok rizik za 38 pacijenata iz opština južne Mantove</div><div style="color: #5B6B78; font-size: 12px">Dan 34 · 08:02</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Intervention · nivo 3</div><div style="color: #5B6B78">Podsetnik za 9 pacijenata da podignu lekove</div><div style="color: #5B6B78; font-size: 12px">Dan 33 · 08:03</div></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</section><section class="screen" id="Chiedi" hidden>
+
+<div style="min-height: 900px; display: flex; flex-wrap: wrap; background: #F4F6F8; color: #14212B; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+  <nav aria-label="Glavna navigacija" style="flex: 1 1 200px; max-width: 232px; min-width: 200px; background: #10262F; color: #E8EEF1; padding: 20px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#7FD1C7" stroke-width="2"></circle><path d="M6 15h5l2-5 3 9 2-4h4" fill="none" stroke="#7FD1C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <div>
+        <div style="font-weight: 600; font-size: 16px">CarePath AI</div>
+        <div style="font-size: 12px; color: #A9BCC6">ATS della Val Padana</div>
+      </div>
+    </div>
+    <a href="#Main" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pregled</a>
+    <a href="#Mappa" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Mapa</a>
+    <a href="#Chiedi" style="padding: 10px 12px; border-radius: 8px; color: #FFFFFF; background: #1E3C48; font-weight: 600; text-decoration: none; font-size: 14px">Pitaj</a>
+    <a href="#Confronto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Poređenje</a>
+    <a href="#WhatIf" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Šta ako</a>
+    <a href="#NuovaPatologia" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Putevi</a>
+    <a href="#ListaChiamate" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pozivi</a>
+    <a href="#PostiLetto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Kreveti</a>
+    <a href="#Paziente360" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pacijenti</a>
+    <div style="margin-top: auto; padding: 12px; font-size: 12px; color: #A9BCC6; line-height: 1.5">Lokalni modeli · nema stvarnih podataka</div>
+  </nav>
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 24px; background: #FFFFFF; border-bottom: 1px solid #DDE3E8">
+      <h1 style="margin: 0; font-size: 20px; font-weight: 600">Pitaj</h1>
+      <span style="font-size: 13px; padding: 4px 10px; border-radius: 999px; background: #EEF2F5; color: #3D4C57">Srčana insuficijencija</span>
+      <div style="flex: 1 1 auto"></div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">Dan 35</span>
+      <span style="font-size: 13px; color: #5B6B78">Pauzirano</span>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #FFF4E0; color: #8A4B08; font-weight: 500">Sintetički podaci</span>
+    </header>
+    <div role="note" aria-label="Vodič" style="display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 24px; background: #FFF8D6; color: #4A3B00; font-size: 13px; line-height: 1.5; border-bottom: 1px solid #EAD27A;"><strong style="flex: 0 0 auto">Vodič · Korak 5 · Istraga i predlog pravila</strong><span style="flex: 1 1 420px; min-width: 0"><strong>Šta se dešava:</strong> Pauza. Investigator prikazuje 4 koraka istrage: koji alat je pozvao i šta je dobio. Verifier je ponovo pokrenuo alate i potvrdio sve 4 tvrdnje. Rule Advisor predlaže novo pravilo, menadžment ga odobrava.</span><span style="flex: 1 1 260px; min-width: 0"><strong>Klikni:</strong> „Odobri” kod novog pravila → Poređenje (korak 6).</span></div>
+    <div style="flex: 1 1 auto; display: flex; flex-wrap: wrap">
+      <section style="flex: 999 1 520px; min-width: 0; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+        <div style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+          <div style="font-size: 13px; color: #5B6B78">Istraga pokrenuta alarmom · Investigator</div>
+          <div style="font-size: 18px; font-weight: 600; margin-top: 4px">Zašto se u Bolnici B na ehokardiografiju čeka 41 dan?</div>
+        </div>
+        <section aria-labelledby="h-passi" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+          <h2 id="h-passi" style="margin: 0 0 14px; font-size: 16px; font-weight: 600">Koraci istrage</h2>
+          <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px">
+            <li style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; padding: 12px; border: 1px solid #E6EBEF; border-radius: 10px">
+              <span style="flex: 0 0 auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 4px 8px; border-radius: 6px; background: #EEF2F5; color: #3D4C57">wait_by_hospital</span>
+              <div style="flex: 1 1 260px; min-width: 0; font-size: 14px; line-height: 1.5">Prosečno čekanje na eho: Bolnica B 41 dan, Bolnica A 22, Bolnica C 14.</div>
+              <span style="flex: 0 0 auto; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #D9EFE2; color: #155C39">provereno</span>
+            </li>
+            <li style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; padding: 12px; border: 1px solid #E6EBEF; border-radius: 10px">
+              <span style="flex: 0 0 auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 4px 8px; border-radius: 6px; background: #EEF2F5; color: #3D4C57">free_slots</span>
+              <div style="flex: 1 1 260px; min-width: 0; font-size: 14px; line-height: 1.5">Bolnica C ima 34 slobodna termina za ehokardiografiju u naredne 3 nedelje.</div>
+              <span style="flex: 0 0 auto; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #D9EFE2; color: #155C39">provereno</span>
+            </li>
+            <li style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; padding: 12px; border: 1px solid #E6EBEF; border-radius: 10px">
+              <span style="flex: 0 0 auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 4px 8px; border-radius: 6px; background: #EEF2F5; color: #3D4C57">adherence_by_group</span>
+              <div style="flex: 1 1 260px; min-width: 0; font-size: 14px; line-height: 1.5">Pacijenti Zadruge 3 (Cooperativa 3) podižu furosemid u 52% slučajeva, naspram 81% u ostatku ATS.</div>
+              <span style="flex: 0 0 auto; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #D9EFE2; color: #155C39">provereno</span>
+            </li>
+            <li style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; padding: 12px; border: 1px solid #E6EBEF; border-radius: 10px">
+              <span style="flex: 0 0 auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 4px 8px; border-radius: 6px; background: #EEF2F5; color: #3D4C57">risk_drivers</span>
+              <div style="flex: 1 1 260px; min-width: 0; font-size: 14px; line-height: 1.5">Glavni faktori rizika: nepodignut lek, eho kasni više od 30 dana, udaljenost od bolnice.</div>
+              <span style="flex: 0 0 auto; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #D9EFE2; color: #155C39">provereno</span>
+            </li>
+          </ol>
+        </section>
+        <div style="display: flex; flex-wrap: wrap; gap: 16px">
+          <section aria-labelledby="h-concl" style="flex: 3 1 380px; min-width: 0; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+            <h2 id="h-concl" style="margin: 0 0 8px; font-size: 16px; font-weight: 600">Zaključak</h2>
+            <p style="margin: 0 0 12px; font-size: 14px; line-height: 1.6">Kašnjenje zavisi od kapaciteta Bolnice B, a ne od potražnje: Bolnica C ima slobodne termine. Predlog: prebaciti 18 pacijenata koji čekaju u slobodne termine Bolnice C i Bolnice A. Rizik od ponovnog prijema najviše raste tamo gde se lek ne podiže.</p>
+            <div style="font-size: 13px; color: #5B6B78">Druga pitanja</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px">
+              <button type="button" style="min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid #C9D2D9; background: #FFFFFF; color: #14212B; font: inherit; font-size: 13px">Zašto Sermide e Felonica ima više ponovnih prijema?</button>
+              <button type="button" style="min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid #C9D2D9; background: #FFFFFF; color: #14212B; font: inherit; font-size: 13px">Koji MMG imaju najviše pacijenata koji kasne?</button>
+            </div>
+          </section>
+          <section aria-labelledby="h-regola" style="flex: 2 1 300px; min-width: 0; background: #EAF0FB; border: 1px solid #B9CBEF; border-radius: 12px; padding: 18px">
+            <div style="font-size: 13px; color: #1A3F91">Rule Advisor · za odobrenje</div>
+            <h2 id="h-regola" style="margin: 4px 0 10px; font-size: 16px; font-weight: 600">Predlog novog pravila</h2>
+            <p style="margin: 0 0 14px; font-size: 14px; line-height: 1.6">Ako pacijent 30 dana ne podigne furosemid, obavestiti MMG i staviti ga na listu poziva Centra usluga.</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px">
+              <a href="#Confronto" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 8px; background: #2457C5; color: #FFFFFF; text-decoration: none; font-size: 14px; font-weight: 600">Odobri</a>
+              <button type="button" style="min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #C9D2D9; background: #FFFFFF; color: #14212B; font: inherit; font-size: 14px">Odbij</button>
+            </div>
+          </section>
+        </div>
+      </section>
+      <aside aria-labelledby="h-feed" style="flex: 1 1 280px; max-width: 340px; min-width: 260px; background: #FFFFFF; border-left: 1px solid #DDE3E8; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #1F7A4D"></span>
+          <h2 id="h-feed" style="margin: 0; font-size: 14px; font-weight: 600">Aktivnost agenata · uživo</h2>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Verifier</div><div style="color: #5B6B78">4 od 4 tvrdnje potvrđene ponovnim pokretanjem alata</div><div style="color: #5B6B78; font-size: 12px">Dan 35 · 08:02</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #B45309; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Rule Advisor · čeka</div><div style="color: #5B6B78">Novo pravilo o podizanju furosemida</div><div style="color: #5B6B78; font-size: 12px">Dan 35 · 08:02</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Investigator</div><div style="color: #5B6B78">Istraga završena u 4 koraka</div><div style="color: #5B6B78; font-size: 12px">Dan 35 · 08:02</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #B45309; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Monitoring · regionalni alarm</div><div style="color: #5B6B78">Čekanje na ehokardiografiju u Bolnici B preko praga</div><div style="color: #5B6B78; font-size: 12px">Dan 35 · 08:01</div></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</section><section class="screen" id="Confronto" hidden>
+
+<div style="min-height: 900px; display: flex; flex-wrap: wrap; background: #F4F6F8; color: #14212B; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+  <nav aria-label="Glavna navigacija" style="flex: 1 1 200px; max-width: 232px; min-width: 200px; background: #10262F; color: #E8EEF1; padding: 20px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#7FD1C7" stroke-width="2"></circle><path d="M6 15h5l2-5 3 9 2-4h4" fill="none" stroke="#7FD1C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <div>
+        <div style="font-weight: 600; font-size: 16px">CarePath AI</div>
+        <div style="font-size: 12px; color: #A9BCC6">ATS della Val Padana</div>
+      </div>
+    </div>
+    <a href="#Main" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pregled</a>
+    <a href="#Mappa" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Mapa</a>
+    <a href="#Chiedi" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pitaj</a>
+    <a href="#Confronto" style="padding: 10px 12px; border-radius: 8px; color: #FFFFFF; background: #1E3C48; font-weight: 600; text-decoration: none; font-size: 14px">Poređenje</a>
+    <a href="#WhatIf" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Šta ako</a>
+    <a href="#NuovaPatologia" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Putevi</a>
+    <a href="#ListaChiamate" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pozivi</a>
+    <a href="#PostiLetto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Kreveti</a>
+    <a href="#Paziente360" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pacijenti</a>
+    <div style="margin-top: auto; padding: 12px; font-size: 12px; color: #A9BCC6; line-height: 1.5">Lokalni modeli · nema stvarnih podataka</div>
+  </nav>
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 24px; background: #FFFFFF; border-bottom: 1px solid #DDE3E8">
+      <h1 style="margin: 0; font-size: 20px; font-weight: 600">Poređenje</h1>
+      <span style="font-size: 13px; padding: 4px 10px; border-radius: 999px; background: #EEF2F5; color: #3D4C57">Srčana insuficijencija</span>
+      <div style="flex: 1 1 auto"></div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">Dan 62</span>
+      <span style="font-size: 13px; color: #14212B; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #EAF0FB">Brzina ×4</span>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #FFF4E0; color: #8A4B08; font-weight: 500">Sintetički podaci</span>
+    </header>
+    <div role="note" aria-label="Vodič" style="display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 24px; background: #FFF8D6; color: #4A3B00; font-size: 13px; line-height: 1.5; border-bottom: 1px solid #EAD27A;"><strong style="flex: 0 0 auto">Vodič · Korak 6 · Autonomija i poređenje</strong><span style="flex: 1 1 420px; min-width: 0"><strong>Šta se dešava:</strong> Dan 62. Gore: menadžment podešava šta AI sme da radi sam (lekar uvek odlučuje o dijagnozi i terapiji). Sredina: AI je sam prebacio eho pacijenta u Bolnicu C, prvi slobodan termin. Dole: ista simulacija sa i bez agenata.</span><span style="flex: 1 1 260px; min-width: 0"><strong>Klikni:</strong> „Probaj scenario šta ako” (korak 7). Link kod kreveta vodi na Bed Finder (korak 9c).</span></div>
+    <div style="flex: 1 1 auto; display: flex; flex-wrap: wrap">
+      <section style="flex: 999 1 520px; min-width: 0; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+        <section aria-labelledby="h-auto" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+          <h2 id="h-auto" style="margin: 0 0 4px; font-size: 16px; font-weight: 600">Autonomija agenata</h2>
+          <p style="margin: 0 0 12px; font-size: 13px; color: #5B6B78">Menadžment odlučuje koliko AI sme da radi sam. Kliničke odluke uvek ostaju lekarima.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px">
+            <div style="flex: 1 1 220px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid #E6EBEF; border-radius: 10px">
+              <label for="sw-riprog" style="font-size: 14px">Prebacivanje u druge ustanove</label>
+              <span style="display: inline-flex; align-items: center; gap: 8px"><span style="font-size: 12px; font-weight: 600; color: #1A3F91">Izvršava sam</span><input id="sw-riprog" type="checkbox" checked style="width: 22px; height: 22px; accent-color: #2457C5"></span>
+            </div>
+            <div style="flex: 1 1 220px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid #E6EBEF; border-radius: 10px">
+              <label for="sw-mmg" style="font-size: 14px">Obaveštavanje MMG</label>
+              <span style="display: inline-flex; align-items: center; gap: 8px"><span style="font-size: 12px; font-weight: 600; color: #1A3F91">Izvršava sam</span><input id="sw-mmg" type="checkbox" checked style="width: 22px; height: 22px; accent-color: #2457C5"></span>
+            </div>
+            <div style="flex: 1 1 220px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid #E6EBEF; border-radius: 10px; background: #F7F9FA">
+              <span style="font-size: 14px">Uključivanje pacijenata u put lečenja</span>
+              <span style="font-size: 12px; font-weight: 600; color: #1A3F91">Izvršava sam · MMG obavešten</span>
+            </div>
+            <div style="flex: 1 1 220px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid #E6EBEF; border-radius: 10px">
+              <span style="font-size: 14px">Dodela kreveta</span>
+              <a href="#PostiLetto" style="font-size: 12px; font-weight: 600; color: #1A3F91">Dodeljuje sam · alternativa: potvrda lekara</a>
+            </div>
+          </div>
+        </section>
+        <section aria-labelledby="h-proposta" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin-bottom: 4px">
+            <h2 id="h-proposta" style="margin: 0; font-size: 16px; font-weight: 600">Automatsko prebacivanje</h2>
+            <span style="font-size: 13px; color: #5B6B78">Ehokardiografija već propisana · p_04512</span>
+          </div>
+          <p style="margin: 0 0 12px; font-size: 13px; color: #5B6B78">AI bira prvi slobodan termin (pa udaljenost), zakazuje i obaveštava pacijenta i MMG.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px">
+            <div style="flex: 1 1 200px; padding: 12px; border-radius: 10px; border: 2px solid #2457C5; background: #EAF0FB">
+              <div style="font-size: 14px; font-weight: 600">Bolnica C</div>
+              <div style="font-size: 13px; color: #3D4C57">za 4 dana · 22 km</div>
+              <div style="font-size: 12px; font-weight: 600; color: #1A3F91; margin-top: 6px">Dodelio AI</div>
+            </div>
+            <div style="flex: 1 1 200px; padding: 12px; border-radius: 10px; border: 1px solid #E6EBEF">
+              <div style="font-size: 14px; font-weight: 600">Bolnica A</div>
+              <div style="font-size: 13px; color: #3D4C57">za 9 dana · 35 km</div>
+            </div>
+            <div style="flex: 1 1 200px; padding: 12px; border-radius: 10px; border: 1px solid #E6EBEF; background: #F7F9FA">
+              <div style="font-size: 14px; font-weight: 600">Bolnica B (sadašnja)</div>
+              <div style="font-size: 13px; color: #3D4C57">za 41 dan · 12 km</div>
+            </div>
+          </div>
+        </section>
+        <div style="display: flex; flex-wrap: wrap; gap: 16px">
+          <section aria-labelledby="h-senza" style="flex: 1 1 300px; min-width: 0; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+            <h2 id="h-senza" style="margin: 0 0 14px; font-size: 16px; font-weight: 600; color: #5B6B78">Bez agenata</h2>
+            <div style="display: flex; flex-direction: column; gap: 14px">
+              <div><div style="font-size: 13px; color: #5B6B78">Ponovni prijemi u roku od 30 dana</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 32px">214</div></div>
+              <div><div style="font-size: 13px; color: #5B6B78">U skladu sa PAI</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 32px">52%</div></div>
+              <div><div style="font-size: 13px; color: #5B6B78">Prosečno čekanje na ehokardiografiju</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 32px">41 d</div></div>
+              <div><div style="font-size: 13px; color: #5B6B78">Procenjeni trošak ponovnih prijema</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 32px">[€ iz simulacije]</div></div>
+            </div>
+          </section>
+          <section aria-labelledby="h-con" style="flex: 1 1 300px; min-width: 0; background: #FFFFFF; border: 2px solid #2457C5; border-radius: 12px; padding: 18px">
+            <h2 id="h-con" style="margin: 0 0 14px; font-size: 16px; font-weight: 600; color: #1A3F91">Sa agentima</h2>
+            <div style="display: flex; flex-direction: column; gap: 14px">
+              <div><div style="font-size: 13px; color: #5B6B78">Ponovni prijemi u roku od 30 dana</div><div style="display: flex; align-items: baseline; gap: 10px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 32px">168</span><span style="font-size: 14px; font-weight: 600; color: #155C39">−46</span></div></div>
+              <div><div style="font-size: 13px; color: #5B6B78">U skladu sa PAI</div><div style="display: flex; align-items: baseline; gap: 10px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 32px">71%</span><span style="font-size: 14px; font-weight: 600; color: #155C39">+19 poena</span></div></div>
+              <div><div style="font-size: 13px; color: #5B6B78">Prosečno čekanje na ehokardiografiju</div><div style="display: flex; align-items: baseline; gap: 10px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 32px">24 d</span><span style="font-size: 14px; font-weight: 600; color: #155C39">−17 d</span></div></div>
+              <div><div style="font-size: 13px; color: #5B6B78">Procenjena ušteda</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 32px; color: #155C39">[€ iz simulacije]</div></div>
+            </div>
+          </section>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+          <span style="font-size: 13px; color: #5B6B78">Isto seme simulacije, ista populacija, isti period.</span>
+          <div style="flex: 1 1 auto"></div>
+          <a href="#WhatIf" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #2457C5; color: #2457C5; text-decoration: none; font-size: 14px; font-weight: 600">Probaj scenario šta ako</a>
+        </div>
+      </section>
+      <aside aria-labelledby="h-feed" style="flex: 1 1 280px; max-width: 340px; min-width: 260px; background: #FFFFFF; border-left: 1px solid #DDE3E8; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #1F7A4D"></span>
+          <h2 id="h-feed" style="margin: 0; font-size: 14px; font-weight: 600">Aktivnost agenata · uživo</h2>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Intervention · nivo 3</div><div style="color: #5B6B78">18 pacijenata prebačeno: 12 u Bolnicu C, 6 u Bolnicu A</div><div style="color: #5B6B78; font-size: 12px">Dan 62 · 08:03</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Monitoring · novo pravilo</div><div style="color: #5B6B78">3 pacijenta nisu podigla furosemid 30 dana</div><div style="color: #5B6B78; font-size: 12px">Dan 62 · 08:02</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Intervention · nivo 3</div><div style="color: #5B6B78">Obaveštenje poslato za 3 MMG; pacijenti na listi poziva</div><div style="color: #5B6B78; font-size: 12px">Dan 62 · 08:03</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Daily Worklist</div><div style="color: #5B6B78">Lista od 20 poziva spremna za Centar usluga</div><div style="color: #5B6B78; font-size: 12px">Dan 62 · 08:05</div></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</section><section class="screen" id="WhatIf" hidden>
+
+<div style="min-height: 900px; display: flex; flex-wrap: wrap; background: #F4F6F8; color: #14212B; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+  <nav aria-label="Glavna navigacija" style="flex: 1 1 200px; max-width: 232px; min-width: 200px; background: #10262F; color: #E8EEF1; padding: 20px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#7FD1C7" stroke-width="2"></circle><path d="M6 15h5l2-5 3 9 2-4h4" fill="none" stroke="#7FD1C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <div>
+        <div style="font-weight: 600; font-size: 16px">CarePath AI</div>
+        <div style="font-size: 12px; color: #A9BCC6">ATS della Val Padana</div>
+      </div>
+    </div>
+    <a href="#Main" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pregled</a>
+    <a href="#Mappa" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Mapa</a>
+    <a href="#Chiedi" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pitaj</a>
+    <a href="#Confronto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Poređenje</a>
+    <a href="#WhatIf" style="padding: 10px 12px; border-radius: 8px; color: #FFFFFF; background: #1E3C48; font-weight: 600; text-decoration: none; font-size: 14px">Šta ako</a>
+    <a href="#NuovaPatologia" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Putevi</a>
+    <a href="#ListaChiamate" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pozivi</a>
+    <a href="#PostiLetto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Kreveti</a>
+    <a href="#Paziente360" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pacijenti</a>
+    <div style="margin-top: auto; padding: 12px; font-size: 12px; color: #A9BCC6; line-height: 1.5">Lokalni modeli · nema stvarnih podataka</div>
+  </nav>
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 24px; background: #FFFFFF; border-bottom: 1px solid #DDE3E8">
+      <h1 style="margin: 0; font-size: 20px; font-weight: 600">Šta ako</h1>
+      <span style="font-size: 13px; padding: 4px 10px; border-radius: 999px; background: #EEF2F5; color: #3D4C57">Srčana insuficijencija</span>
+      <div style="flex: 1 1 auto"></div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">Dan 62</span>
+      <span style="font-size: 13px; color: #5B6B78">Pauzirano</span>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #FFF4E0; color: #8A4B08; font-weight: 500">Sintetički podaci</span>
+    </header>
+    <div role="note" aria-label="Vodič" style="display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 24px; background: #FFF8D6; color: #4A3B00; font-size: 13px; line-height: 1.5; border-bottom: 1px solid #EAD27A;"><strong style="flex: 0 0 auto">Vodič · Korak 7 · Šta ako i PNE prognoza</strong><span style="flex: 1 1 420px; min-width: 0"><strong>Šta se dešava:</strong> Menjamo jednu polugu (+1 ehokardiograf u Bolnici B, telemonitoring u roku od 3 dana) i simuliramo 6 meseci sa i bez agenata za oko 6 sekundi. Dole: da li do kraja godine padamo ispod cilja od 12%.</span><span style="flex: 1 1 260px; min-width: 0"><strong>Klikni:</strong> „Simuliraj 6 meseci”, zatim „Putevi” u meniju (korak 8, opciono) ili „Pozivi” (korak 9a).</span></div>
+    <div style="flex: 1 1 auto; display: flex; flex-wrap: wrap">
+      <section style="flex: 999 1 520px; min-width: 0; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+        <section aria-labelledby="h-leve" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+          <h2 id="h-leve" style="margin: 0 0 4px; font-size: 16px; font-weight: 600">Šta ako…?</h2>
+          <p style="margin: 0 0 14px; font-size: 13px; color: #5B6B78">Promenite jednu polugu i simulirajte narednih 6 meseci, sa i bez agenata.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end">
+            <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px">
+              <label for="r-eco" style="font-size: 14px">Ehokardiografi u Bolnici B: <strong>+1</strong></label>
+              <input id="r-eco" type="range" min="0" max="3" value="1" style="width: 100%; accent-color: #2457C5">
+            </div>
+            <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px">
+              <label for="r-tele" style="font-size: 14px">Telemonitoring u roku od: <strong>3 dana</strong></label>
+              <input id="r-tele" type="range" min="1" max="7" value="3" style="width: 100%; accent-color: #2457C5">
+            </div>
+            <button type="button" style="min-height: 44px; padding: 0 18px; border-radius: 8px; border: none; background: #2457C5; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600">Simuliraj 6 meseci</button>
+          </div>
+        </section>
+        <div style="display: flex; flex-wrap: wrap; gap: 16px">
+          <div style="flex: 1 1 200px; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+            <div style="font-size: 13px; color: #5B6B78">Izbegnuti ponovni prijemi za 6 meseci</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 30px; margin-top: 6px; color: #155C39">−92</div>
+          </div>
+          <div style="flex: 1 1 200px; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+            <div style="font-size: 13px; color: #5B6B78">Prosečno čekanje na ehokardiografiju</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 30px; margin-top: 6px">19 d</div>
+          </div>
+          <div style="flex: 1 1 200px; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+            <div style="font-size: 13px; color: #5B6B78">Procenjena ušteda</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 30px; margin-top: 6px; color: #155C39">[€ iz simulacije]</div>
+          </div>
+          <div style="flex: 1 1 200px; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+            <div style="font-size: 13px; color: #5B6B78">Vreme simulacije</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 30px; margin-top: 6px">6,2 s</div>
+          </div>
+        </div>
+        <section aria-labelledby="h-pne" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+          <h2 id="h-pne" style="margin: 0 0 2px; font-size: 16px; font-weight: 600">PNE prognoza za kraj godine</h2>
+          <div style="font-size: 13px; color: #5B6B78; margin-bottom: 16px">Ponovni prijemi u roku od 30 dana za srčanu insuficijenciju · cilj ATS 12%</div>
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+              <div style="flex: 0 0 200px; font-size: 14px">Bez CarePath-a</div>
+              <div style="flex: 1 1 240px; height: 22px; background: #EEF2F5; border-radius: 6px; position: relative">
+                <div style="width: 88%; height: 22px; background: #9AA8B2; border-radius: 6px"></div>
+                <div aria-hidden="true" style="position: absolute; left: 75%; top: -4px; width: 2px; height: 30px; background: #14212B"></div>
+              </div>
+              <div style="flex: 0 0 64px; font-family: 'IBM Plex Mono', monospace; font-size: 14px">14,1%</div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+              <div style="flex: 0 0 200px; font-size: 14px">Sa CarePath-om</div>
+              <div style="flex: 1 1 240px; height: 22px; background: #EEF2F5; border-radius: 6px; position: relative">
+                <div style="width: 76%; height: 22px; background: #6E91DA; border-radius: 6px"></div>
+                <div aria-hidden="true" style="position: absolute; left: 75%; top: -4px; width: 2px; height: 30px; background: #14212B"></div>
+              </div>
+              <div style="flex: 0 0 64px; font-family: 'IBM Plex Mono', monospace; font-size: 14px">12,2%</div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+              <div style="flex: 0 0 200px; font-size: 14px; font-weight: 600">Sa CarePath-om + 1 eho</div>
+              <div style="flex: 1 1 240px; height: 22px; background: #EEF2F5; border-radius: 6px; position: relative">
+                <div style="width: 71%; height: 22px; background: #2457C5; border-radius: 6px"></div>
+                <div aria-hidden="true" style="position: absolute; left: 75%; top: -4px; width: 2px; height: 30px; background: #14212B"></div>
+              </div>
+              <div style="flex: 0 0 64px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600">11,4%</div>
+            </div>
+            <div style="font-size: 12px; color: #5B6B78">Vertikalna linija je cilj od 12%.</div>
+          </div>
+        </section>
+      </section>
+      <aside aria-labelledby="h-feed" style="flex: 1 1 280px; max-width: 340px; min-width: 260px; background: #FFFFFF; border-left: 1px solid #DDE3E8; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #1F7A4D"></span>
+          <h2 id="h-feed" style="margin: 0; font-size: 14px; font-weight: 600">Aktivnost agenata · uživo</h2>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Simulacija šta ako</div><div style="color: #5B6B78">6 meseci simulirano sa i bez agenata za 6,2 sekunde</div><div style="color: #5B6B78; font-size: 12px">Dan 62</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Intervention · nivo 3</div><div style="color: #5B6B78">6 pacijenata automatski prebačeno u Bolnicu C</div><div style="color: #5B6B78; font-size: 12px">Dan 62 · 08:03</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Daily Worklist</div><div style="color: #5B6B78">Lista od 20 poziva spremna za Centar usluga</div><div style="color: #5B6B78; font-size: 12px">Dan 62 · 08:05</div></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</section><section class="screen" id="NuovaPatologia" hidden>
+
+<div style="min-height: 900px; display: flex; flex-wrap: wrap; background: #F4F6F8; color: #14212B; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+  <nav aria-label="Glavna navigacija" style="flex: 1 1 200px; max-width: 232px; min-width: 200px; background: #10262F; color: #E8EEF1; padding: 20px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#7FD1C7" stroke-width="2"></circle><path d="M6 15h5l2-5 3 9 2-4h4" fill="none" stroke="#7FD1C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <div>
+        <div style="font-weight: 600; font-size: 16px">CarePath AI</div>
+        <div style="font-size: 12px; color: #A9BCC6">ATS della Val Padana</div>
+      </div>
+    </div>
+    <a href="#Main" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pregled</a>
+    <a href="#Mappa" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Mapa</a>
+    <a href="#Chiedi" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pitaj</a>
+    <a href="#Confronto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Poređenje</a>
+    <a href="#WhatIf" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Šta ako</a>
+    <a href="#NuovaPatologia" style="padding: 10px 12px; border-radius: 8px; color: #FFFFFF; background: #1E3C48; font-weight: 600; text-decoration: none; font-size: 14px">Putevi</a>
+    <a href="#ListaChiamate" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pozivi</a>
+    <a href="#PostiLetto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Kreveti</a>
+    <a href="#Paziente360" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pacijenti</a>
+    <div style="margin-top: auto; padding: 12px; font-size: 12px; color: #A9BCC6; line-height: 1.5">Lokalni modeli · nema stvarnih podataka</div>
+  </nav>
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 24px; background: #FFFFFF; border-bottom: 1px solid #DDE3E8">
+      <h1 style="margin: 0; font-size: 20px; font-weight: 600">Nova bolest</h1>
+      <span style="font-size: 13px; padding: 4px 10px; border-radius: 999px; background: #EEF2F5; color: #3D4C57">Srčana insuficijencija</span>
+      <span style="font-size: 13px; padding: 4px 10px; border-radius: 999px; background: #EAF0FB; color: #1A3F91; font-weight: 600">+ Dijabetes tip 2</span>
+      <div style="flex: 1 1 auto"></div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">Dan 62</span>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #FFF4E0; color: #8A4B08; font-weight: 500">Sintetički podaci</span>
+    </header>
+    <div role="note" aria-label="Vodič" style="display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 24px; background: #FFF8D6; color: #4A3B00; font-size: 13px; line-height: 1.5; border-bottom: 1px solid #EAD27A;"><strong style="flex: 0 0 auto">Vodič · Korak 8 · Nova bolest (opciono)</strong><span style="flex: 1 1 420px; min-width: 0"><strong>Šta se dešava:</strong> Menadžment bira dijabetes tip 2, AI radi ostalo: Pathway Builder sam pravi model iz PDTA i aktivira ga, prva analiza traje 38 s, Enrollment Advisor sam uključuje pacijente i obaveštava MMG.</span><span style="flex: 1 1 260px; min-width: 0"><strong>Klikni:</strong> „Maria R.” u tabeli → Pacijent 360, ili „Pozivi” u meniju (korak 9a).</span></div>
+    <div style="flex: 1 1 auto; display: flex; flex-wrap: wrap">
+      <section style="flex: 999 1 520px; min-width: 0; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+        <p style="margin: 0; font-size: 15px; color: #3D4C57">Menadžment bira bolest, AI radi ostalo.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 16px">
+          <section aria-labelledby="h-s1" style="flex: 1 1 240px; min-width: 0; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+              <span style="font-size: 13px; color: #5B6B78">1 · Enrollment Advisor</span>
+              <span style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #D9EFE2; color: #155C39">izabrao menadžment</span>
+            </div>
+            <h2 id="h-s1" style="margin: 8px 0 8px; font-size: 16px; font-weight: 600">Predlog: pratiti dijabetes tip 2</h2>
+            <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.6">
+              <li>2.980 pacijenata sa dijabetesom tip 2</li>
+              <li>38% bez HbA1c duže od 6 meseci</li>
+              <li>910 ima i srčanu insuficijenciju</li>
+            </ul>
+          </section>
+          <section aria-labelledby="h-s2" style="flex: 1 1 240px; min-width: 0; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+              <span style="font-size: 13px; color: #5B6B78">2 · Pathway Builder</span>
+              <span style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #D9EFE2; color: #155C39">proverio i aktivirao AI</span>
+            </div>
+            <h2 id="h-s2" style="margin: 8px 0 8px; font-size: 16px; font-weight: 600">Model iz PDTA za dijabetes</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px">
+              <span style="font-size: 13px; padding: 6px 10px; border-radius: 8px; background: #EEF2F5">HbA1c na 3–6 meseci</span>
+              <span style="font-size: 13px; padding: 6px 10px; border-radius: 8px; background: #EEF2F5">Pregled očnog dna jednom godišnje</span>
+              <span style="font-size: 13px; padding: 6px 10px; border-radius: 8px; background: #EEF2F5">Kreatinin i eGFR</span>
+              <span style="font-size: 13px; padding: 6px 10px; border-radius: 8px; background: #EEF2F5">Pregled stopala</span>
+            </div>
+          </section>
+          <section aria-labelledby="h-s3" style="flex: 1 1 240px; min-width: 0; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+              <span style="font-size: 13px; color: #5B6B78">3 · Prva analiza</span>
+              <span style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #EAF0FB; color: #1A3F91">za 38 sekundi</span>
+            </div>
+            <h2 id="h-s3" style="margin: 8px 0 8px; font-size: 16px; font-weight: 600">Pridržavanje puta za dijabetes</h2>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 30px">54%</div>
+            <div style="font-size: 13px; color: #5B6B78">214 pacijenata uključeno automatski</div>
+          </section>
+        </div>
+        <section aria-labelledby="h-cand" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+          <h2 id="h-cand" style="margin: 0 0 4px; font-size: 16px; font-weight: 600">Uključeni danas · MMG 118</h2>
+          <p style="margin: 0 0 12px; font-size: 13px; color: #5B6B78">Pacijenti sa lekom za dijabetes i visokim HbA1c, bez PAI za dijabetes. AI ih je uključio u put lečenja i obavestio MMG.</p>
+          <div style="overflow-x: auto">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 620px">
+              <thead>
+                <tr style="text-align: left; color: #5B6B78; font-size: 13px">
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Pacijent</th>
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Godine</th>
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Razlog</th>
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="background: #EAF0FB">
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF"><a href="#Paziente360" style="font-weight: 600">Maria R.</a> · Sermide e Felonica</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">81</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">metformin, HbA1c 8,1%, srčana insuficijencija</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF"><span style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #D9EFE2; color: #155C39">Uključio AI · MMG obavešten</span></td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Giuseppe T. · Ostiglia</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">74</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">metformin, HbA1c 7,9%</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF"><span style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #D9EFE2; color: #155C39">Uključio AI · MMG obavešten</span></td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px">Anna B. · Poggio Rusco</td>
+                  <td style="padding: 10px">69</td>
+                  <td style="padding: 10px">gliklazid, HbA1c 8,4%</td>
+                  <td style="padding: 10px"><span style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #D9EFE2; color: #155C39">Uključio AI · MMG obavešten</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+      <aside aria-labelledby="h-feed" style="flex: 1 1 280px; max-width: 340px; min-width: 260px; background: #FFFFFF; border-left: 1px solid #DDE3E8; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #1F7A4D"></span>
+          <h2 id="h-feed" style="margin: 0; font-size: 14px; font-weight: 600">Aktivnost agenata · uživo</h2>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Enrollment Advisor</div><div style="color: #5B6B78">214 pacijenata uključeno u put za dijabetes; MMG obavešteni</div><div style="color: #5B6B78; font-size: 12px">Dan 62</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Monitoring</div><div style="color: #5B6B78">Put za dijabetes aktivan za 2.980 pacijenata</div><div style="color: #5B6B78; font-size: 12px">Dan 62</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Pathway Builder</div><div style="color: #5B6B78">Model napravljen iz PDTA na italijanskom, proveren i aktiviran; klinički komitet obavešten</div><div style="color: #5B6B78; font-size: 12px">Dan 62</div></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</section><section class="screen" id="ListaChiamate" hidden>
+
+<div style="min-height: 900px; display: flex; flex-wrap: wrap; background: #F4F6F8; color: #14212B; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+  <nav aria-label="Glavna navigacija" style="flex: 1 1 200px; max-width: 232px; min-width: 200px; background: #10262F; color: #E8EEF1; padding: 20px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#7FD1C7" stroke-width="2"></circle><path d="M6 15h5l2-5 3 9 2-4h4" fill="none" stroke="#7FD1C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <div>
+        <div style="font-weight: 600; font-size: 16px">CarePath AI</div>
+        <div style="font-size: 12px; color: #A9BCC6">ATS della Val Padana</div>
+      </div>
+    </div>
+    <a href="#Main" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pregled</a>
+    <a href="#Mappa" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Mapa</a>
+    <a href="#Chiedi" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pitaj</a>
+    <a href="#Confronto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Poređenje</a>
+    <a href="#WhatIf" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Šta ako</a>
+    <a href="#NuovaPatologia" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Putevi</a>
+    <a href="#ListaChiamate" style="padding: 10px 12px; border-radius: 8px; color: #FFFFFF; background: #1E3C48; font-weight: 600; text-decoration: none; font-size: 14px">Pozivi</a>
+    <a href="#PostiLetto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Kreveti</a>
+    <a href="#Paziente360" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pacijenti</a>
+    <div style="margin-top: auto; padding: 12px; font-size: 12px; color: #A9BCC6; line-height: 1.5">Lokalni modeli · nema stvarnih podataka</div>
+  </nav>
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 24px; background: #FFFFFF; border-bottom: 1px solid #DDE3E8">
+      <h1 style="margin: 0; font-size: 20px; font-weight: 600">Lista poziva</h1>
+      <span style="font-size: 13px; color: #5B6B78">Centar usluga · Zadruga 3</span>
+      <div style="flex: 1 1 auto"></div>
+      <div role="group" aria-label="Dan" style="display: inline-flex; border: 1px solid #C9D2D9; border-radius: 10px; overflow: hidden">
+        <button type="button" aria-pressed="true" style="min-height: 44px; padding: 0 14px; border: none; background: #2457C5; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600">Dan 31</button>
+        <button type="button" aria-pressed="false" style="min-height: 44px; padding: 0 14px; border: none; background: #FFFFFF; color: #14212B; font: inherit; font-size: 14px">Danas · dan 62</button>
+      </div>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #FFF4E0; color: #8A4B08; font-weight: 500">Sintetički podaci</span>
+    </header>
+    <div role="note" aria-label="Vodič" style="display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 24px; background: #FFF8D6; color: #4A3B00; font-size: 13px; line-height: 1.5; border-bottom: 1px solid #EAD27A;"><strong style="flex: 0 0 auto">Vodič · Korak 9a · Lista poziva</strong><span style="flex: 1 1 420px; min-width: 0"><strong>Šta se dešava:</strong> Vraćamo se na dan 31. Ovo je lista koju je AI sam napravio za Centar usluga: jedan poziv po pacijentu, sortirano po riziku, sa korakom lestvice i ishodom poziva. Maria je prva jer je visokorizična, pa preskače podsetnik.</span><span style="flex: 1 1 260px; min-width: 0"><strong>Klikni:</strong> „Otvori karton Marije” ili ime „Maria R.” → Pacijent 360 (korak 9b).</span></div>
+    <div style="flex: 1 1 auto; display: flex; flex-wrap: wrap">
+      <section style="flex: 999 1 520px; min-width: 0; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+        <p style="margin: 0; font-size: 15px; color: #3D4C57">Jedan poziv po pacijentu, sa svim razlozima iz svih puteva lečenja. Sortirano po riziku.</p>
+        <section aria-labelledby="h-lista" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+          <h2 id="h-lista" style="margin: 0 0 12px; font-size: 16px; font-weight: 600">Dan 31 · 20 poziva · prvih 5</h2>
+          <div style="overflow-x: auto">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 760px">
+              <thead>
+                <tr style="text-align: left; color: #5B6B78; font-size: 13px">
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">#</th>
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Pacijent</th>
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Rizik</th>
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Razlozi</th>
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Lestvica</th>
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Ishod poziva</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="background: #EAF0FB">
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF; font-family: 'IBM Plex Mono', monospace">1</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF"><a href="#Paziente360" style="font-weight: 600">Maria R.</a><div style="font-size: 12px; color: #5B6B78">81 god. · živi sama · Sermide e Felonica</div></td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF"><span style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #FBE0D3; color: #7A2C0D">Visok</span></td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Furosemid nije podignut 30 dana · HbA1c kasni</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Odmah poziv (visok rizik, podsetnik preskočen)</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF"><strong>Niko joj ne donosi lek.</strong> Organizovana dostava kući, HbA1c zakazan, MMG obavešten.</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF; font-family: 'IBM Plex Mono', monospace">2</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Luigi P.<div style="font-size: 12px; color: #5B6B78">77 god. · Casalmaggiore</div></td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF"><span style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #FBE0D3; color: #7A2C0D">Visok</span></td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Ehokardiografija: 41 dan čekanja u Bolnici B</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Prebacio AI</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Dodeljen Bolnici C za 4 dana; obavešten telefonom.</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF; font-family: 'IBM Plex Mono', monospace">3</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Anna B.<div style="font-size: 12px; color: #5B6B78">69 god. · Poggio Rusco</div></td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF"><span style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #FBE3B9; color: #6B4407">Srednji</span></td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Telemonitoring bez podataka 4 dana</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Podsetnik bez odgovora, pa poziv</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Vaga ispražnjena; zamenjena. Podaci ponovo stižu.</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF; font-family: 'IBM Plex Mono', monospace">4</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Giuseppe T.<div style="font-size: 12px; color: #5B6B78">74 god. · Ostiglia</div></td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF"><span style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #FBE3B9; color: #6B4407">Srednji</span></td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Kardiološki pregled kasni 6 dana</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Podsetnik bez odgovora, pa poziv</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">Zakazan za dan 38.</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; font-family: 'IBM Plex Mono', monospace">5</td>
+                  <td style="padding: 10px">Rosa M.<div style="font-size: 12px; color: #5B6B78">83 god. · Quistello</div></td>
+                  <td style="padding: 10px"><span style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #FBE3B9; color: #6B4407">Srednji</span></td>
+                  <td style="padding: 10px">Furosemid nije podignut 34 dana</td>
+                  <td style="padding: 10px">Poziv, pa MMG</td>
+                  <td style="padding: 10px">Ne javlja se. Obavešten MMG; novi pokušaj sutra.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <div style="display: flex; flex-wrap: wrap; gap: 16px">
+          <section aria-labelledby="h-script" style="flex: 3 1 380px; min-width: 0; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+            <div style="font-size: 13px; color: #5B6B78">Daily Worklist · predlog za razgovor</div>
+            <h2 id="h-script" style="margin: 4px 0 10px; font-size: 16px; font-weight: 600">Maria R.</h2>
+            <p style="margin: 0 0 10px; font-size: 14px; line-height: 1.6">„Dobar dan, gospođo Maria, zovemo iz Centra usluga. Videli smo da prošlog meseca niste podigli furosemid i da je vreme za analizu glikiranog hemoglobina. Da li ste imali problem da odete do apoteke? Možemo mi da vam pomognemo.”</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px">
+              <a href="#Paziente360" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 8px; background: #2457C5; color: #FFFFFF; text-decoration: none; font-size: 14px; font-weight: 600">Otvori karton Marije</a>
+            </div>
+          </section>
+          <section aria-labelledby="h-scala" style="flex: 2 1 300px; min-width: 0; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+            <h2 id="h-scala" style="margin: 0 0 10px; font-size: 16px; font-weight: 600">Lestvica reagovanja</h2>
+            <ol style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.7">
+              <li>Automatski podsetnik pacijentu</li>
+              <li>Posle 3 dana bez promene: lista poziva</li>
+              <li>Posle 7 dana, ili odmah ako je rizik visok: obaveštenje MMG</li>
+              <li>Isti problem kod mnogo pacijenata jedne ustanove: alarm menadžmentu ATS</li>
+            </ol>
+            <p style="margin: 10px 0 0; font-size: 13px; color: #5B6B78">Visokorizični pacijenti preskaču prvi korak.</p>
+          </section>
+        </div>
+      </section>
+      <aside aria-labelledby="h-feed" style="flex: 1 1 280px; max-width: 340px; min-width: 260px; background: #FFFFFF; border-left: 1px solid #DDE3E8; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #1F7A4D"></span>
+          <h2 id="h-feed" style="margin: 0; font-size: 14px; font-weight: 600">Aktivnost agenata · dan 31</h2>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Daily Worklist</div><div style="color: #5B6B78">Lista od 20 poziva spremna; Maria R. na vrhu zbog visokog rizika</div><div style="color: #5B6B78; font-size: 12px">Dan 31 · 08:05</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Intervention · nivo 3</div><div style="color: #5B6B78">Automatski podsetnici za 31 pacijenta niskog rizika</div><div style="color: #5B6B78; font-size: 12px">Dan 31 · 08:04</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Risk</div><div style="color: #5B6B78">Visok rizik za Mariju R.: dva kašnjenja, živi sama, 45 km</div><div style="color: #5B6B78; font-size: 12px">Dan 31 · 08:02</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Monitoring</div><div style="color: #5B6B78">Maria R. van plana: furosemid i HbA1c</div><div style="color: #5B6B78; font-size: 12px">Dan 31 · 08:01</div></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</section><section class="screen" id="Paziente360" hidden>
+
+<div style="min-height: 900px; display: flex; flex-wrap: wrap; background: #F4F6F8; color: #14212B; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+  <nav aria-label="Glavna navigacija" style="flex: 1 1 200px; max-width: 232px; min-width: 200px; background: #10262F; color: #E8EEF1; padding: 20px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#7FD1C7" stroke-width="2"></circle><path d="M6 15h5l2-5 3 9 2-4h4" fill="none" stroke="#7FD1C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <div>
+        <div style="font-weight: 600; font-size: 16px">CarePath AI</div>
+        <div style="font-size: 12px; color: #A9BCC6">ATS della Val Padana</div>
+      </div>
+    </div>
+    <a href="#Main" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pregled</a>
+    <a href="#Mappa" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Mapa</a>
+    <a href="#Chiedi" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pitaj</a>
+    <a href="#Confronto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Poređenje</a>
+    <a href="#WhatIf" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Šta ako</a>
+    <a href="#NuovaPatologia" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Putevi</a>
+    <a href="#ListaChiamate" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pozivi</a>
+    <a href="#PostiLetto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Kreveti</a>
+    <a href="#Paziente360" style="padding: 10px 12px; border-radius: 8px; color: #FFFFFF; background: #1E3C48; font-weight: 600; text-decoration: none; font-size: 14px">Pacijenti</a>
+    <div style="margin-top: auto; padding: 12px; font-size: 12px; color: #A9BCC6; line-height: 1.5">Lokalni modeli · nema stvarnih podataka</div>
+  </nav>
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 24px; background: #FFFFFF; border-bottom: 1px solid #DDE3E8">
+      <h1 style="margin: 0; font-size: 20px; font-weight: 600">Maria R.</h1>
+      <span style="font-size: 13px; color: #5B6B78">81 god. · Sermide e Felonica · živi sama · 45 km od bolnice · MMG 118</span>
+      <div style="flex: 1 1 auto"></div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">Dan 62</span>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #FFF4E0; color: #8A4B08; font-weight: 500">Sintetička pacijentkinja</span>
+    </header>
+    <div role="note" aria-label="Vodič" style="display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 24px; background: #FFF8D6; color: #4A3B00; font-size: 13px; line-height: 1.5; border-bottom: 1px solid #EAD27A;"><strong style="flex: 0 0 auto">Vodič · Korak 9b · Pacijent 360: Maria</strong><span style="flex: 1 1 420px; min-width: 0"><strong>Šta se dešava:</strong> Marijina vremenska linija sa CarePath-om. Plavo su koraci agenta i čoveka: dan 31 lista poziva i poziv, dan 33 lek stiže kući, dan 40 urađen HbA1c, dan 47 nema ponovnog prijema.</span><span style="flex: 1 1 260px; min-width: 0"><strong>Klikni:</strong> „Pogledaj prijem” → svet bez CarePath-a i Bed Finder (korak 9c), ili „Otvaranje koverte” (korak 10).</span></div>
+    <div style="flex: 1 1 auto; display: flex; flex-wrap: wrap">
+      <section style="flex: 999 1 520px; min-width: 0; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+          <span style="font-size: 13px; padding: 6px 12px; border-radius: 999px; background: #EEF2F5; color: #3D4C57">Put lečenja: srčana insuficijencija</span>
+          <span style="font-size: 13px; padding: 6px 12px; border-radius: 999px; background: #EAF0FB; color: #1A3F91; font-weight: 600">Put lečenja: dijabetes tip 2 · novo</span>
+          <div style="flex: 1 1 auto"></div>
+          <div role="group" aria-label="Scenario" style="display: inline-flex; border: 1px solid #C9D2D9; border-radius: 10px; overflow: hidden">
+            <button type="button" aria-pressed="true" style="min-height: 44px; padding: 0 16px; border: none; background: #2457C5; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600">Sa CarePath-om</button>
+            <button type="button" aria-pressed="false" style="min-height: 44px; padding: 0 16px; border: none; background: #FFFFFF; color: #14212B; font: inherit; font-size: 14px">Bez CarePath-a</button>
+          </div>
+        </div>
+        <section aria-labelledby="h-linea" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+          <h2 id="h-linea" style="margin: 0 0 12px; font-size: 16px; font-weight: 600">Vremenska linija</h2>
+          <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+            <li style="display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 0; border-bottom: 1px solid #E6EBEF">
+              <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #5B6B78">Dan 0</span>
+              <span style="flex: 1 1 300px; font-size: 14px">Otpuštena iz bolnice zbog srčane insuficijencije</span>
+              <span style="font-size: 12px; color: #5B6B78">Srce</span>
+            </li>
+            <li style="display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 0; border-bottom: 1px solid #E6EBEF">
+              <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #5B6B78">Dan 6</span>
+              <span style="flex: 1 1 300px; font-size: 14px">Telemonitoring aktiviran</span>
+              <span style="font-size: 12px; color: #5B6B78">Srce</span>
+            </li>
+            <li style="display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 0; border-bottom: 1px solid #E6EBEF">
+              <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #5B6B78">Dan 24</span>
+              <span style="flex: 1 1 300px; font-size: 14px">Kardiološki pregled</span>
+              <span style="font-size: 12px; color: #5B6B78">Srce</span>
+            </li>
+            <li style="display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 0; border-bottom: 1px solid #E6EBEF">
+              <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #A33B12">Dan 30</span>
+              <span style="flex: 1 1 300px; font-size: 14px">HbA1c kasni</span>
+              <span style="font-size: 12px; color: #5B6B78">Dijabetes</span>
+            </li>
+            <li style="display: flex; flex-wrap: wrap; gap: 14px; padding: 12px; margin: 6px 0; border-radius: 10px; background: #EAF0FB; border: 1px solid #B9CBEF">
+              <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #1A3F91; font-weight: 600">Dan 31</span>
+              <span style="flex: 1 1 300px; font-size: 14px"><strong>Daily Worklist:</strong> furosemid nije podignut 30 dana i HbA1c kasni. Visok rizik (81 god., živi sama, dva kašnjenja): preskače podsetnik i ide na vrh liste poziva.</span>
+              <span style="font-size: 12px; color: #1A3F91; font-weight: 600">Agent</span>
+            </li>
+            <li style="display: flex; flex-wrap: wrap; gap: 14px; padding: 12px; margin: 0 0 6px; border-radius: 10px; background: #EAF0FB; border: 1px solid #B9CBEF">
+              <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #1A3F91; font-weight: 600">Dan 31</span>
+              <span style="flex: 1 1 300px; font-size: 14px"><strong>Poziv Centra usluga:</strong> niko joj ne donosi lek. Organizovana dostava kući, HbA1c zakazan, MMG obavešten.</span>
+              <span style="font-size: 12px; color: #1A3F91; font-weight: 600">Čovek</span>
+            </li>
+            <li style="display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 0; border-bottom: 1px solid #E6EBEF">
+              <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #5B6B78">Dan 33</span>
+              <span style="flex: 1 1 300px; font-size: 14px">Furosemid dostavljen kući</span>
+              <span style="font-size: 12px; color: #5B6B78">Srce</span>
+            </li>
+            <li style="display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 0; border-bottom: 1px solid #E6EBEF">
+              <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #5B6B78">Dan 40</span>
+              <span style="flex: 1 1 300px; font-size: 14px">HbA1c urađen</span>
+              <span style="font-size: 12px; color: #5B6B78">Dijabetes</span>
+            </li>
+            <li style="display: flex; flex-wrap: wrap; gap: 14px; padding: 12px 0 0">
+              <span style="flex: 0 0 84px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #155C39; font-weight: 600">Dan 47</span>
+              <span style="flex: 1 1 300px; font-size: 15px; font-weight: 600; color: #155C39">Nema ponovnog prijema</span>
+            </li>
+          </ol>
+        </section>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; background: #FFFFFF; border: 1px dashed #C9D2D9">
+          <span style="flex: 1 1 320px; font-size: 14px; color: #3D4C57">Bez CarePath-a, u istoj simulaciji, Maria se vraća u bolnicu 47. dana.</span>
+          <a href="#PostiLetto" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #2457C5; color: #2457C5; text-decoration: none; font-size: 14px; font-weight: 600">Pogledaj prijem</a>
+          <a href="#Rivelazione" style="font-size: 13px; color: #5B6B78">Otvaranje koverte (samo demo)</a>
+        </div>
+      </section>
+      <aside aria-labelledby="h-feed" style="flex: 1 1 280px; max-width: 340px; min-width: 260px; background: #FFFFFF; border-left: 1px solid #DDE3E8; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #1F7A4D"></span>
+          <h2 id="h-feed" style="margin: 0; font-size: 14px; font-weight: 600">Aktivnost agenata · uživo</h2>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Reporter</div><div style="color: #5B6B78">Mesečni izveštaj na italijanskom spreman, u PNE stilu</div><div style="color: #5B6B78; font-size: 12px">Dan 62</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Daily Worklist</div><div style="color: #5B6B78">Lista od 20 poziva spremna za Centar usluga</div><div style="color: #5B6B78; font-size: 12px">Dan 62 · 08:05</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Enrollment Advisor</div><div style="color: #5B6B78">Maria R. uključena u put za dijabetes; MMG obavešten</div><div style="color: #5B6B78; font-size: 12px">Dan 62</div></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</section><section class="screen" id="PostiLetto" hidden>
+
+<div style="min-height: 900px; display: flex; flex-wrap: wrap; background: #F4F6F8; color: #14212B; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+  <nav aria-label="Glavna navigacija" style="flex: 1 1 200px; max-width: 232px; min-width: 200px; background: #10262F; color: #E8EEF1; padding: 20px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#7FD1C7" stroke-width="2"></circle><path d="M6 15h5l2-5 3 9 2-4h4" fill="none" stroke="#7FD1C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <div>
+        <div style="font-weight: 600; font-size: 16px">CarePath AI</div>
+        <div style="font-size: 12px; color: #A9BCC6">ATS della Val Padana</div>
+      </div>
+    </div>
+    <a href="#Main" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pregled</a>
+    <a href="#Mappa" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Mapa</a>
+    <a href="#Chiedi" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pitaj</a>
+    <a href="#Confronto" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Poređenje</a>
+    <a href="#WhatIf" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Šta ako</a>
+    <a href="#NuovaPatologia" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Putevi</a>
+    <a href="#ListaChiamate" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pozivi</a>
+    <a href="#PostiLetto" style="padding: 10px 12px; border-radius: 8px; color: #FFFFFF; background: #1E3C48; font-weight: 600; text-decoration: none; font-size: 14px">Kreveti</a>
+    <a href="#Paziente360" style="padding: 10px 12px; border-radius: 8px; color: #E8EEF1; text-decoration: none; font-size: 14px">Pacijenti</a>
+    <div style="margin-top: auto; padding: 12px; font-size: 12px; color: #A9BCC6; line-height: 1.5">Lokalni modeli · nema stvarnih podataka</div>
+  </nav>
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 24px; background: #FFFFFF; border-bottom: 1px solid #DDE3E8">
+      <h1 style="margin: 0; font-size: 20px; font-weight: 600">Kreveti</h1>
+      <span style="font-size: 13px; padding: 4px 10px; border-radius: 999px; background: #EEF2F5; color: #3D4C57">Scenario bez CarePath-a</span>
+      <div style="flex: 1 1 auto"></div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">Dan 47</span>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #FFF4E0; color: #8A4B08; font-weight: 500">Sintetički podaci</span>
+    </header>
+    <div role="note" aria-label="Vodič" style="display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 24px; background: #FFF8D6; color: #4A3B00; font-size: 13px; line-height: 1.5; border-bottom: 1px solid #EAD27A;"><strong style="flex: 0 0 auto">Vodič · Korak 9c · Kreveti: Bed Finder (opciono)</strong><span style="flex: 1 1 420px; min-width: 0"><strong>Šta se dešava:</strong> Svet bez CarePath-a: Maria je 47. dana na hitnoj. Lekar odlučuje da treba prijem, a Bed Finder za 2,1 s sam dodeljuje bolnicu, odeljenje i krevet i upisuje prijem u audit. Pacijent ništa ne bira.</span><span style="flex: 1 1 260px; min-width: 0"><strong>Klikni:</strong> prekidač „Predloži i potvrdi” pokazuje alternativu gde lekar potvrđuje; „Dodeljuje sam” vraća automatski režim. Dalje: prečica V ili link na kartonu Marije (korak 10).</span></div>
+    <div style="flex: 1 1 auto; display: flex; flex-wrap: wrap">
+      <section style="flex: 999 1 520px; min-width: 0; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+        <section aria-labelledby="h-paz" style="display: flex; flex-wrap: wrap; align-items: center; gap: 14px; background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 16px 18px">
+          <div style="flex: 1 1 320px; min-width: 0">
+            <div style="font-size: 13px; color: #5B6B78">Hitna pomoć · Bolnica A · lekar traži prijem</div>
+            <h2 id="h-paz" style="margin: 4px 0 2px; font-size: 18px; font-weight: 600">Maria R. · 81 god.</h2>
+            <div style="font-size: 14px; color: #3D4C57">Pogoršanje srčane insuficijencije · traženo odeljenje: Kardiologija</div>
+          </div>
+          <div role="group" aria-label="Režim Bed Finder-a" style="display: inline-flex; border: 1px solid #C9D2D9; border-radius: 10px; overflow: hidden">
+            <button type="button" data-mode="conferma" aria-pressed="false" style="min-height: 44px; padding: 0 14px; border: none; font: inherit; font-size: 14px; font-weight: 600; background: #FFFFFF; color: #14212B">Predloži i potvrdi</button>
+            <button type="button" data-mode="auto" aria-pressed="true" style="min-height: 44px; padding: 0 14px; border: none; font: inherit; font-size: 14px; font-weight: 600; background: #2457C5; color: #FFFFFF">Dodeljuje sam</button>
+          </div>
+        </section>
+        <div data-show="auto">
+          <div role="status" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; background: #E3F2EA; border: 1px solid #9CCFB2">
+            <div style="flex: 1 1 320px; min-width: 0">
+              <div style="font-size: 15px; font-weight: 600; color: #155C39">Dodeljeno automatski: Kardiologija, Bolnica A, krevet 12</div>
+              <div style="font-size: 13px; color: #155C39">Za 2,1 sekundu · upisano u audit · lekar može da poništi</div>
+            </div>
+            <button type="button" style="min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #155C39; background: #FFFFFF; color: #155C39; font: inherit; font-size: 14px; font-weight: 600">Poništi</button>
+          </div>
+        </div>
+        <section aria-labelledby="h-prop" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+          <div style="font-size: 13px; color: #5B6B78">Bed Finder · pronađeno za 2,1 sekundu</div>
+          <h2 id="h-prop" style="margin: 4px 0 12px; font-size: 16px; font-weight: 600">Kreveti prikladni za dijagnozu</h2>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px">
+            <div style="flex: 1 1 220px; padding: 14px; border-radius: 10px; border: 2px solid #2457C5; background: #EAF0FB">
+              <div style="font-size: 12px; font-weight: 600; color: #1A3F91">Izbor AI</div>
+              <div style="font-size: 15px; font-weight: 600; margin-top: 4px">Kardiologija · Bolnica A</div>
+              <div style="font-size: 13px; color: #3D4C57">Krevet 12 · slobodan sada · ista bolnica kao hitna</div>
+            </div>
+            <div style="flex: 1 1 220px; padding: 14px; border-radius: 10px; border: 1px solid #E6EBEF">
+              <div style="font-size: 12px; font-weight: 600; color: #5B6B78">Alternativa</div>
+              <div style="font-size: 15px; font-weight: 600; margin-top: 4px">Interna medicina · Bolnica C</div>
+              <div style="font-size: 13px; color: #3D4C57">Krevet 4 · slobodan sada · potreban transfer</div>
+            </div>
+            <div style="flex: 1 1 220px; padding: 14px; border-radius: 10px; border: 1px solid #E6EBEF">
+              <div style="font-size: 12px; font-weight: 600; color: #5B6B78">Alternativa</div>
+              <div style="font-size: 15px; font-weight: 600; margin-top: 4px">Kardiologija · Bolnica B</div>
+              <div style="font-size: 13px; color: #3D4C57">Slobodan za 2 dana (planirano otpuštanje)</div>
+            </div>
+          </div>
+          <p style="margin: 12px 0 0; font-size: 13px; color: #5B6B78">Obrazloženje: srčana insuficijencija ide na Kardiologiju; krevet je slobodan u istoj bolnici u koju je pacijentkinja stigla, pa nema transfera.</p>
+          <div data-show="conferma" hidden>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px">
+              <button type="button" style="min-height: 44px; padding: 0 18px; border-radius: 8px; border: none; background: #2457C5; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600">Potvrdi prijem</button>
+              <button type="button" style="min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #C9D2D9; background: #FFFFFF; color: #14212B; font: inherit; font-size: 14px">Izaberi alternativu</button>
+            </div>
+          </div>
+        </section>
+        <section aria-labelledby="h-occ" style="background: #FFFFFF; border: 1px solid #DDE3E8; border-radius: 12px; padding: 18px">
+          <h2 id="h-occ" style="margin: 0 0 12px; font-size: 16px; font-weight: 600">Popunjenost odeljenja · danas</h2>
+          <div style="overflow-x: auto">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 560px">
+              <thead>
+                <tr style="text-align: left; color: #5B6B78; font-size: 13px">
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Bolnica</th>
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Kardiologija</th>
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Interna medicina</th>
+                  <th scope="col" style="padding: 8px 10px; border-bottom: 1px solid #DDE3E8; font-weight: 500">Endokrinologija</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF; font-weight: 600">Bolnica A</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">27 / 28 · 1 slobodan</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">40 / 40 · puno</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">10 / 12 · 2 slobodna</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF; font-weight: 600">Bolnica B</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">24 / 24 · puno</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">35 / 36 · 1 slobodan</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #E6EBEF">8 / 8 · puno</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; font-weight: 600">Bolnica C</td>
+                  <td style="padding: 10px">16 / 16 · puno</td>
+                  <td style="padding: 10px">26 / 30 · 4 slobodna</td>
+                  <td style="padding: 10px">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="margin: 10px 0 0; font-size: 12px; color: #5B6B78">Zauzeti / ukupno kreveta. Bolnica C nema Endokrinologiju.</p>
+        </section>
+      </section>
+      <aside aria-labelledby="h-feed" style="flex: 1 1 280px; max-width: 340px; min-width: 260px; background: #FFFFFF; border-left: 1px solid #DDE3E8; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #1F7A4D"></span>
+          <h2 id="h-feed" style="margin: 0; font-size: 14px; font-weight: 600">Aktivnost agenata · dan 47</h2>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Bed Finder</div><div style="color: #5B6B78">3 kreveta pronađena za Mariju R. za 2,1 sekundu</div><div style="color: #5B6B78; font-size: 12px">Dan 47 · 14:12</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #B45309; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Zahtev za prijem</div><div style="color: #5B6B78">Lekar hitne pomoći traži prijem Marije R.</div><div style="color: #5B6B78; font-size: 12px">Dan 47 · 14:12</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.4">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #2457C5; margin-top: 6px"></span>
+          <div><div style="font-weight: 600">Monitoring</div><div style="color: #5B6B78">Popunjenost odeljenja ažurirana za 3 bolnice</div><div style="color: #5B6B78; font-size: 12px">Dan 47 · 08:01</div></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</section><section class="screen" id="Rivelazione" hidden>
+
+<div style="min-height: 900px; background: #10262F; color: #E8EEF1; font-family: 'IBM Plex Sans', system-ui, sans-serif; display: flex; flex-direction: column; box-sizing: border-box; padding: 40px 48px">
+  <div style="display: flex; align-items: center; gap: 10px">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#7FD1C7" stroke-width="2"></circle><path d="M6 15h5l2-5 3 9 2-4h4" fill="none" stroke="#7FD1C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    <span style="font-weight: 600; font-size: 16px">CarePath AI</span>
+    <div style="flex: 1 1 auto"></div>
+    <a href="#Maria" style="font-size: 13px">Počni demo ponovo</a>
+  </div>
+  <div role="note" aria-label="Vodič" style="display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 24px; background: #FFF8D6; color: #4A3B00; font-size: 13px; line-height: 1.5; margin-top: 20px; border-radius: 10px; border: 1px solid #EAD27A;"><strong style="flex: 0 0 auto">Vodič · Korak 10 · Otvaranje koverte</strong><span style="flex: 1 1 420px; min-width: 0"><strong>Šta se dešava:</strong> Otvaramo kovertu koju je publika izabrala. Levo je ono što su agenti sami našli, desno sadržaj koverte: sve tri stavke se poklapaju, iako agenti nikad nisu videli kovertu.</span><span style="flex: 1 1 260px; min-width: 0"><strong>Klikni:</strong> „Počni demo ponovo” (gore desno) vraća na korak 1.</span></div>
+  <div style="flex: 1 1 auto; max-width: 1200px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; padding: 36px 0">
+    <h1 style="margin: 0; font-family: 'IBM Plex Serif', Georgia, serif; font-weight: 500; font-size: 44px; line-height: 1.15">Vi ste izabrali problem. Agenti su ga sami pronašli.</h1>
+    <div style="display: flex; flex-wrap: wrap; gap: 20px">
+      <section aria-labelledby="h-agenti" style="flex: 1 1 380px; min-width: 0; background: #163440; border: 1px solid #2A4B58; border-radius: 16px; padding: 24px">
+        <h2 id="h-agenti" style="margin: 0 0 16px; font-size: 18px; font-weight: 600">Šta su agenti pronašli</h2>
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div style="padding: 14px; border-radius: 10px; background: #10262F">
+            <div style="font-size: 13px; color: #A9BCC6">Usko grlo za ehokardiografiju</div>
+            <div style="font-size: 16px; font-weight: 600; margin-top: 4px">Bolnica B · ASST Cremona</div>
+          </div>
+          <div style="padding: 14px; border-radius: 10px; background: #10262F">
+            <div style="font-size: 13px; color: #A9BCC6">Rizične ruralne opštine</div>
+            <div style="font-size: 16px; font-weight: 600; margin-top: 4px">Sermide e Felonica, Poggio Rusco, Ostiglia</div>
+          </div>
+          <div style="padding: 14px; border-radius: 10px; background: #10262F">
+            <div style="font-size: 13px; color: #A9BCC6">MMG sa slabim pridržavanjem terapije</div>
+            <div style="font-size: 16px; font-weight: 600; margin-top: 4px">Zadruga 3 (Cooperativa 3)</div>
+          </div>
+        </div>
+      </section>
+      <section aria-labelledby="h-busta" style="flex: 1 1 380px; min-width: 0; background: #F4F1E8; color: #14212B; border-radius: 16px; padding: 24px">
+        <h2 id="h-busta" style="margin: 0 0 16px; font-size: 18px; font-weight: 600">Koverta 2 · izabrala publika</h2>
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 10px; background: #FFFFFF">
+            <div style="flex: 1 1 auto"><div style="font-size: 13px; color: #5B6B78">Usko grlo za ehokardiografiju</div><div style="font-size: 16px; font-weight: 600; margin-top: 4px">Bolnica B · ASST Cremona</div></div>
+            <span style="font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 6px; background: #D9EFE2; color: #155C39">poklapa se</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 10px; background: #FFFFFF">
+            <div style="flex: 1 1 auto"><div style="font-size: 13px; color: #5B6B78">Rizične ruralne opštine</div><div style="font-size: 16px; font-weight: 600; margin-top: 4px">Sermide e Felonica, Poggio Rusco, Ostiglia</div></div>
+            <span style="font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 6px; background: #D9EFE2; color: #155C39">poklapa se</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 10px; background: #FFFFFF">
+            <div style="flex: 1 1 auto"><div style="font-size: 13px; color: #5B6B78">MMG sa slabim pridržavanjem terapije</div><div style="font-size: 16px; font-weight: 600; margin-top: 4px">Zadruga 3 (Cooperativa 3)</div></div>
+            <span style="font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 6px; background: #D9EFE2; color: #155C39">poklapa se</span>
+          </div>
+        </div>
+      </section>
+    </div>
+    <p style="margin: 0; font-size: 15px; color: #A9BCC6">Sintetički podaci, kalibrisani na PNE. Agenti nemaju pristup sadržaju koverti.</p>
+  </div>
+</div>
+</section>
+<script>
+var order=['Maria', 'Busta', 'Main', 'Mappa', 'Chiedi', 'Confronto', 'WhatIf', 'NuovaPatologia', 'ListaChiamate', 'Paziente360', 'PostiLetto', 'Rivelazione'];
+function show(){
+  var id=(location.hash||'#Maria').slice(1); if(order.indexOf(id)<0) id='Maria';
+  document.querySelectorAll('.screen').forEach(function(s){s.hidden=s.id!==id;});
+  document.querySelectorAll('.steps a').forEach(function(a){a.classList.toggle('on',a.dataset.tab===id);});
+  window.scrollTo(0,0);
+}
+function go(d){var id=(location.hash||'#Maria').slice(1);var i=Math.max(0,order.indexOf(id))+d;if(i>=0&&i<order.length)location.hash=order[i];}
+document.getElementById('prev').onclick=function(){go(-1)};
+document.getElementById('next').onclick=function(){go(1)};
+document.addEventListener('keydown',function(e){if(e.key==='ArrowRight')go(1);if(e.key==='ArrowLeft')go(-1);});
+window.addEventListener('hashchange',show);
+document.querySelectorAll('#PostiLetto [data-mode]').forEach(function(b){
+  b.addEventListener('click',function(){
+    var m=b.dataset.mode;
+    document.querySelectorAll('#PostiLetto [data-mode]').forEach(function(x){
+      var on=x.dataset.mode===m; x.setAttribute('aria-pressed',on);
+      x.style.background=on?'#2457C5':'#FFFFFF'; x.style.color=on?'#FFFFFF':'#14212B';
+    });
+    document.querySelectorAll('#PostiLetto [data-show]').forEach(function(x){x.hidden=x.dataset.show!==m;});
+  });
+});
+show();
+</script>
+</body>
+</html>
