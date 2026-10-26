@@ -41,24 +41,41 @@ These apply to every phase. A pull request that breaks one of them needs a decis
 
 | Item | State |
 |---|---|
-| Reference laptop | Intel i7-1355U (10 cores, 12 threads), 32 GB RAM, Intel Iris Xe, **no NVIDIA GPU** |
+| Reference laptop (every team laptop, D12) | Intel i7-1355U (10 cores, 12 threads), 32 GB RAM, Intel Iris Xe, **no NVIDIA GPU** |
 | Python | 3.12 via `uv`; `.venv` from `uv sync` (`pyproject.toml`, `uv.lock`) |
 | Packages | numpy, pandas, duckdb, scikit-learn, xgboost, fastapi, uvicorn, pydantic, ollama; dev: pytest, jupyterlab |
 | LLM runtime | Ollama 0.40.11, local server on `127.0.0.1:11434` |
-| Models pulled | `qwen2.5:7b`, `qwen2.5:14b`; `mistral-nemo:12b` downloading |
-| Benchmark | `testing/llm_bench.py <model> [...]` |
+| Models pulled | `qwen3:30b-instruct` (18 GB), `qwen3:4b-instruct` (2.5 GB); evaluated and not recommended: `nemotron-3.5-lightning:30b`, `qwen3:8b`, `qwen2.5:7b`, `qwen2.5:14b`, `mistral-nemo:12b` |
+| Evaluation | `testing/llm_eval.py <model> [...]`; `--investigate-only` reruns just the investigation; results in `testing/results/` |
 
-First measurement with `qwen2.5:7b` on CPU, taken while another model was downloading, so treat it as a lower bound:
+### 3.1 Model evaluation (step 0.4)
 
-- **Speed:** about 4.6 tokens per second. A three-sentence Italian note took 24.9 s, and a tool-calling turn took 29.6 s. A multi-step Investigator run (4 tool calls plus a summary) would take several minutes live, against a 30 s target (AC5).
-- **Tool calling:** correct. The model produced `wait_by_hospital(pathway_id="hf_lombardia_v1", step="echo", period_days=30)`.
-- **Italian:** fluent, but it **inverted a fact**. It wrote that the patient "continues to take furosemide", when the input said she has not collected it for 30 days.
+Seven free local models, CPU only, temperature 0, seed 42, thinking off. Three tests per model:
 
-Consequences, already built into this plan:
+- **Italian:** 5 texts written from facts that code supplies (MMG note, alarm, call script, rule proposal, report line), checked automatically for missing and wrong facts, then read by a person.
+- **Tools:** 5 questions with the 7 tools of Solution Plan §7; correct tool, valid schema, expected arguments.
+- **Investigation:** the Investigator flow with fake tool results: several tool calls, then a JSON answer that must contain the key facts (41 days at Ospedale B, 34 free slots at Ospedale C, Cooperativa 3 at 52%).
 
-- Live LLM on this class of laptop is not demo-safe. The cache is mandatory (principle 3).
-- The 14B model is used to **generate** the cache, ideally on a machine with a GPU, and is not expected to run live.
-- Facts never come from the LLM (principle 2). The Verifier is worth building even for a small model.
+| Model | Licence | RAM | Speed | Italian | Tools | Investigation (v2 prompt) | Verdict |
+|---|---|---|---|---|---|---|---|
+| `qwen3:30b-instruct` (MoE, 3B active) | Apache 2.0 | 18 GB | 10.8 tok/s | **5/5**, 11.5 s each | 4/5, 18 s | **Pass**, 243 s, all facts right | **Recommended: all cached agents** |
+| `qwen3:4b-instruct` | Apache 2.0 | 2.5 GB | **14.3 tok/s** | 4/5, 8.1 s each | 3/5, 15 s | Pass, 244 s | **Recommended: short live text, behind templates** |
+| `nemotron-3.5-lightning:30b` (MoE, 3B active) | NVIDIA Open Model | 25 GB | 5.6 tok/s | 5/5, 24.4 s | 4/5, 67 s | Pass, 394 s | Backup only: too heavy for 32 GB next to the app |
+| `qwen3:8b` | Apache 2.0 | 5.2 GB | 5.6 tok/s | 4/5 | 5/5 | Fail (v1): invented an ASST, missed key facts | Not recommended: slower and weaker than 30B MoE |
+| `qwen2.5:7b` | Apache 2.0 | 4.7 GB | 5.7 tok/s | 4/5; wrote "Medico di Maggiore Grado" for MMG | 5/5 | Fail (v1): invented an ASST | Not recommended |
+| `qwen2.5:14b` | Apache 2.0 | 9.0 GB | 3.2 tok/s | 4/5; **inverted Maria's fact** ("continua la terapia con furosemide") | 5/5 | Fail (v1), 408 s | Not recommended |
+| `mistral-nemo:12b` | Apache 2.0 | 7.1 GB | 3.6 tok/s | 5/5 | 4/5 | Fail (v1): **called no tools**, answered from nothing | Not recommended |
+
+How to read it:
+
+- **No model is fast enough live for the Investigator on our laptops.** The best investigation took 243 s against the 30 s target (AC5). Every investigation shown in the demo comes from the cache (D12, D14).
+- **The 30B MoE model beats every dense model** because only 3B parameters are active per token. It is faster than the 7B and 8B dense models and is the only one with every Italian text right.
+- **The prompt matters as much as the model.** With the first summary prompt ("riassumi in JSON"), 6 of 7 models dropped the 34 free slots at Ospedale C, which is the fact the reschedule action needs. With a prompt that asks for every relevant number, all three candidates passed. Prompts are versioned in the gateway (`prompt_version`) for this reason.
+- **Every model made at least one factual slip somewhere:** inverted meaning, a wrong hospital in a call script, an invented ASST, "within 30 days" instead of 21, or adherence presented as the cause of the wait. Facts come from code (principle 2), and the Verifier stays in scope.
+- **One question is ambiguous, not wrong:** every model read "per gruppo di MMG" as `grouping=mmg` instead of `mmg_group`. Fix the question or the tool description before scoring AC6.
+- **Speeds vary by about ±40% on the same laptop** with load and power mode (7B measured 9.0 and 5.7 tok/s on two runs). Measure on mains power with nothing else running.
+
+Limits of this evaluation: one run per prompt and 5 prompts per test, on fake tool results. AC6 (10 benchmark questions × 3 scenarios on real simulator data) is the real gate in week 3.
 
 ## 4. Roles
 
@@ -85,11 +102,11 @@ The critical path is R1 and R5 in week 2.
 | 0.1 | Team charter: roles R1–R5, two 20-min syncs a week, chat channel, decision-register owner (R5) | All | `brief/charter.md` | Signed off by all five |
 | 0.2 | Approval check: confirm with the mentor that Ollama, the chosen models and every tool in §10 are allowed; confirm with IT that Ollama and Python may run on company laptops | R5 | Line in decision register | Written "yes" from mentor and IT |
 | 0.3 | Dev setup guide: `uv sync`, Ollama install, `ollama pull`, PATH fix for terminals opened before install, run the benchmark | R3 | `README.md` "Getting started" | A second person follows it on a clean laptop without help |
-| 0.4 | Model selection: run `llm_bench.py` on `qwen2.5:7b`, `qwen2.5:14b`, `mistral-nemo:12b` on every team laptop with no other load; add 5 tool-calling prompts and 5 Italian prompts scored by R5 for factual faithfulness | R3, R5 | Table of tok/s, tool-call accuracy and faithfulness per model and machine; decision D11 | One small model (live text, Daily Worklist) and one larger model (cache generation for Investigator, Pathway Builder, Rule Advisor) chosen |
-| 0.5 | Demo machine decision: identify the fastest machine available (GPU if anyone has one); it becomes the cache-generation and demo machine; name a backup laptop | R5, R3 | Decision D12 | Two named machines |
-| 0.6 | Repo skeleton exactly as in Solution Plan §15: `brief/ spec/ src/{sim,engine,agents,api,ui}/ testing/ demo/`, Python package `carepath`, `uv run` entry points | R4 | Skeleton PR | `uv run pytest` passes on an empty test |
-| 0.7 | API skeleton: FastAPI app, `GET /health`, WebSocket `/stream` that emits a fake tick every 2 s; serves the static UI shell | R4 | `src/api/main.py` | Browser shows a ticking counter |
-| 0.8 | Frontend decision: lightweight frontend reusing the prototype's HTML and CSS (no build step) versus Angular; choose on team experience. Streamlit is not recommended because it cannot reproduce the prototype layout | R4 | Decision D13 | Recorded with reason |
+| 0.4 | Model selection: run `llm_eval.py` (5 Italian, 5 tool-calling prompts, one investigation) on the candidates with no other load; R5 reads the Italian outputs for factual faithfulness. **Done on the reference laptop (§3.1); D11 recommended.** Remaining: R5 review of the Italian outputs, and one rerun on a second laptop | R3, R5 | Table of tok/s, tool-call accuracy and faithfulness per model; decision D11 | One small model (live text, Daily Worklist) and one larger model (cache generation for Investigator, Pathway Builder, Rule Advisor) chosen |
+| 0.5 | Demo machine decision: identify the fastest machine available (GPU if anyone has one); it becomes the cache-generation and demo machine; name a backup laptop. **Decided (D12):** every team laptop is the reference laptop, none has a GPU | R5, R3 | Decision D12 | Two named machines |
+| 0.6 | Repo skeleton exactly as in Solution Plan §15: `brief/ spec/ src/{sim,engine,agents,api,ui}/ testing/ demo/`; `sim`, `engine`, `agents` and `api` are separate Python packages installed by `uv sync`; `carepath-api` entry point | R4 | Skeleton PR | `uv run pytest` passes |
+| 0.7 | API skeleton: FastAPI app, `GET /api/health`, WebSocket `/api/stream` that emits a fake tick every 2 s; serves the built console | R4 | `src/api/main.py` | Browser shows a ticking counter |
+| 0.8 | Frontend decision. Streamlit is not recommended because it cannot reproduce the prototype layout. **Decided (D13):** React 19 + TypeScript on Vite 8, Node 24 via fnm; console shell in `src/ui` | R4 | Decision D13 | Recorded with reason |
 | 0.9 | DuckDB skeleton: database file layout, empty tables from the draft contracts, state-engine stub | R2 | `src/engine/db.py` | Tables created by one command |
 | 0.10 | Simulator sketch: list of comuni in ASST Mantova, Cremona and Crema; ISTAT population by age and sex; published PNE 30-day HF readmission range; Ospedale A/B/C mapped to ASSTs | R1 | `src/sim/README.md` with sources and numbers | Reviewed by R5 |
 | 0.11 | Problem brief and SPEC draft: users, pains, success metrics; draft of every contract in §6 of this plan | R5 | `brief/problem.md`, `spec/SPEC.md` draft | Reviewed at the second sync |
@@ -256,8 +273,9 @@ The critical path is R1 and R5 in week 2.
 | Language and env | Python 3.12, uv | Free, open source |
 | Data and ML | numpy, pandas, DuckDB, scikit-learn, XGBoost | Free, open source |
 | API | FastAPI, uvicorn, WebSocket | Free, open source |
+| Console | React, TypeScript, Vite, Node 24 via fnm | Free, open source |
 | LLM runtime | Ollama | Free, open source |
-| Models | Qwen 2.5 7B and 14B, Mistral Nemo 12B (Apache 2.0) | Free; Llama and Gemma also free but carry their own licence terms |
+| Models | Qwen 3 30B-A3B Instruct and Qwen 3 4B Instruct (Apache 2.0), D11 | Free; backup Nemotron 3.5 Lightning under the NVIDIA Open Model License, which allows commercial use |
 | Agent orchestration | Plain Python with tool calling | Replaces LangGraph: fewer dependencies |
 | Prompt and call log | JSON lines in the repo | Replaces Langfuse, which needs Docker and several services |
 | Map | ISTAT boundaries as GeoJSON, drawn without a basemap | No tile server, works offline |
@@ -289,9 +307,9 @@ The only real cost is hardware. Without a GPU machine, the plan still works beca
 
 | # | Decision | Status |
 |---|---|---|
-| D11 | Small and large model choice, from Phase 0 numbers | Open (step 0.4) |
-| D12 | Demo and backup machine | Open (step 0.5) |
-| D13 | Frontend: prototype-based or Angular | Open (step 0.8) |
+| D11 | `qwen3:30b-instruct` for every cached LLM output (Investigator, Pathway Builder, Rule Advisor, Reporter, Verifier wording); `qwen3:4b-instruct` only for short live text that code fills from templates (action rationales, call-script wording). Both Apache 2.0, both fit in RAM together (about 21 GB of 32 GB). Plain `qwen3:4b` and `qwen3:30b` tags are thinking models and are not allowed. Backup: `nemotron-3.5-lightning:30b`, not kept on disk; pull it again only if both Qwen models fail. Evidence in §3.1 | Recommended 26 Oct 2026; confirm at the week-1 sync |
+| D12 | No GPU in the team: every laptop is the reference laptop (§3). One team laptop is the demo machine and generates the cache unattended (overnight runs if needed); a second identical laptop is the backup, with the same models and a hash-checked copy of the cache. Live LLM is never on the critical path | Decided 26 Oct 2026 |
+| D13 | Console in React 19 + TypeScript on Vite 8, not Angular. Reasons: the prototype's screens port almost one-to-one into components; far less boilerplate for a one-week build; AI assistants generate React most reliably; the build is static files that FastAPI serves offline. Node 24 LTS via fnm (`src/ui/.node-version`), because the laptops' Node 20 is too old for Vite 8. All API paths under `/api` so one proxy rule separates API from console. Charts, Sankey and the GeoJSON map with one library chosen in week 2 (candidate: Apache ECharts, bundled locally) | Decided 26 Oct 2026 |
 | D14 | Cache-first LLM: every demo LLM output is pre-generated; live is optional | Proposed |
 | D15 | Plain Python agents instead of LangGraph; JSON log instead of Langfuse | Proposed |
 | D16 | Offline map from ISTAT GeoJSON, no basemap; distances precomputed | Proposed |
@@ -322,8 +340,6 @@ The only real cost is hardware. Without a GPU machine, the plan still works beca
 
 ## 13. Open questions
 
-1. Does anyone on the team have a machine with an NVIDIA GPU for cache generation and the demo? (Blocks D12.)
-2. Has IT confirmed that Ollama and local models are allowed on company laptops? (Blocks step 0.2.)
-3. Does anyone on the team know Angular well enough for a one-week build? (Decides D13.)
-4. When is the Italian colleague available for the PDTA and terminology reviews in weeks 2 and 4?
-5. Has the TL confirmed the positioning given that ENG's healthcare portfolio was sold? (Solution Plan §17.)
+1. Has IT confirmed that Ollama and local models are allowed on company laptops? (Blocks step 0.2.)
+2. When is the Italian colleague available for the PDTA and terminology reviews in weeks 2 and 4?
+3. Has the TL confirmed the positioning given that ENG's healthcare portfolio was sold? (Solution Plan §17.)
