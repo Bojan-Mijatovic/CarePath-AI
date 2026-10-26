@@ -1,0 +1,31 @@
+/* Design tokens from the UI prototype (docs/CarePath-AI-UI-demo-srpski.html).
+   System fonts until IBM Plex is bundled locally (delivery plan, step 4.4): no CDN. */
+:root {
+  --ink: #14212b;
+  --ink-muted: #5b6b78;
+  --ink-soft: #3d4c57;
+  --surface: #ffffff;
+  --canvas: #f4f6f8;
+  --line: #dde3e8;
+  --nav-bg: #10262f;
+  --nav-ink: #e8eef1;
+  --nav-muted: #a9bcc6;
+  --nav-active: #1e3c48;
+  --brand: #7fd1c7;
+  --primary: #2457c5;
+  --primary-soft: #eaf0fb;
+  --warning: #b45309;
+  --ok: #1f7a4d;
+
+  --sans: system-ui, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 14px/1.45 var(--sans);
+  color: var(--ink);
+  background: var(--canvas);
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+}

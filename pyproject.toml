@@ -15,8 +15,22 @@ dependencies = [
     "ollama",
 ]
 
+[project.scripts]
+carepath-api = "api.main:run"
+
 [dependency-groups]
 dev = [
     "pytest",
     "jupyterlab",
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sim", "src/engine", "src/agents", "src/api"]
+
+[tool.pytest.ini_options]
+testpaths = ["testing"]
+markers = ["acceptance: acceptance criteria AC1–AC19"]

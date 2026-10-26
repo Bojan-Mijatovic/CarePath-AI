@@ -1,0 +1,121 @@
+/* Layout of every screen in the prototype: menu left, day bar on top, agent feed right. */
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.nav {
+  flex: 0 0 216px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 14px;
+  background: var(--nav-bg);
+  color: var(--nav-ink);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 8px 20px;
+}
+
+.brand strong {
+  font-size: 16px;
+}
+
+.brand span,
+.nav-footer {
+  font-size: 12px;
+  color: var(--nav-muted);
+}
+
+.nav-item {
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--nav-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nav-item.active {
+  background: var(--nav-active);
+  font-weight: 600;
+}
+
+.nav-footer {
+  margin-top: auto;
+  padding: 12px;
+}
+
+.main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.day {
+  font-family: var(--mono);
+}
+
+.pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff4e0;
+  color: #8a4b08;
+  font-size: 12px;
+}
+
+.connection {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.connection.open {
+  color: var(--ok);
+}
+
+.content {
+  padding: 24px;
+}
+
+.feed {
+  flex: 0 0 300px;
+  padding: 20px;
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+}
+
+.feed h2 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.placeholder {
+  margin: 0;
+  color: var(--ink-muted);
+}
