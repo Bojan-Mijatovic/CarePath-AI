@@ -1,0 +1,22 @@
+[project]
+name = "carepath-ai"
+version = "0.1.0"
+description = "CarePath AI PoC: simulator, engine, agents and console for ATS della Val Padana"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "numpy",
+    "pandas",
+    "duckdb",
+    "scikit-learn",
+    "xgboost",
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "ollama",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "jupyterlab",
+]
