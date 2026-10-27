@@ -5,7 +5,7 @@ Tri testa po modelu, temperatura 0, seed 42, thinking iskljucen gde postoji:
   2. tools       5 pitanja, jedan poziv alata; provera imena, sema i argumenata
   3. investigate istraga u vise koraka sa laznim rezultatima alata (kao Investigator, AC5)
 
-Pokretanje: .venv\\Scripts\\python.exe testing\\llm_eval.py qwen3:4b qwen3:30b
+Pokretanje: uv run python testing\\llm_eval.py qwen3:30b-instruct qwen3:4b-instruct
 Rezultati: testing/results/<model>.json
 """
 

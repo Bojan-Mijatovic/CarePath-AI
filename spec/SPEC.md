@@ -306,10 +306,12 @@ complete(agent: str, prompt_version: str, messages: list, *, tools=None, schema=
 | Sampling | temperature 0, fixed seed |
 | Output | JSON schema enforced through Ollama structured output whenever `schema` is given; validated after the call |
 | Retry | 1 retry on invalid output |
-| Timeout | 20 s, then fall back to the cache |
+| Timeout | 20 s, then fall back to the cache; 600 s in warm-up runs that fill the cache |
+| Models | `qwen3:30b-instruct` for cached outputs, `qwen3:4b-instruct` for short live text (delivery plan, D11); `keep_alive` keeps the model in use loaded |
+| Cache scope | only outputs the demo script shows, listed in `demo/cache/manifest.json`; everything else uses the agent's template (delivery plan, D17) |
 | Cache key | SHA-256 of `(agent, model, prompt_version, canonical JSON of messages, tools, schema)` |
 | Cache store | `demo/cache/<agent>/<key>.json` |
-| Modes | `live` (call, then cache), `cache_first` (default in the demo), `cache_only` (operator hotkey) |
+| Modes | `live` (call, then cache; used for warm-up), `cache_first` (development and rehearsals), `cache_only` (default at demo start, D14; the operator hotkey toggles it) |
 | Log | one line per call in `logs/llm.jsonl`: `ts`, `agent`, `model`, `prompt_version`, `key`, `mode`, `cache_hit`, `latency_ms`, `valid`, `retries` |
 
 **Thinking models:** the gateway always sends `think: false`. Models that cannot turn thinking off (for example the plain `qwen3:4b` and `qwen3:30b` tags) are not allowed; use the `-instruct` tags.
@@ -384,7 +386,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 | AC2 | One simulated day for all patients under 1 s | timer | `test_ac02_tick_speed.py` | core | R2 |
 | AC3 | KPI, Sankey and map under 200 ms | timer | `test_ac03_views_speed.py` | core | R2 |
 | AC4 | What-if 6 months, with and without agents, under 10 s | timer | `test_ac04_whatif_speed.py` | core | R2 |
-| AC5 | Investigator under 30 s live, under 2 s from cache | timer | `test_ac05_investigator_speed.py` | core | R3 |
+| AC5 | Investigator under 2 s from cache (live 30 s not reachable on CPU laptops, delivery plan D18) | timer | `test_ac05_investigator_speed.py` | core | R3 |
 | AC6 | Ask correct on at least 8 of 10 benchmark questions | expected answers | `test_ac06_benchmark.py` | core | R3 |
 | AC7 | No action above its autonomy level without approval | test + audit log | `test_ac07_autonomy.py` | core | R3 |
 | AC8 | Fewer readmissions with agents than without, same seed | simulation report | `test_ac08_effect.py` | core | R1 |
