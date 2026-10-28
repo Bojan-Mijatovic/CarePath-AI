@@ -1,0 +1,334 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pathway.schema.json",
+  "$defs": {
+    "Eligibility": {
+      "additionalProperties": false,
+      "properties": {
+        "any_diagnosis": {
+          "description": "ICD-9-CM codes; a trailing * matches a prefix",
+          "items": {
+            "type": "string"
+          },
+          "title": "Any Diagnosis",
+          "type": "array"
+        },
+        "any_drug_atc": {
+          "description": "ATC codes",
+          "items": {
+            "type": "string"
+          },
+          "title": "Any Drug Atc",
+          "type": "array"
+        }
+      },
+      "title": "Eligibility",
+      "type": "object"
+    },
+    "Escalation": {
+      "additionalProperties": false,
+      "properties": {
+        "reminder_day": {
+          "minimum": 0,
+          "title": "Reminder Day",
+          "type": "integer"
+        },
+        "call_after_days": {
+          "exclusiveMinimum": 0,
+          "title": "Call After Days",
+          "type": "integer"
+        },
+        "mmg_after_days": {
+          "exclusiveMinimum": 0,
+          "title": "Mmg After Days",
+          "type": "integer"
+        },
+        "high_risk_skips_reminder": {
+          "title": "High Risk Skips Reminder",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "reminder_day",
+        "call_after_days",
+        "mmg_after_days",
+        "high_risk_skips_reminder"
+      ],
+      "title": "Escalation",
+      "type": "object"
+    },
+    "Rule": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "if": {
+          "description": "rule language of SPEC §4",
+          "title": "If",
+          "type": "string"
+        },
+        "then": {
+          "$ref": "#/$defs/Then"
+        }
+      },
+      "required": [
+        "id",
+        "if",
+        "then"
+      ],
+      "title": "Rule",
+      "type": "object"
+    },
+    "StatusThresholds": {
+      "additionalProperties": false,
+      "properties": {
+        "due_soon_days": {
+          "exclusiveMinimum": 0,
+          "title": "Due Soon Days",
+          "type": "integer"
+        },
+        "dropped_after_days": {
+          "exclusiveMinimum": 0,
+          "title": "Dropped After Days",
+          "type": "integer"
+        },
+        "dropped_if_overdue_steps": {
+          "minimum": 1,
+          "title": "Dropped If Overdue Steps",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "due_soon_days",
+        "dropped_after_days",
+        "dropped_if_overdue_steps"
+      ],
+      "title": "StatusThresholds",
+      "type": "object"
+    },
+    "Step": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "event": {
+          "enum": [
+            "DISCHARGE",
+            "ADMISSION",
+            "VISIT",
+            "IMAGING",
+            "LAB",
+            "DISPENSE",
+            "TELEMON_START",
+            "TELEMON_READING",
+            "BOOKING",
+            "CALL",
+            "REMINDER"
+          ],
+          "title": "Event",
+          "type": "string"
+        },
+        "codes": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ICD-9-CM or procedure codes",
+          "title": "Codes"
+        },
+        "specialty": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Specialty"
+        },
+        "loinc": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Loinc"
+        },
+        "due_days": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "due this many days after the `after` step",
+          "title": "Due Days"
+        },
+        "after": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After"
+        },
+        "every_days": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "repeats with this period",
+          "title": "Every Days"
+        }
+      },
+      "required": [
+        "id",
+        "event"
+      ],
+      "title": "Step",
+      "type": "object"
+    },
+    "Then": {
+      "additionalProperties": false,
+      "properties": {
+        "step": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Step"
+        },
+        "due_days": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Due Days"
+        },
+        "flag": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Flag"
+        }
+      },
+      "title": "Then",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "pathway_id": {
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Pathway Id",
+      "type": "string"
+    },
+    "name": {
+      "description": "Italian, shown in the UI",
+      "title": "Name",
+      "type": "string"
+    },
+    "eligibility": {
+      "$ref": "#/$defs/Eligibility"
+    },
+    "status_thresholds": {
+      "$ref": "#/$defs/StatusThresholds"
+    },
+    "steps": {
+      "items": {
+        "$ref": "#/$defs/Step"
+      },
+      "minItems": 1,
+      "title": "Steps",
+      "type": "array"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/Rule"
+      },
+      "title": "Rules",
+      "type": "array"
+    },
+    "escalation": {
+      "$ref": "#/$defs/Escalation"
+    },
+    "ward_by_diagnosis": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "description": "Bed Finder, optional layer",
+      "title": "Ward By Diagnosis",
+      "type": "object"
+    }
+  },
+  "required": [
+    "pathway_id",
+    "name",
+    "eligibility",
+    "status_thresholds",
+    "steps",
+    "escalation"
+  ],
+  "title": "Pathway",
+  "type": "object"
+}

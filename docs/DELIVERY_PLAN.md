@@ -130,7 +130,7 @@ The critical path is R1 and R5 in week 2.
 |---|---|---|---|---|
 | 1.1 | Data contracts: `events` (11 columns per Solution Plan §6), `patients`, `facilities`, `capacity_slots`, `beds` (optional), `scenario_truth`; types, keys, allowed codes | R5, R1 | SPEC §Data | R1 and R2 sign off |
 | 1.2 | State and view contracts: `pathway_state` (one row per patient × pathway; status `on_track` / `due_soon` / `overdue` / `dropped`), `kpi_daily`, `sankey_flows`, `map_comuni`, `worklist_today` | R5, R2 | SPEC §State | R2 and R4 sign off |
-| 1.3 | Pathway model JSON schema plus `hf_lombardia_v1.json` (eligibility, steps, due/every days, rules); codes confirmed by the Italian colleague | R5, R2 | `spec/pathways/` | Validates against the schema in a test |
+| 1.3 | Pathway model JSON schema plus `hf_lombardia_v1.json` (eligibility, steps, due/every days, rules); codes confirmed by the Italian colleague. **Done** (reviewed 28 Oct 2026): schema generated from the Pydantic model `engine.pathway`, which also enforces the rule language; codes are demo values (D28) | R5, R2 | `spec/pathways/` | Validates against the schema in a test |
 | 1.4 | Tool signatures (Solution Plan §7): all take `pathway_id`, read-only, typed return JSON; the error contract | R5, R3 | SPEC §Tools | R3 signs off |
 | 1.5 | Action contract: types (`notify_mmg`, `reschedule`, `call_task`, `enroll_proposal`, `rule_proposal`, `pathway_proposal`, `bed_proposal`, `bed_assignment`), autonomy levels 0–3, status lifecycle, evidence list | R5, R3 | SPEC §Actions | R3 signs off |
 | 1.6 | API and WebSocket contract: REST endpoints from Solution Plan §7; WS envelope `{type: tick\|alert\|action\|investigation, scenario, day, payload}` | R5, R4 | SPEC §API | R4 signs off |
@@ -328,6 +328,7 @@ The only real cost is hardware. Without a GPU machine, the plan still works beca
 | D25 | The demo venue has internet, so the demo no longer has to run offline. Offline hardening (step 4.4) and the network-off rehearsals are dropped. Unchanged: models, data and the cache stay local (D5, D14: cost, privacy and CPU speed), no patient data goes to an external API (Solution Plan §14), and zero cost | Decided 28 Oct 2026 |
 | D26 | Bojan approves the code of every step before it is committed to `main`; that approval is the code review of the Definition of done. The TL reviewed all work up to 28 Oct 2026, including D15–D18, D21–D24 and SPEC changes C1–C10 | Decided 28 Oct 2026 |
 | D27 | The mentor approved the tools and models of the plan: Ollama, `qwen3:30b-instruct`, `qwen3:4b-instruct` and every tool in §10 (step 0.2) | Decided 28 Oct 2026 |
+| D28 | Medical codes (ICD-9-CM, ATC, LOINC) in the pathway files are demo values, not clinically confirmed; the PoC does not wait for the Italian reviewer on codes. HF uses LOINC 30934-4 (BNP). The limitations state it. Replaces "codes confirmed by the Italian colleague" in step 1.3 | Decided 28 Oct 2026 |
 
 ## 12. Acceptance criteria map
 

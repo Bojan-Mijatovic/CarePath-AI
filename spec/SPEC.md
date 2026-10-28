@@ -50,7 +50,7 @@ The PoC monitors heart-failure patients of ATS della Val Padana (ASST Mantova, C
 | Simulated time | Integer `day`; day 0 = start of simulation; 365 days. No calendar dates in data; the UI shows "Giorno N" |
 | IDs | `p_00001`–`p_13000` patients; `osp_A`, `osp_B`, `osp_C`, `amb_<n>` facilities; `asst_mantova`, `asst_cremona`, `asst_crema`; `mmg_<nnn>`; `coop_<n>` MMG groups; `cs_<n>` Centro Servizi; `act_<run>_<n>` actions; `ev_<n>` events |
 | Scenarios | `1`, `2`, `3`. Same pattern types, different locations (Solution Plan §6) |
-| Codes | Diagnoses ICD-9-CM, drugs ATC, labs LOINC. Codes in examples are illustrative until confirmed by the Italian colleague (step 1.3) |
+| Codes | Diagnoses ICD-9-CM, drugs ATC, labs LOINC. The codes in `spec/pathways/` are demo values, not clinically confirmed (delivery plan D28) |
 | Units | Days, km, EUR. Rates are fractions 0–1 in data, percentages only in the UI |
 | Language | Data and code in English; every user-facing string in Italian (UI, reports, call scripts, rationales) |
 | Determinism | Every random draw comes from a generator seeded by `(run seed, component)`; same seed, same run, byte for byte (AC14) |
@@ -139,7 +139,7 @@ Stored **outside** the run databases, in `demo/truth/scenario_<n>.json`. Only ac
 
 ## 4. Pathway model
 
-One JSON file per pathway in `spec/pathways/`, validated against `spec/pathways/pathway.schema.json` (step 1.3). Example (Solution Plan §7, shortened):
+One JSON file per pathway in `spec/pathways/`, validated against `spec/pathways/pathway.schema.json` (step 1.3). The schema is generated from the Pydantic model in `src/engine/pathway.py` (`uv run python -m engine.pathway`), and a test fails if they drift apart. The model also enforces the rule language below and checks that every step a rule or an `after` names exists. The heart-failure pathway is `spec/pathways/hf_lombardia_v1.json`:
 
 ```json
 {
@@ -152,7 +152,7 @@ One JSON file per pathway in `spec/pathways/`, validated against `spec/pathways/
     {"id": "telemon", "event": "TELEMON_START", "due_days": 7, "after": "discharge"},
     {"id": "cardio_visit", "event": "VISIT", "specialty": "cardiologia", "due_days": 30, "after": "discharge"},
     {"id": "echo", "event": "IMAGING", "codes": ["88.72"], "due_days": 90, "after": "discharge"},
-    {"id": "lab_bnp", "event": "LAB", "loinc": ["BNP"], "every_days": 90}
+    {"id": "lab_bnp", "event": "LAB", "loinc": ["30934-4"], "every_days": 90}
   ],
   "rules": [
     {"id": "weight_gain", "if": "weight_gain_kg_3d >= 2", "then": {"step": "cardio_visit", "due_days": 7}},
@@ -172,6 +172,8 @@ One JSON file per pathway in `spec/pathways/`, validated against `spec/pathways/
 - Actions (`then`): `{"step": id, "due_days": n}` (pull a step earlier) or `{"flag": name}`.
 
 Anything outside this grammar fails validation. That is how a generated pathway or rule is checked before activation.
+
+**Codes are demo values** (delivery plan D28): ICD-9-CM 428.* for heart failure, procedure 88.72 for echocardiography, ATC C03CA01 for furosemide, LOINC 30934-4 for BNP. They are not clinically confirmed, and the limitations say so. A real deployment would check them, for example BNP against NT-proBNP (LOINC 33762-6), which Italian labs often report.
 
 ## 5. State and views
 
@@ -433,7 +435,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 
 | # | Question | Who answers | Needed by |
 |---|---|---|---|
-| Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D | Italian colleague via R5 | week 2, day 1 |
+| Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D. **Closed** (D28): demo values, no clinical confirmation for the PoC | Italian colleague via R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source | R5 | week 2 |
 | Q3 | Changes C1–C10: accepted as proposed? **Accepted** (TL review, 28 Oct 2026) | all, at the sync | week 1 |
 | Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |

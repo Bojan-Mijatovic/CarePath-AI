@@ -1,0 +1,19 @@
+{
+  "pathway_id": "hf_lombardia_v1",
+  "name": "PDTA scompenso cardiaco",
+  "eligibility": {"any_diagnosis": ["428.*"], "any_drug_atc": ["C03CA01"]},
+  "status_thresholds": {"due_soon_days": 7, "dropped_after_days": 30, "dropped_if_overdue_steps": 2},
+  "steps": [
+    {"id": "discharge", "event": "DISCHARGE", "codes": ["428.*"]},
+    {"id": "telemon", "event": "TELEMON_START", "due_days": 7, "after": "discharge"},
+    {"id": "cardio_visit", "event": "VISIT", "specialty": "cardiologia", "due_days": 30, "after": "discharge"},
+    {"id": "echo", "event": "IMAGING", "codes": ["88.72"], "due_days": 90, "after": "discharge"},
+    {"id": "lab_bnp", "event": "LAB", "loinc": ["30934-4"], "every_days": 90}
+  ],
+  "rules": [
+    {"id": "weight_gain", "if": "weight_gain_kg_3d >= 2", "then": {"step": "cardio_visit", "due_days": 7}},
+    {"id": "no_furosemide", "if": "no_dispense('C03CA01', 30)", "then": {"flag": "adherence_risk"}}
+  ],
+  "escalation": {"reminder_day": 0, "call_after_days": 3, "mmg_after_days": 7, "high_risk_skips_reminder": true},
+  "ward_by_diagnosis": {"428.*": ["cardiologia", "medicina_interna"]}
+}
