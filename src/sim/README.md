@@ -77,9 +77,10 @@ Not found: PNE values for the hospitals of ATS Val Padana. The PNE portal (pne.a
 | 3 | ATS Val Padana, Elenco Comuni ASST Cremona (27 Mar 2022) | https://ats-valpadana.it/system/files/news/files/711/1166/Elenco%20Comuni%20ASST%20Cremona.pdf | public document; we use the names only |
 | 4 | Agenas PNE, rationale of the HF indicators | https://pne.agenas.it/assets/documentation/razionali/Razionale_ind_59.pdf | public document |
 | 5 | AOU Policlinico Rodolico–San Marco, PNE 2025 summary (2024 data), table with the Italy column | https://www.policlinicorodolicosanmarco.it/professionista/qualita-e-rischio-clinico/report/allegati/Riepilogo%20Treemap%20ed%20indicatori%20PNE%202025.pdf | public document |
+| 6 | ISTAT generalised boundaries of comuni, 1 Jan 2026 (UTM 32N, despite the `_WGS84` file name) | https://www.istat.it/storage/cartografia/confini_amministrativi/generalizzati/2026/Limiti01012026_g.zip | CC BY 4.0 |
 
 ## 6. Open points for week 2
 
 - Step 1.10, done: `uv run carepath-reference-data` downloads sources 1–2 plus ISTAT's province totals, writes `data/comuni.csv`, `data/population_by_age.csv` and `data/sources.csv`, and fails unless the comuni add up to ISTAT's province totals per age and sex. The ATS list (source 3) is transcribed in `data/asst_cremona_comuni.csv`.
-- Step 1.11: comune coordinates come from the ISTAT boundaries (centroids), which are also needed for the map.
+- Step 1.11, done: the same command reads source 6, writes `lat`/`lon` (area centroid) into `data/comuni.csv` and the map file `src/ui/assets/comuni.geojson` (0.28 MB, no simplification needed, so neighbouring comuni share exact borders). `src/ui/map-test.html` draws it (`npm run dev`, then `/map-test.html`).
 - The ATS list is from 2022. The script fails if any of its names is missing from the current ISTAT list, so a later merger of comuni shows up at once.

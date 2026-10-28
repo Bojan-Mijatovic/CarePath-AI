@@ -84,5 +84,6 @@ Everything serves the demo running 10 out of 10 times (AC9). In practice:
 
 - A terminal opened before an install does not see the new PATH. Refresh it with `$env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Environment]::GetEnvironmentVariable('Path','Machine')`.
 - Ollama runs from the tray on `127.0.0.1:11434`. Do not start `ollama serve` a second time.
+- From a non-interactive shell, `fnm exec` finds npm only as `npm.cmd` (`fnm exec --using=24 npm.cmd run dev`).
 - PowerShell is 5.1: no `&&`, no `?:`. Write files with an explicit `-Encoding utf8`.
 - No GPU (D12). The demo machine and the backup laptop have identical models and a hash-checked copy of the cache.

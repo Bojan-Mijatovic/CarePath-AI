@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mappa comuni: test</title>
+    <!-- Delivery plan step 1.11: proves assets/comuni.geojson renders. Dev only (npm run dev, /map-test.html);
+         the real map comes with step 2.16 and the chart library chosen in week 2 (D13). -->
+    <style>
+      body { margin: 16px; font: 14px system-ui, sans-serif; background: #fff; color: #14212b; }
+      svg { width: 100%; max-width: 900px; height: auto; border: 1px solid #e6ebef; }
+      path { stroke: #fff; stroke-width: 0.6; }
+      .legend span { display: inline-block; width: 12px; height: 12px; margin: 0 4px 0 12px; vertical-align: -1px; }
+    </style>
+  </head>
+  <body>
+    <h1 style="font-size: 18px">ATS Val Padana: <span id="count"></span> comuni</h1>
+    <p class="legend" id="legend"></p>
+    <svg id="map" viewBox="0 0 900 600" role="img" aria-label="Mappa dei comuni per ASST"></svg>
+    <script type="module">
+      const COLORS = { asst_mantova: "#2457c5", asst_cremona: "#e07a1f", asst_crema: "#2f9e6e" };
+      const NAMES = { asst_mantova: "ASST Mantova", asst_cremona: "ASST Cremona", asst_crema: "ASST Crema" };
+      const geo = await (await fetch("./assets/comuni.geojson")).json();
+
+      const rings = geo.features.flatMap((f) => f.geometry.coordinates.flat());
+      const lons = rings.flat().map((p) => p[0]);
+      const lats = rings.flat().map((p) => p[1]);
+      const [minLon, maxLon, minLat, maxLat] = [Math.min(...lons), Math.max(...lons), Math.min(...lats), Math.max(...lats)];
+      const k = Math.cos((((minLat + maxLat) / 2) * Math.PI) / 180);
+      const scale = 880 / ((maxLon - minLon) * k);
+      const xy = ([lon, lat]) => `${10 + (lon - minLon) * k * scale},${10 + (maxLat - lat) * scale}`;
+
+      const svg = document.getElementById("map");
+      svg.setAttribute("viewBox", `0 0 900 ${Math.ceil((maxLat - minLat) * scale) + 20}`);
+      for (const f of geo.features) {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", f.geometry.coordinates.flat().map((r) => "M" + r.map(xy).join("L") + "Z").join(""));
+        path.setAttribute("fill", COLORS[f.properties.asst_id]);
+        path.setAttribute("fill-rule", "evenodd");
+        path.innerHTML = `<title>${f.properties.name}</title>`;
+        svg.append(path);
+      }
+      document.getElementById("count").textContent = geo.features.length;
+      document.getElementById("legend").innerHTML = Object.keys(COLORS)
+        .map((a) => `<span style="background:${COLORS[a]}"></span>${NAMES[a]}`).join("");
+    </script>
+  </body>
+</html>

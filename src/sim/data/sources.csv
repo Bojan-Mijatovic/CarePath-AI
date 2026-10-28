@@ -2,4 +2,5 @@ source,url,licence,sha256
 comuni,https://www.istat.it/storage/codici-unita-amministrative/Elenco-comuni-italiani.csv,"CC BY 4.0, https://www.istat.it/note-legali/",57eaf945182fc64fa05f80f1a5fb2a84cff55ebde2af6e3947a731776e7809e0
 posas_comuni,https://demo.istat.it/data/posas/POSAS_2025_it_Comuni.zip,"CC BY 4.0, https://www.istat.it/note-legali/",5f549156a3057ca7d4be6dc49cf0e861807ec66e15fda1f9a41fc5aa7271b700
 posas_province,https://demo.istat.it/data/posas/POSAS_2025_it_Province.zip,"CC BY 4.0, https://www.istat.it/note-legali/",ac94aa519962a53f194ffeaef7129bb307f6185da8d0e52a6d944e46981c4e2b
+boundaries,https://www.istat.it/storage/cartografia/confini_amministrativi/generalizzati/2026/Limiti01012026_g.zip,"CC BY 4.0, https://www.istat.it/note-legali/",b011a590656c3a3ebc297fba80726a376aa843b6f164641cf6a4a990021a81d6
 ats_asst_cremona,https://ats-valpadana.it/system/files/news/files/711/1166/Elenco%20Comuni%20ASST%20Cremona.pdf,public document; names transcribed to asst_cremona_comuni.csv,

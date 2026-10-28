@@ -1,178 +1,178 @@
-comune_istat,name,asst_id,population,population_65plus
-019001,Acquanegra Cremonese,asst_cremona,1186,314
-019002,Agnadello,asst_crema,3931,745
-019003,Annicco,asst_cremona,1994,534
-019004,Azzanello,asst_cremona,623,174
-019005,Bagnolo Cremasco,asst_crema,5038,1236
-019006,Bonemerse,asst_cremona,1444,366
-019007,Bordolano,asst_cremona,598,167
-019009,Calvatone,asst_cremona,1149,303
-019010,Camisano,asst_crema,1250,311
-019011,Campagnola Cremasca,asst_crema,659,138
-019012,Capergnanica,asst_crema,2130,494
-019013,Cappella Cantone,asst_cremona,546,136
-019014,Cappella de' Picenardi,asst_cremona,425,101
-019015,Capralba,asst_crema,2279,601
-019016,Casalbuttano ed Uniti,asst_cremona,3774,1161
-019017,Casale Cremasco-Vidolasco,asst_crema,1817,381
-019018,Casaletto Ceredano,asst_crema,1154,297
-019019,Casaletto di Sopra,asst_crema,536,110
-019020,Casaletto Vaprio,asst_crema,1757,330
-019021,Casalmaggiore,asst_cremona,15095,3551
-019022,Casalmorano,asst_cremona,1688,443
-019023,Casteldidone,asst_cremona,539,165
-019024,Castel Gabbiano,asst_crema,498,79
-019025,Castelleone,asst_crema,9345,2465
-019026,Castelverde,asst_cremona,5677,1320
-019027,Castelvisconti,asst_cremona,315,74
-019028,Cella Dati,asst_cremona,490,152
-019029,Chieve,asst_crema,2300,473
-019030,Cicognolo,asst_cremona,956,229
-019031,Cingia de' Botti,asst_cremona,1133,339
-019032,Corte de' Cortesi con Cignone,asst_cremona,1061,215
-019033,Corte de' Frati,asst_cremona,1309,361
-019034,Credera Rubbiano,asst_crema,1514,467
-019035,Crema,asst_crema,34012,9362
-019036,Cremona,asst_cremona,70922,19152
-019037,Cremosano,asst_crema,1728,355
-019038,Crotta d'Adda,asst_cremona,610,141
-019039,Cumignano sul Naviglio,asst_crema,399,106
-019040,Derovere,asst_cremona,279,86
-019041,Dovera,asst_crema,3729,895
-019043,Fiesco,asst_crema,1213,254
-019044,Formigara,asst_cremona,1000,295
-019045,Gabbioneta-Binanuova,asst_cremona,851,254
-019046,Gadesco-Pieve Delmona,asst_cremona,1882,389
-019047,Genivolta,asst_crema,1120,272
-019048,Gerre de' Caprioli,asst_cremona,1337,287
-019049,Gombito,asst_crema,619,148
-019050,Grontardo,asst_cremona,1485,391
-019051,Grumello Cremonese ed Uniti,asst_cremona,1701,457
-019052,Gussola,asst_cremona,2662,712
-019053,Isola Dovarese,asst_cremona,1066,334
-019054,Izano,asst_crema,1951,447
-019055,Madignano,asst_crema,2772,647
-019056,Malagnino,asst_cremona,1711,335
-019057,Martignana di Po,asst_cremona,2053,386
-019058,Monte Cremasco,asst_crema,2241,533
-019059,Montodine,asst_crema,2419,632
-019060,Moscazzano,asst_crema,700,207
-019061,Motta Baluffi,asst_cremona,787,223
-019062,Offanengo,asst_crema,5922,1472
-019063,Olmeneta,asst_cremona,920,220
-019064,Ostiano,asst_cremona,2777,783
-019065,Paderno Ponchielli,asst_cremona,1276,389
-019066,Palazzo Pignano,asst_crema,3808,914
-019067,Pandino,asst_crema,8894,2228
-019068,Persico Dosimo,asst_cremona,3229,728
-019069,Pescarolo ed Uniti,asst_cremona,1537,402
-019070,Pessina Cremonese,asst_cremona,567,178
-019072,Pianengo,asst_crema,2546,586
-019073,Pieranica,asst_crema,1102,258
-019074,Pieve d'Olmi,asst_cremona,1233,310
-019075,Pieve San Giacomo,asst_cremona,1589,383
-019076,Pizzighettone,asst_cremona,6209,1820
-019077,Pozzaglio ed Uniti,asst_cremona,1414,305
-019078,Quintano,asst_crema,933,186
-019079,Ricengo,asst_crema,1740,283
-019080,Ripalta Arpina,asst_crema,1075,263
-019081,Ripalta Cremasca,asst_crema,3472,843
-019082,Ripalta Guerina,asst_crema,537,117
-019083,Rivarolo del Re ed Uniti,asst_cremona,1844,485
-019084,Rivolta d'Adda,asst_crema,8294,2103
-019085,Robecco d'Oglio,asst_cremona,2248,653
-019086,Romanengo,asst_crema,3227,694
-019087,Salvirola,asst_crema,1154,237
-019088,San Bassano,asst_cremona,2051,570
-019089,San Daniele Po,asst_cremona,1271,385
-019090,San Giovanni in Croce,asst_cremona,1905,417
-019091,San Martino del Lago,asst_cremona,373,116
-019092,Scandolara Ravara,asst_cremona,1284,387
-019093,Scandolara Ripa d'Oglio,asst_cremona,513,170
-019094,Sergnano,asst_crema,3449,766
-019095,Sesto ed Uniti,asst_cremona,3257,784
-019096,Solarolo Rainerio,asst_cremona,915,249
-019097,Soncino,asst_crema,7540,2079
-019098,Soresina,asst_cremona,9200,2330
-019099,Sospiro,asst_cremona,3004,882
-019100,Spinadesco,asst_cremona,1453,357
-019101,Spineda,asst_cremona,598,178
-019102,Spino d'Adda,asst_crema,7009,1549
-019103,Stagno Lombardo,asst_cremona,1407,396
-019104,Ticengo,asst_crema,452,96
-019105,Torlino Vimercati,asst_crema,464,118
-019106,Tornata,asst_cremona,413,101
-019107,Torre de' Picenardi,asst_cremona,2184,622
-019108,Torricella del Pizzo,asst_cremona,588,164
-019109,Trescore Cremasco,asst_crema,2897,614
-019110,Trigolo,asst_crema,1640,489
-019111,Vaiano Cremasco,asst_crema,3564,943
-019112,Vailate,asst_crema,4669,1056
-019113,Vescovato,asst_cremona,3977,942
-019114,Volongo,asst_cremona,459,145
-019115,Voltido,asst_cremona,329,101
-019116,Piadena Drizzona,asst_cremona,4052,1079
-020001,Acquanegra sul Chiese,asst_mantova,2719,749
-020002,Asola,asst_mantova,9804,2482
-020003,Bagnolo San Vito,asst_mantova,5905,1444
-020007,Bozzolo,asst_mantova,4062,1131
-020008,Canneto sull'Oglio,asst_mantova,4370,1094
-020010,Casalmoro,asst_mantova,2215,456
-020011,Casaloldo,asst_mantova,2612,546
-020012,Casalromano,asst_mantova,1503,353
-020013,Castelbelforte,asst_mantova,3350,710
-020014,Castel d'Ario,asst_mantova,4634,1068
-020015,Castel Goffredo,asst_mantova,12742,2384
-020016,Castellucchio,asst_mantova,5126,1266
-020017,Castiglione delle Stiviere,asst_mantova,23864,4719
-020018,Cavriana,asst_mantova,3713,999
-020019,Ceresara,asst_mantova,2498,606
-020020,Commessaggio,asst_mantova,1038,298
-020021,Curtatone,asst_mantova,14739,3566
-020022,Dosolo,asst_mantova,3241,827
-020024,Gazoldo degli Ippoliti,asst_mantova,3017,692
-020025,Gazzuolo,asst_mantova,2047,660
-020026,Goito,asst_mantova,10102,2466
-020027,Gonzaga,asst_mantova,8645,1952
-020028,Guidizzolo,asst_mantova,6033,1378
-020029,Magnacavallo,asst_mantova,1384,424
-020030,Mantova,asst_mantova,49607,13084
-020031,Marcaria,asst_mantova,6382,1821
-020032,Mariana Mantovana,asst_mantova,817,165
-020033,Marmirolo,asst_mantova,7667,1984
-020034,Medole,asst_mantova,4222,837
-020035,Moglia,asst_mantova,5357,1438
-020036,Monzambano,asst_mantova,4814,1227
-020037,Motteggiana,asst_mantova,2401,502
-020038,Ostiglia,asst_mantova,6739,1869
-020039,Pegognaga,asst_mantova,6934,1777
-020041,Piubega,asst_mantova,1734,424
-020042,Poggio Rusco,asst_mantova,6535,1645
-020043,Pomponesco,asst_mantova,1700,417
-020044,Ponti sul Mincio,asst_mantova,2315,559
-020045,Porto Mantovano,asst_mantova,16691,4238
-020046,Quingentole,asst_mantova,1040,289
-020047,Quistello,asst_mantova,5225,1564
-020048,Redondesco,asst_mantova,1193,346
-020050,Rivarolo Mantovano,asst_mantova,2339,702
-020051,Rodigo,asst_mantova,5151,1347
-020052,Roncoferraro,asst_mantova,6854,1877
-020053,Roverbella,asst_mantova,8742,2018
-020054,Sabbioneta,asst_mantova,4080,1120
-020055,San Benedetto Po,asst_mantova,6729,1912
-020056,San Giacomo delle Segnate,asst_mantova,1487,444
-020057,San Giorgio Bigarello,asst_mantova,11891,2647
-020058,San Giovanni del Dosso,asst_mantova,1251,318
-020059,San Martino dall'Argine,asst_mantova,1585,513
-020060,Schivenoglia,asst_mantova,1101,322
-020061,Sermide e Felonica,asst_mantova,7018,2215
-020062,Serravalle a Po,asst_mantova,1470,436
-020063,Solferino,asst_mantova,2606,641
-020064,Sustinente,asst_mantova,2042,575
-020065,Suzzara,asst_mantova,21195,4933
-020066,Viadana,asst_mantova,19739,4313
-020068,Villimpenta,asst_mantova,2140,545
-020070,Volta Mantovana,asst_mantova,7207,1725
-020071,Borgo Virgilio,asst_mantova,15137,3618
-020072,Borgo Mantovano,asst_mantova,5374,1507
-020073,Borgocarbonara,asst_mantova,1870,577
+comune_istat,name,asst_id,population,population_65plus,lat,lon
+019001,Acquanegra Cremonese,asst_cremona,1186,314,45.17451,9.89107
+019002,Agnadello,asst_crema,3931,745,45.44301,9.55903
+019003,Annicco,asst_cremona,1994,534,45.2527,9.88278
+019004,Azzanello,asst_cremona,623,174,45.31268,9.91862
+019005,Bagnolo Cremasco,asst_crema,5038,1236,45.36525,9.61356
+019006,Bonemerse,asst_cremona,1444,366,45.10799,10.09056
+019007,Bordolano,asst_cremona,598,167,45.28923,9.97874
+019009,Calvatone,asst_cremona,1149,303,45.13045,10.45239
+019010,Camisano,asst_crema,1250,311,45.44507,9.74817
+019011,Campagnola Cremasca,asst_crema,659,138,45.40066,9.67236
+019012,Capergnanica,asst_crema,2130,494,45.33371,9.64346
+019013,Cappella Cantone,asst_cremona,546,136,45.24556,9.83395
+019014,Cappella de' Picenardi,asst_cremona,425,101,45.14523,10.2329
+019015,Capralba,asst_crema,2279,601,45.43578,9.64258
+019016,Casalbuttano ed Uniti,asst_cremona,3774,1161,45.24941,9.96353
+019017,Casale Cremasco-Vidolasco,asst_crema,1817,381,45.44061,9.71779
+019018,Casaletto Ceredano,asst_crema,1154,297,45.3137,9.62119
+019019,Casaletto di Sopra,asst_crema,536,110,45.41532,9.79167
+019020,Casaletto Vaprio,asst_crema,1757,330,45.40991,9.64214
+019021,Casalmaggiore,asst_cremona,15095,3551,44.98698,10.4542
+019022,Casalmorano,asst_cremona,1688,443,45.28781,9.90595
+019023,Casteldidone,asst_cremona,539,165,45.06511,10.4021
+019024,Castel Gabbiano,asst_crema,498,79,45.46964,9.71728
+019025,Castelleone,asst_crema,9345,2465,45.29148,9.7721
+019026,Castelverde,asst_cremona,5677,1320,45.19982,9.98992
+019027,Castelvisconti,asst_cremona,315,74,45.30125,9.94769
+019028,Cella Dati,asst_cremona,490,152,45.08626,10.21426
+019029,Chieve,asst_crema,2300,473,45.33811,9.61283
+019030,Cicognolo,asst_cremona,956,229,45.16357,10.2032
+019031,Cingia de' Botti,asst_cremona,1133,339,45.08003,10.26851
+019032,Corte de' Cortesi con Cignone,asst_cremona,1061,215,45.26697,10.00472
+019033,Corte de' Frati,asst_cremona,1309,361,45.22708,10.10601
+019034,Credera Rubbiano,asst_crema,1514,467,45.29848,9.65173
+019035,Crema,asst_crema,34012,9362,45.36608,9.68304
+019036,Cremona,asst_cremona,70922,19152,45.14092,10.02977
+019037,Cremosano,asst_crema,1728,355,45.3889,9.64546
+019038,Crotta d'Adda,asst_cremona,610,141,45.1554,9.86635
+019039,Cumignano sul Naviglio,asst_crema,399,106,45.34934,9.83982
+019040,Derovere,asst_cremona,279,86,45.11176,10.24496
+019041,Dovera,asst_crema,3729,895,45.36592,9.53794
+019043,Fiesco,asst_crema,1213,254,45.33435,9.77702
+019044,Formigara,asst_cremona,1000,295,45.23201,9.75703
+019045,Gabbioneta-Binanuova,asst_cremona,851,254,45.21851,10.20365
+019046,Gadesco-Pieve Delmona,asst_cremona,1882,389,45.1639,10.12051
+019047,Genivolta,asst_crema,1120,272,45.33894,9.87562
+019048,Gerre de' Caprioli,asst_cremona,1337,287,45.08888,10.03763
+019049,Gombito,asst_crema,619,148,45.25394,9.73606
+019050,Grontardo,asst_cremona,1485,391,45.20228,10.14268
+019051,Grumello Cremonese ed Uniti,asst_cremona,1701,457,45.20268,9.86294
+019052,Gussola,asst_cremona,2662,712,45.00855,10.34332
+019053,Isola Dovarese,asst_cremona,1066,334,45.17011,10.31121
+019054,Izano,asst_crema,1951,447,45.35434,9.75224
+019055,Madignano,asst_crema,2772,647,45.33693,9.72313
+019056,Malagnino,asst_cremona,1711,335,45.13023,10.1168
+019057,Martignana di Po,asst_cremona,2053,386,45.00559,10.37494
+019058,Monte Cremasco,asst_crema,2241,533,45.37564,9.56994
+019059,Montodine,asst_crema,2419,632,45.27813,9.7001
+019060,Moscazzano,asst_crema,700,207,45.29187,9.6789
+019061,Motta Baluffi,asst_cremona,787,223,45.04921,10.23971
+019062,Offanengo,asst_crema,5922,1472,45.38592,9.74976
+019063,Olmeneta,asst_cremona,920,220,45.23956,10.02826
+019064,Ostiano,asst_cremona,2777,783,45.22512,10.25906
+019065,Paderno Ponchielli,asst_cremona,1276,389,45.2302,9.9267
+019066,Palazzo Pignano,asst_crema,3808,914,45.39986,9.58233
+019067,Pandino,asst_crema,8894,2228,45.41044,9.53881
+019068,Persico Dosimo,asst_cremona,3229,728,45.18324,10.08395
+019069,Pescarolo ed Uniti,asst_cremona,1537,402,45.19346,10.19856
+019070,Pessina Cremonese,asst_cremona,567,178,45.18215,10.26132
+019072,Pianengo,asst_crema,2546,586,45.40368,9.69708
+019073,Pieranica,asst_crema,1102,258,45.42905,9.6091
+019074,Pieve d'Olmi,asst_cremona,1233,310,45.07922,10.13368
+019075,Pieve San Giacomo,asst_cremona,1589,383,45.12677,10.19234
+019076,Pizzighettone,asst_cremona,6209,1820,45.1916,9.80503
+019077,Pozzaglio ed Uniti,asst_cremona,1414,305,45.21267,10.04704
+019078,Quintano,asst_crema,933,186,45.42117,9.62108
+019079,Ricengo,asst_crema,1740,283,45.40995,9.73716
+019080,Ripalta Arpina,asst_crema,1075,263,45.29004,9.72358
+019081,Ripalta Cremasca,asst_crema,3472,843,45.32797,9.68188
+019082,Ripalta Guerina,asst_crema,537,117,45.30656,9.70607
+019083,Rivarolo del Re ed Uniti,asst_cremona,1844,485,45.03617,10.47012
+019084,Rivolta d'Adda,asst_crema,8294,2103,45.45996,9.5133
+019085,Robecco d'Oglio,asst_cremona,2248,653,45.25801,10.05924
+019086,Romanengo,asst_crema,3227,694,45.38357,9.78765
+019087,Salvirola,asst_crema,1154,237,45.35702,9.79042
+019088,San Bassano,asst_cremona,2051,570,45.23881,9.80107
+019089,San Daniele Po,asst_cremona,1271,385,45.05517,10.17975
+019090,San Giovanni in Croce,asst_cremona,1905,417,45.07657,10.37839
+019091,San Martino del Lago,asst_cremona,373,116,45.07894,10.31497
+019092,Scandolara Ravara,asst_cremona,1284,387,45.04818,10.31158
+019093,Scandolara Ripa d'Oglio,asst_cremona,513,170,45.22657,10.15232
+019094,Sergnano,asst_crema,3449,766,45.43149,9.68949
+019095,Sesto ed Uniti,asst_cremona,3257,784,45.18287,9.92578
+019096,Solarolo Rainerio,asst_cremona,915,249,45.07305,10.35085
+019097,Soncino,asst_crema,7540,2079,45.40679,9.85242
+019098,Soresina,asst_cremona,9200,2330,45.29066,9.85122
+019099,Sospiro,asst_cremona,3004,882,45.10772,10.16072
+019100,Spinadesco,asst_cremona,1453,357,45.1324,9.93293
+019101,Spineda,asst_cremona,598,178,45.06045,10.51606
+019102,Spino d'Adda,asst_crema,7009,1549,45.39396,9.48681
+019103,Stagno Lombardo,asst_cremona,1407,396,45.06182,10.08959
+019104,Ticengo,asst_crema,452,96,45.38137,9.82164
+019105,Torlino Vimercati,asst_crema,464,118,45.42756,9.59398
+019106,Tornata,asst_cremona,413,101,45.10415,10.43659
+019107,Torre de' Picenardi,asst_cremona,2184,622,45.1305,10.29058
+019108,Torricella del Pizzo,asst_cremona,588,164,45.01913,10.28414
+019109,Trescore Cremasco,asst_crema,2897,614,45.39877,9.61605
+019110,Trigolo,asst_crema,1640,489,45.32684,9.81825
+019111,Vaiano Cremasco,asst_crema,3564,943,45.3741,9.59228
+019112,Vailate,asst_crema,4669,1056,45.45669,9.59685
+019113,Vescovato,asst_cremona,3977,942,45.16305,10.16714
+019114,Volongo,asst_cremona,459,145,45.20613,10.30022
+019115,Voltido,asst_cremona,329,101,45.10871,10.33515
+019116,Piadena Drizzona,asst_cremona,4052,1079,45.13141,10.36986
+020001,Acquanegra sul Chiese,asst_mantova,2719,749,45.1568,10.45444
+020002,Asola,asst_mantova,9804,2482,45.21937,10.43001
+020003,Bagnolo San Vito,asst_mantova,5905,1444,45.07946,10.88194
+020007,Bozzolo,asst_mantova,4062,1131,45.10666,10.48682
+020008,Canneto sull'Oglio,asst_mantova,4370,1094,45.16647,10.38136
+020010,Casalmoro,asst_mantova,2215,456,45.2699,10.41261
+020011,Casaloldo,asst_mantova,2612,546,45.25499,10.48608
+020012,Casalromano,asst_mantova,1503,353,45.19766,10.3471
+020013,Castelbelforte,asst_mantova,3350,710,45.21774,10.89454
+020014,Castel d'Ario,asst_mantova,4634,1068,45.1763,10.97118
+020015,Castel Goffredo,asst_mantova,12742,2384,45.29613,10.47836
+020016,Castellucchio,asst_mantova,5126,1266,45.14824,10.63343
+020017,Castiglione delle Stiviere,asst_mantova,23864,4719,45.37885,10.49472
+020018,Cavriana,asst_mantova,3713,999,45.34658,10.60522
+020019,Ceresara,asst_mantova,2498,606,45.25408,10.55976
+020020,Commessaggio,asst_mantova,1038,298,45.03669,10.56611
+020021,Curtatone,asst_mantova,14739,3566,45.10694,10.71502
+020022,Dosolo,asst_mantova,3241,827,44.96386,10.64061
+020024,Gazoldo degli Ippoliti,asst_mantova,3017,692,45.1939,10.56535
+020025,Gazzuolo,asst_mantova,2047,660,45.07042,10.56638
+020026,Goito,asst_mantova,10102,2466,45.25036,10.66094
+020027,Gonzaga,asst_mantova,8645,1952,44.95434,10.83149
+020028,Guidizzolo,asst_mantova,6033,1378,45.30878,10.57089
+020029,Magnacavallo,asst_mantova,1384,424,45.00263,11.1813
+020030,Mantova,asst_mantova,49607,13084,45.14921,10.80695
+020031,Marcaria,asst_mantova,6382,1821,45.10438,10.59709
+020032,Mariana Mantovana,asst_mantova,817,165,45.18609,10.48981
+020033,Marmirolo,asst_mantova,7667,1984,45.24097,10.74578
+020034,Medole,asst_mantova,4222,837,45.32919,10.5219
+020035,Moglia,asst_mantova,5357,1438,44.95091,10.92617
+020036,Monzambano,asst_mantova,4814,1227,45.37991,10.66787
+020037,Motteggiana,asst_mantova,2401,502,45.0345,10.76389
+020038,Ostiglia,asst_mantova,6739,1869,45.08579,11.15079
+020039,Pegognaga,asst_mantova,6934,1777,44.99795,10.86233
+020041,Piubega,asst_mantova,1734,424,45.21964,10.52609
+020042,Poggio Rusco,asst_mantova,6535,1645,44.9635,11.15812
+020043,Pomponesco,asst_mantova,1700,417,44.93951,10.59531
+020044,Ponti sul Mincio,asst_mantova,2315,559,45.411,10.68964
+020045,Porto Mantovano,asst_mantova,16691,4238,45.19235,10.75575
+020046,Quingentole,asst_mantova,1040,289,45.03362,11.0474
+020047,Quistello,asst_mantova,5225,1564,45.00057,10.99439
+020048,Redondesco,asst_mantova,1193,346,45.17247,10.51743
+020050,Rivarolo Mantovano,asst_mantova,2339,702,45.06891,10.44803
+020051,Rodigo,asst_mantova,5151,1347,45.19512,10.64192
+020052,Roncoferraro,asst_mantova,6854,1877,45.1229,10.94857
+020053,Roverbella,asst_mantova,8742,2018,45.26132,10.80756
+020054,Sabbioneta,asst_mantova,4080,1120,45.00705,10.5155
+020055,San Benedetto Po,asst_mantova,6729,1912,45.03439,10.93001
+020056,San Giacomo delle Segnate,asst_mantova,1487,444,44.96798,11.01702
+020057,San Giorgio Bigarello,asst_mantova,11891,2647,45.18345,10.88372
+020058,San Giovanni del Dosso,asst_mantova,1251,318,44.97123,11.0654
+020059,San Martino dall'Argine,asst_mantova,1585,513,45.09495,10.52929
+020060,Schivenoglia,asst_mantova,1101,322,45.00142,11.06869
+020061,Sermide e Felonica,asst_mantova,7018,2215,44.97836,11.29512
+020062,Serravalle a Po,asst_mantova,1470,436,45.07508,11.08008
+020063,Solferino,asst_mantova,2606,641,45.36855,10.55635
+020064,Sustinente,asst_mantova,2042,575,45.08027,11.02539
+020065,Suzzara,asst_mantova,21195,4933,45.00415,10.74361
+020066,Viadana,asst_mantova,19739,4313,44.97659,10.58222
+020068,Villimpenta,asst_mantova,2140,545,45.1377,11.01544
+020070,Volta Mantovana,asst_mantova,7207,1725,45.31415,10.6653
+020071,Borgo Virgilio,asst_mantova,15137,3618,45.08186,10.78661
+020072,Borgo Mantovano,asst_mantova,5374,1507,45.02681,11.11524
+020073,Borgocarbonara,asst_mantova,1870,577,45.03263,11.21806

@@ -1,0 +1,3 @@
+# Generated data must be byte-identical on every checkout (determinism, SPEC §2).
+*.csv text eol=lf
+*.geojson text eol=lf
