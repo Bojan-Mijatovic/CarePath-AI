@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **DRAFT v0.2**, for review at the week-1 sync. Freezes as tag `spec-v1` at the end of week 2, day 2 (delivery plan, step 1.9) |
+| Status | **DRAFT v0.3**: changes C1–C11 accepted (§12, Q3); freezes as tag `spec-v1` at step 1.9 (delivery plan) |
 | Last updated | 28 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -37,8 +37,9 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C7 | Every DOUBLE that a tool, view or API returns is rounded (§2), and a test checks that tools return identical bytes | DuckDB's parallel aggregation is not bit-stable (measured 27 Oct 2026, §2). The cache key hashes tool results (§8), so one changed last bit is a cache miss, and in `cache_only` a missing investigation has no fallback |
 | C8 | `adherence_by_group` gets a `measure` argument; segments and metrics for `compare_segments` and `risk_drivers` are defined (§6) | Pattern 3 (telemonitoring dropout in rural comuni) had no tool that returns telemonitoring by comune or segment; segment and metric were undefined in the Solution Plan |
 | C9 | Only the 2 runs of the scenario on screen advance after the envelope; jump forward continues from the current day; performance budgets beyond AC2 (§9) | Demo pacing and budgets, delivery plan D21 and D22 |
-| C11 | Days before 0 are history: the simulator warms up for 120 days (−120..−1) and keeps those events (§2) | Rules and tools look back 30–180 days; without history, `no_dispense('C03CA01', 30)` would fire for every patient on day 30 |
 | C10 | Cache completeness check (§8) | Any change to the simulator, engine, tools or prompts after the warm-up can change cache keys; the check finds misses before a rehearsal does |
+| C11 | Days before 0 are history: the simulator warms up for 120 days (−120..−1) and keeps those events (§2) | Rules and tools look back 30–180 days; without history, `no_dispense('C03CA01', 30)` would fire for every patient on day 30 |
+| C12 (proposed, D29) | In the process that runs the simulation, tools get a cursor of the run's single connection instead of their own connection (§6) | DuckDB refuses a second connection to a file already open with another configuration, so `connect_for_tools` cannot open while the tick writes (tested 28 Oct 2026) |
 
 ## 1. Scope
 
@@ -229,6 +230,8 @@ All views are DuckDB views or tables refreshed once per tick and must answer in 
 All tools are **read-only**, take typed arguments and return JSON. The Investigator uses only these tools and never writes SQL (Solution Plan §8 guardrails). Tool descriptions shown to the model are in Italian; names and arguments are in English.
 
 Every tool gets its database from `engine.db.connect_for_tools(run_id)` and from nothing else: the run database read-only, with DuckDB's access to files disabled and the configuration locked. A tool therefore cannot read `demo/truth/` or the scenario files, attach another database, or write. Agent code does not import the simulator (step 1.18, tested).
+
+**Proposed (C12, delivery plan D29), to settle before steps 1.24 and 2.1:** while the tick holds a run open for writing, DuckDB refuses any second connection to that file in the same process, `connect_for_tools` included. The proposal: the tick opens each run once, with file access disabled and the configuration locked, and tools get a cursor of that connection through `engine.db`. Truth and scenario files stay unreachable (tested); write protection moves from the database to the tools' code, with a guard that runs only `SELECT`/`WITH` statements and a test. `connect_for_tools` stays for notebooks and tests, which read a finished run.
 
 Every result has the same envelope (C5):
 
@@ -440,7 +443,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 |---|---|---|---|
 | Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D. **Closed** (D28): demo values, no clinical confirmation for the PoC | Italian colleague via R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source | R5 | week 2 |
-| Q3 | Changes C1–C10: accepted as proposed? **Accepted** (TL review, 28 Oct 2026) | all, at the sync | week 1 |
+| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 is proposed (delivery plan D29) | all, at the sync | week 1 |
 | Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |
 | Q5 | Daily limit of automatic actions per facility: 50 a sensible default? | R3, R5 | week 2 |
 | Q6 | Do we need calendar dates on screen, or is "Giorno N" enough for the audience? | R5 | week 2 |

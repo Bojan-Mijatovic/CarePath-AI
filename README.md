@@ -77,6 +77,26 @@ Takes about 15 minutes plus model downloads. No admin rights needed.
 
    Open <http://127.0.0.1:8000>: the console shows "Giorno N" going up every 2 seconds and "connesso" in the top bar.
 
+## Commands
+
+Everything runs with `uv run` from the repository root.
+
+| Command | What it does | Step |
+|---|---|---|
+| `uv run pytest` | all tests (about a minute; the simulation tests run full years) | — |
+| `uv run pytest -m acceptance` | only the acceptance tests AC1–AC19 | 1.7 |
+| `uv run carepath-api` | API and built console on <http://127.0.0.1:8000> | 0.7 |
+| `uv run carepath-db s2_agents` | empty run database `runs/s2_agents.duckdb` with every SPEC table | 0.9 |
+| `uv run carepath-reference-data [--refresh]` | downloads ISTAT and ATS sources, rebuilds `src/sim/data/*.csv` and the map `src/ui/assets/comuni.geojson` | 1.10–1.13 |
+| `uv run carepath-sim s2_baseline [--days 365]` | simulates one run into `runs/` and reports the time per day; the scenario comes from the run id | 1.15–1.17 |
+| `uv run python -m sim.calibration` | refits the two readmission parameters against the PNE target | 1.16 |
+| `uv run python -m sim.truth` | rewrites `demo/truth/scenario_<n>.json` from the scenario files | 1.18 |
+| `uv run python -m engine.pathway` | regenerates `spec/pathways/pathway.schema.json` from the model | 1.3 |
+| `uv run jupyter lab --notebook-dir testing/notebooks` | population, calibration and pattern-proof notebooks | 1.14, 1.16, 1.21 |
+| `uv run python docs/build_pdf.py` | exports `docs/DELIVERY_PLAN.md` to PDF with Edge | — |
+
+Data sources, licences and every assumption of the simulator: [src/sim/README.md](src/sim/README.md).
+
 ## Console development
 
 The console is React 19 + TypeScript on Vite (decision D13). For hot reload, run the API and Vite side by side:

@@ -43,7 +43,7 @@ These apply to every phase. A change that breaks one of them needs a decision-re
 |---|---|
 | Reference laptop (every team laptop, D12) | Intel i7-1355U (10 cores, 12 threads), 32 GB RAM, Intel Iris Xe, **no NVIDIA GPU** |
 | Python | 3.12 via `uv`; `.venv` from `uv sync` (`pyproject.toml`, `uv.lock`) |
-| Packages | numpy, pandas, duckdb, scikit-learn, xgboost, fastapi, uvicorn, pydantic, ollama; dev: pytest, jupyterlab |
+| Packages | numpy, pandas, duckdb, scikit-learn, xgboost, fastapi, uvicorn, pydantic, ollama; dev: pytest, jupyterlab, matplotlib (notebooks), pyshp and pyproj (reading ISTAT boundaries), jsonschema (schema test), markdown (PDF export of this plan) |
 | LLM runtime | Ollama 0.40.11, local server on `127.0.0.1:11434` |
 | Models pulled | `qwen3:30b-instruct` (18 GB), `qwen3:4b-instruct` (2.5 GB), D11. Evaluated and deleted from disk (results kept in `testing/results/`): `nemotron-3.5-lightning:30b`, `qwen3:8b`, `qwen2.5:7b`, `qwen2.5:14b`, `mistral-nemo:12b` |
 | Evaluation | `testing/llm_eval.py <model> [...]`; `--investigate-only` reruns just the investigation; results in `testing/results/` |
@@ -329,6 +329,7 @@ The only real cost is hardware. Without a GPU machine, the plan still works beca
 | D26 | Bojan approves the code of every step before it is committed to `main`; that approval is the code review of the Definition of done. The TL reviewed all work up to 28 Oct 2026, including D15–D18, D21–D24 and SPEC changes C1–C10 | Decided 28 Oct 2026 |
 | D27 | The mentor approved the tools and models of the plan: Ollama, `qwen3:30b-instruct`, `qwen3:4b-instruct` and every tool in §10 (step 0.2) | Decided 28 Oct 2026 |
 | D28 | Medical codes (ICD-9-CM, ATC, LOINC) in the pathway files are demo values, not clinically confirmed; the PoC does not wait for the Italian reviewer on codes. HF uses LOINC 30934-4 (BNP). The limitations state it. Replaces "codes confirmed by the Italian colleague" in step 1.3 | Decided 28 Oct 2026 |
+| D29 | Tools in the simulation process read through a cursor of the run's single connection (SPEC C12, §6). Reason: DuckDB refuses a second connection to a file open with another configuration, so `connect_for_tools` cannot open while the tick writes (tested 28 Oct 2026). The tick's connection has file access disabled and locked, so the truth stays unreachable (tested); a SELECT-only guard in the tools replaces the database's read-only flag. Alternatives considered: tools in a separate process (DuckDB allows no reader while a writer holds the file); a snapshot copy of each run per tick (a file copy every simulated day) | Proposed |
 
 ## 12. Acceptance criteria map
 
