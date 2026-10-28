@@ -80,6 +80,6 @@ Not found: PNE values for the hospitals of ATS Val Padana. The PNE portal (pne.a
 
 ## 6. Open points for week 2
 
-- Step 1.10: write the comune → ASST table and the population by age band as `src/sim/data/comuni.csv` with a script that downloads sources 1–3 and asserts the totals above.
+- Step 1.10, done: `uv run carepath-reference-data` downloads sources 1–2 plus ISTAT's province totals, writes `data/comuni.csv`, `data/population_by_age.csv` and `data/sources.csv`, and fails unless the comuni add up to ISTAT's province totals per age and sex. The ATS list (source 3) is transcribed in `data/asst_cremona_comuni.csv`.
 - Step 1.11: comune coordinates come from the ISTAT boundaries (centroids), which are also needed for the map.
-- The ATS list is from 2022. The step 1.10 script fails if any of its names is missing from the current ISTAT list, so a later merger of comuni shows up at once.
+- The ATS list is from 2022. The script fails if any of its names is missing from the current ISTAT list, so a later merger of comuni shows up at once.
