@@ -75,7 +75,7 @@ Takes about 15 minutes plus model downloads. No admin rights needed.
    uv run carepath-api
    ```
 
-   Open <http://127.0.0.1:8000>: the console shows "Giorno N" going up every 2 seconds and "connesso" in the top bar.
+   Open <http://127.0.0.1:8000>: the console opens on Maria's story; "Avvia la simulazione", then an envelope, leads to Panoramica, where "Giorno N" goes up every 2 seconds from day 23 and "connesso" shows in the top bar.
 
 ## Commands
 
@@ -83,7 +83,9 @@ Everything runs with `uv run` from the repository root.
 
 | Command | What it does | Step |
 |---|---|---|
-| `uv run pytest` | all tests (about a minute; the simulation tests run full years) | — |
+| `uv run pytest` | all tests (about 3 minutes; the simulation tests run full years) | — |
+| `uv run python testing/fixtures/scenario.py` | rewrites the JSON fixtures of every contract (`testing/fixtures/README.md`) | 1.23 |
+| `uv run python testing/benchmark/questions.py` | rewrites the benchmark questions and their expected answers from the tools | 1.24 |
 | `uv run pytest -m acceptance` | only the acceptance tests AC1–AC19 | 1.7 |
 | `uv run carepath-api` | API and built console on <http://127.0.0.1:8000> | 0.7 |
 | `uv run carepath-db s2_agents` | empty run database `runs/s2_agents.duckdb` with every SPEC table | 0.9 |
@@ -107,6 +109,8 @@ cd src/ui; fnm exec --using=24 npm run dev   # terminal 2: console on :5173
 ```
 
 Open <http://127.0.0.1:5173>. Vite forwards `/api`, including the `/api/stream` WebSocket, to the API. Every API path is under `/api` (spec §10). `npm run lint` runs oxlint.
+
+Until the real tick (step 2.1) the API runs in fixture mode (step 1.25): `GET /api/kpi`, `/api/patients/{id}`, `/api/actions` and `POST /api/sim/scenario/{n}` answer from `testing/fixtures/`, and `/api/stream` replays days 23–62 of scenario 2, whichever envelope is chosen. Restart `carepath-api` after a change to the API or the fixtures; it does not reload. Screens so far: `#storia` (Maria's story), `#buste` (envelopes), `#panoramica` (overview with the agent feed); the switch in the top bar changes between Italian and English (D30).
 
 ## Measuring models on your machine
 

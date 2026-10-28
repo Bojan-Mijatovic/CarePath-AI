@@ -1,11 +1,32 @@
 import { useEffect, useState } from 'react'
+import type { Action, Kpi } from './api'
+import type { Bilingual } from './i18n'
 
-/** Envelope of every message on /api/stream (spec/SPEC.md §10). */
+/** Envelope of every message on /api/stream and its payloads (spec/SPEC.md §10). */
+type Envelope<T extends string, P> = { type: T; scenario: number; day: number; payload: P }
+
+export type TickPayload = { speed?: number; kpi?: Kpi }
+export type AlertPayload = {
+  level: 'patient' | 'regional'
+  text: Bilingual
+  facility_id: string | null
+  investigation_id: string | null
+}
+export type InvestigationPayload = {
+  investigation_id: string
+  step: number
+  tool: string
+  args: Record<string, unknown>
+  result_summary: Bilingual
+  verified: boolean | null
+  final: boolean
+}
+
 export type StreamMessage =
-  | { type: 'tick'; scenario: number; day: number; payload: Record<string, unknown> }
-  | { type: 'alert'; scenario: number; day: number; payload: Record<string, unknown> }
-  | { type: 'action'; scenario: number; day: number; payload: Record<string, unknown> }
-  | { type: 'investigation'; scenario: number; day: number; payload: Record<string, unknown> }
+  | Envelope<'tick', TickPayload>
+  | Envelope<'alert', AlertPayload>
+  | Envelope<'action', Action>
+  | Envelope<'investigation', InvestigationPayload>
 
 export type ConnectionState = 'connecting' | 'open' | 'closed'
 
