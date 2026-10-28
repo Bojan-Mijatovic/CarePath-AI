@@ -1,9 +1,9 @@
 """Real-time tick (SPEC §9, delivery plan step 2.1): the six demo runs, advanced one day at a time.
 
 A Run is one simulator with its run database and state engine, kept open in this process. `Run.tick()`
-does the next day in the order of SPEC §9. Steps 3 to 7 of that order arrive with their own plan steps:
-Risk (2.3), Monitoring (2.8), the worklist (2.4), Intervention through the action service (2.12, 2.13)
-and the Investigator (2.9). Until then a tick is steps 1, 2, 5 (kpi_daily, map_comuni, sankey_flows) and
+does the next day in the order of SPEC §9. Steps 4 to 7 of that order arrive with their own plan steps:
+Monitoring (2.8), the worklist (2.4), Intervention through the action service (2.12, 2.13) and the
+Investigator (2.9). Until then a tick is steps 1, 2, 3 (Risk), 5 (kpi_daily, map_comuni, sankey_flows) and
 8, and the two arms of a scenario do not differ.
 
 Demo holds the six runs (3 scenarios × 2 arms): `start()` replays them to the start day and leaves them
@@ -15,6 +15,7 @@ continues; a jump backward rebuilds those two runs from the warm-up, which gives
 import threading
 import time
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import duckdb
@@ -22,6 +23,7 @@ import duckdb
 from engine import pathway as pathway_model
 from engine import queries
 from engine.db import RUNS_DIR, create_run, open_run
+from engine.risk import HIGH_RISK, RiskModel
 from engine.state import StateEngine
 from sim import feedback
 from sim.population import generate_patients, load_reference
@@ -59,6 +61,7 @@ class Run:
         for events in self.sim.warm_up():
             append(self.con, "events", events)
         self.state = StateEngine(self.con, p.pathway)
+        self.risk = RiskModel(p.pathway)
         feedback.register(run_id, self.sim)
         self.day = -1  # the last day done
         self.last_ms = 0.0
@@ -70,8 +73,9 @@ class Run:
         d = self.day + 1
         append(self.con, "events", self.sim.step(d))  # 1
         self.state.update(self.con, d)                  # 2
+        self.risk.update(self.con, self.state, d)       # 3
         self.state.refresh_kpi(self.con, d)             # 5: views (sankey_flows is a DuckDB view)
-        self.state.refresh_map(self.con, d)
+        self.state.refresh_map(self.con, d, self.risk.risk, HIGH_RISK)
         self._write_capacity()
         self.day = d
         self.last_ms = (time.perf_counter() - t) * 1000
@@ -111,13 +115,21 @@ class Demo:
         self.scenario = scenarios[0]
         self.speed = 0
         self.ready = False
+        # Runs share nothing they write (own database, simulator, engine and model), and DuckDB, numpy and
+        # XGBoost release the GIL, so the runs of a scenario advance in parallel threads (SPEC §9 budget).
+        self.pool = ThreadPoolExecutor(max_workers=len(scenarios) * len(ARMS))
 
     def run_ids(self, scenario: int) -> list[str]:
         return [f"s{scenario}_{arm}" for arm in ARMS]
 
+    def _parallel(self, work: Callable[[str], object], run_ids: list[str]) -> None:
+        for future in [self.pool.submit(work, run_id) for run_id in run_ids]:
+            future.result()  # raises the first failure
+
     def _build(self, run_id: str, day: int) -> None:
-        if run_id in self.runs:
-            self.runs.pop(run_id).close()
+        old = self.runs.pop(run_id, None)
+        if old is not None:
+            old.close()
         run = Run(run_id, self.population, self.runs_dir, self.days)
         run.advance_to(day)
         self.runs[run_id] = run
@@ -128,9 +140,8 @@ class Demo:
             self.ready, self.speed = False, 0
             if self.population is None:
                 self.population = Population(self.seed)
-            for n in self.scenarios:
-                for run_id in self.run_ids(n):
-                    self._build(run_id, self.start_day)
+            self._parallel(lambda run_id: self._build(run_id, self.start_day),
+                           [run_id for n in self.scenarios for run_id in self.run_ids(n)])
             self.ready = True
 
     @property
@@ -154,19 +165,21 @@ class Demo:
             if self.day + 1 >= self.days:
                 self.speed = 0
                 return []
-            for run_id in self.run_ids(self.scenario):
-                self.runs[run_id].tick()
+            self._parallel(lambda run_id: self.runs[run_id].tick(), self.run_ids(self.scenario))
             return [self.tick_message()]
 
     def jump(self, day: int) -> list[dict]:
         if not 0 <= day < self.days:
             raise ValueError(f"day is between 0 and {self.days - 1}")
+
+        def go(run_id: str) -> None:
+            if day < self.runs[run_id].day:
+                self._build(run_id, day)  # replay from the warm-up (C9)
+            else:
+                self.runs[run_id].advance_to(day)
+
         with self.lock:
-            for run_id in self.run_ids(self.scenario):
-                if day < self.runs[run_id].day:
-                    self._build(run_id, day)  # replay from the warm-up (C9)
-                else:
-                    self.runs[run_id].advance_to(day)
+            self._parallel(go, self.run_ids(self.scenario))
             return [self.tick_message()]
 
     def tick_message(self) -> dict:
@@ -191,3 +204,4 @@ class Demo:
                 run.close()
             self.runs.clear()
             self.ready = False
+        self.pool.shutdown()

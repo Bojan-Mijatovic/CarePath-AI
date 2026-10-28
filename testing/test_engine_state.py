@@ -242,8 +242,11 @@ def test_one_pass_equals_day_by_day_on_a_real_run(arms):
                              "WHERE day <= $d", {"d": DAYS - 1}).df())
     fresh._sweep(DAYS - 1)
     for name in ("enrolled_day", "last_event", "own", "done", "booked_on", "booked_for", "readmissions",
-                 "index_discharges", "status"):
+                 "index_discharges", "status", "last_drug", "telemon_started", "last_reading", "last_admission",
+                 "last_discharge", "n_overdue", "days_overdue"):
         np.testing.assert_array_equal(getattr(fresh, name), getattr(engine, name), err_msg=name)
+    # The weight ring keeps stale slots day by day; what is read from it must agree.
+    np.testing.assert_array_equal(fresh.weight_gain_kg_3d(DAYS - 1), engine.weight_gain_kg_3d(DAYS - 1))
 
 
 def test_real_run_kpis_are_plausible(arms):

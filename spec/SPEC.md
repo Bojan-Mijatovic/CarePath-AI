@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **v1.5**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), all proposed 28 Oct 2026. Changes follow §0 |
+| Status | **v1.6**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), all proposed 28 Oct 2026. Changes follow §0 |
 | Last updated | 28 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C18 proposed in v1.1–v1.5)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C19 proposed in v1.1–v1.6)
 
 | # | Change | Why |
 |---|---|---|
@@ -48,6 +48,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C16 (D34) | What each tool computes (§6): booking-to-slot waits, on-time deadlines, the 10 worst groups plus `rest_of_ats`, the `telemonitoring` measure over everyone ever started, `empty_result` for risk until step 2.3 | v1.2 gave names and shapes but not the computations, so two implementations could disagree and the Verifier could not tell which is right. With a 60-day window on the denominator, patients who stopped telemonitoring left the measure and pattern 3 disappeared (measured, scenario 2); hundreds of groups would not fit a prompt |
 | C17 (D35) | `GET /patients/{id}` takes an optional `day`: with it, the API answers from a recording in `demo/story/` instead of the live run (§10). The control endpoints return `{scenario, day, speed}` | The demo opens with every run on day 23 (D21), but Maria's story (demo step 1) tells what happens without CarePath up to her readmission on day 47. Recorded once from the baseline run of scenario 2 to day 62 (`uv run python -m engine.story`); a test checks it against the fixture run. The console needs the day and speed after a control call |
 | C18 (D36) | `map_comuni` defined (§5.2): `adherence_pct` is the share of enrolled patients who are on track, collected every drug of the pathway in the last 60 days and, if ever on telemonitoring, sent a reading in the last 7 days; `alarm` is `adherence_pct` below 50%; fewer than 10 patients give NULL and no alarm; `risk_mean` and `high_risk_patients` are NULL until Risk (step 2.3). `sankey_flows` is a DuckDB view. Answers SPEC Q7 for the map | Q7 left the map's meaning open. Measured on all 3 scenarios, 154 comuni, days 35 and 62: `on_track_pct` alone spreads the hidden rural comuni of pattern 3 from rank 8 to 151 and dispensing alone stays at 69–100%; the combined measure ranges 20–91% (the prototype shows 38–76%) and puts them mostly among the 30 worst. The prototype frames exactly the comuni under 50% |
+| C19 (D37) | Risk defined (§5.1): the chance of an unplanned admission in the next 30 days; high risk is 0.10 or more; drivers only for high-risk patients. `map_comuni` gets `risk_mean` and `high_risk_patients`; `risk_drivers` returns `{drivers, patients}` over the segment's high-risk patients; both risk tools give `empty_result` only on a run where Risk never ran (§6) | The Solution Plan names XGBoost and top-3 drivers but no label, threshold or tool computation. Measured on seed 42 (not trained on): AUC 0.62 in all 3 scenarios, equal to the simulator's own hazard (0.62), so the 30-day outcome is mostly chance; a 7-day label scored 0.71 but rested on weight gain, which the pathway rule already catches, and ranked patients who left telemonitoring lower. 0.10 marks 1.2% of patients, 19% of whom are admitted within 30 days (7×). TreeSHAP for all 10,000 patients took 500 ms a tick, for the high-risk ones 12 ms |
 
 ## 1. Scope
 
@@ -231,6 +232,8 @@ One row per patient × pathway in which the patient is enrolled.
 - Enrolment is the first event that meets the eligibility (`DISCHARGE` or `ADMISSION` with a listed diagnosis, `DISPENSE` of a listed drug), with `enrolled_by = mmg`. Option B needs its own enrolment signal for pattern 5, where eligible patients are not enrolled.
 - The state engine never writes `risk_score`, `risk_drivers`, `flags` or `escalation_step`; Risk, Monitoring and the action service own them. A new row starts with 0 and empty lists.
 
+**Risk** (C19; `src/engine/risk.py`, step 2.3) writes `risk_score` and `risk_drivers` on every tick (§9 step 3), for both arms. `risk_score` is the chance of an unplanned `ADMISSION` in the next 30 days, from an XGBoost model trained once on seed 7 with the simulator without a scenario (`models/risk_<pathway_id>.json`, versioned; retraining gives the same bytes). Features come from the state engine and the pathway: age, distance, living alone, days since the last discharge, days since the last dispense of each pathway drug, telemonitoring started, days since the last reading, `weight_gain_kg_3d` (today's reading, or yesterday's, minus the one 3 days earlier, or 4), overdue steps and days overdue. A patient is **high risk** at `risk_score >= 0.10`. `risk_drivers` holds the up to 3 features with the largest positive TreeSHAP contribution for high-risk patients, and is empty for everyone else.
+
 ### 5.2 Views
 
 All views are DuckDB views or tables refreshed once per tick and must answer in under 200 ms (AC3).
@@ -244,7 +247,7 @@ All views are DuckDB views or tables refreshed once per tick and must answer in 
 
 **`sankey_flows`** (C15): `from_step` is `current_step` and `to_step` is `next_step` of `pathway_state`, NULL when the patient has none; `patients` counts the rows with that pathway, both steps and status. It is a DuckDB view (C18). A periodic step leads to itself (on day 62 of scenario 2, `lab_bnp` → `lab_bnp` for 86% of patients), so the console draws two columns, last step done and next step, where a loop is not a cycle.
 
-**`map_comuni`** (C18) is a table the tick refreshes for the current day, one row per comune with enrolled patients of the pathway, by where they live. `adherence_pct` is the share of those patients who meet all of: `status` is `on_track`; every drug in the pathway's `eligibility.any_drug_atc` dispensed in the last 60 days; if they ever started telemonitoring (warm-up included), a `TELEMON_READING` in the last 7 days. The windows are those of the `dispensing` and `telemonitoring` measures (§6). With fewer than 10 patients `adherence_pct` is NULL and `alarm` false; otherwise `alarm` is `adherence_pct < 0.5`, the prototype's low band. `readmission_rate_30d` equals the comune's `kpi_daily` row of the day. `risk_mean` and `high_risk_patients` are NULL until Risk (step 2.3) defines high risk. Regional alarms from Monitoring (step 2.8) come as `alert` messages, not as map rows.
+**`map_comuni`** (C18) is a table the tick refreshes for the current day, one row per comune with enrolled patients of the pathway, by where they live. `adherence_pct` is the share of those patients who meet all of: `status` is `on_track`; every drug in the pathway's `eligibility.any_drug_atc` dispensed in the last 60 days; if they ever started telemonitoring (warm-up included), a `TELEMON_READING` in the last 7 days. The windows are those of the `dispensing` and `telemonitoring` measures (§6). With fewer than 10 patients `adherence_pct` is NULL and `alarm` false; otherwise `alarm` is `adherence_pct < 0.5`, the prototype's low band. `readmission_rate_30d` equals the comune's `kpi_daily` row of the day. `risk_mean` is the mean `risk_score` of the comune's enrolled patients and `high_risk_patients` counts those at high risk (C19); both are NULL only where Risk did not run. Regional alarms from Monitoring (step 2.8) come as `alert` messages, not as map rows.
 
 **Readmission, PNE-style:** an unplanned `ADMISSION` within 30 days after a `DISCHARGE` with an HF main diagnosis. Rate = such readmissions ÷ HF discharges in the period. Simplified versus the official PNE protocol; the simplification is listed in the limitations.
 
@@ -281,7 +284,7 @@ Every number in `data` follows the precision rule in §2. `testing/test_tools_de
 | `free_slots` | `service`, `asst?`, `horizon_days=21` | `{facility_name: free_slots}` |
 | `adherence_by_group` | `pathway_id`, `grouping` (`mmg`, `mmg_group`, `comune`, `age_band`), `measure` (`dispensing`, `telemonitoring`; default `dispensing`, C8), `period_days=60` | `{group: fraction}`, plus `rest_of_ats` |
 | `readmissions_by_comune` | `pathway_id`, `period_days=180` | `{comune_name: rate}`, sorted descending |
-| `risk_drivers` | `pathway_id`, `segment?` | `{drivers: [{name, weight}]}` |
+| `risk_drivers` | `pathway_id`, `segment?` | `{drivers: [{name, weight}], patients}` (C19) |
 | `compare_segments` | `pathway_id`, `a`, `b` (segments), `metric` | `{a: value, b: value, difference}` |
 | `eligibility_candidates` (option B) | `pathway_id`, `mmg?` | `{count, patients: [{patient_id, reasons}]}` |
 | `free_beds` (optional) | `diagnosis`, `asst?` | `[{facility_id, ward, free_now, free_in_2d, distance_km}]` |
@@ -302,7 +305,7 @@ Every number in `data` follows the precision rule in §2. `testing/test_tools_de
 - `free_slots`: free slots from tomorrow for `horizon_days`. On a live run the tick keeps `capacity_slots` current (step 2.1); on a finished run it is exact only on the last day.
 - `adherence_by_group` and `readmissions_by_comune`: at most the 10 worst groups (lowest adherence, highest readmission rate) with at least 10 patients, or 5 index discharges for readmissions; then `rest_of_ats` over every other patient of the pathway, or `null` when all groups are shown. Age bands: `<65`, `65-74`, `75-84`, `85+`. Comuni are named.
 - `readmission_rate_30d` over a period: §5.2 with the period's last `period_days` days in place of day 0 to today (180 days for `compare_segments`). `dispensing` and `telemonitoring` use 60 days and `on_time_fraction` pools every deadline of the last 90 days.
-- `risk_drivers` and the `risk_mean` metric return `empty_result` until the risk model exists (step 2.3).
+- `risk_drivers` (C19): over the segment's high-risk patients today, `weight` is the share whose `risk_drivers` include the driver, most frequent first; `patients` is how many high-risk patients that is. No high-risk patient in the segment gives `empty_result`. The `risk_mean` metric is the mean `risk_score` of the segment's enrolled patients, summed as integers (C7). Both give `empty_result` on a run where Risk never ran (no positive score).
 - `eligibility_candidates` and `free_beds` come with option B and Bed Finder.
 
 The canonical JSON schemas for these tools live in `src/agents/tools.py` (Pydantic models, Italian descriptions, `$ref`s inlined) and are the single source for the agents. `testing/llm_eval.py` moves to them with the LLM gateway (step 2.7) and is measured again there; its stored results (step 0.4) used its own copy. Benchmark questions are answered with these tools too, not with SQL (Solution Plan §8 allows text-to-SQL for them, but §4 puts text-to-SQL out of scope; C16).
@@ -406,13 +409,13 @@ The baseline arm skips steps 6 and 7.
 | Start replay | all 6 runs to day 23 in under 3 min | runbook, T−5 min |
 | What-if (AC4) | 2 arms × 182 days under 10 s: about 27 ms per arm-day if the arms run one after the other, 55 ms if they run in parallel processes | 20–35 times stricter than AC2 |
 
-What-if runs skip LLM calls, view refreshes and WebSocket pushes; they compute KPIs once at the end. If AC4 is missed at the week-3 checkpoint, the demo lever's results are precomputed per scenario and replayed (D22).
+The runs share nothing they write, so the two runs on screen advance in parallel threads, and the start replays all six in parallel (step 2.3: with Risk, one after the other took a p95 of 509 ms, in parallel 369–419 ms). What-if runs skip LLM calls, view refreshes and WebSocket pushes; they compute KPIs once at the end. If AC4 is missed at the week-3 checkpoint, the demo lever's results are precomputed per scenario and replayed (D22).
 
 **Feedback hook:** `sim.feedback.apply(run_id, actions_executed_today) -> DataFrame of events` (§3.1 columns). The action service calls it once a day, after the simulator's step for that day, with the §7.1 rows it executed (`action_id`, `type`, `patient_id`, `executed_day` required; one day per call). The returned events record the actions themselves on day D (`call_task` → `CALL`, `reminder` → `REMINDER`, with `source = agent_action` and the `action_id`); their effects appear from day D + 1 in the simulator's own events. The process running a run registers its simulator with `sim.feedback.register(run_id, sim)`. Until step 2.13 the effects are a no-op except Maria's scripted response (step 1.19). The probabilities of each effect (for example, how much a call raises dispensing) will be configuration, listed in the limitations.
 
 ## 10. API and WebSocket
 
-REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for example `GET /api/health`, `WS /api/stream`); everything else is the built console, served by FastAPI from `src/ui/dist` (D13). `run` defaults to the scenario on screen and the `agents` arm. The API starts the six runs itself and answers 503 on data and control paths until they stand on the start day (about 25 s on the team laptops). Control paths return `{"scenario", "day", "speed"}` (C17).
+REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for example `GET /api/health`, `WS /api/stream`); everything else is the built console, served by FastAPI from `src/ui/dist` (D13). `run` defaults to the scenario on screen and the `agents` arm. The API starts the six runs itself and answers 503 on data and control paths until they stand on the start day (about 30 s on the team laptops). Control paths return `{"scenario", "day", "speed"}` (C17).
 
 | Method and path (under `/api`) | Purpose |
 |---|---|
@@ -500,7 +503,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 |---|---|---|---|
 | Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D. **Closed** (D28): demo values, no clinical confirmation for the PoC | Italian colleague via R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source | R5 | week 2 |
-| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14–C18 proposed with D32–D36 (28 Oct 2026) | all, at the sync | week 1 |
+| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14–C19 proposed with D32–D37 (28 Oct 2026) | all, at the sync | week 1 |
 | Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |
 | Q5 | Daily limit of automatic actions per facility: 50 a sensible default? | R3, R5 | week 2 |
 | Q6 | Do we need calendar dates on screen, or is "Giorno N" enough for the audience? | R5 | week 2 |

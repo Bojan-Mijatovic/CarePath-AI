@@ -26,6 +26,7 @@ from agents import tools
 from engine import pathway as pathway_model
 from engine.db import create_run, open_run, tool_cursor
 from engine.queries import kpi_headline, map_comuni, patient_360, rows, sankey
+from engine.risk import HIGH_RISK, RiskModel
 from engine.state import StateEngine
 from sim.population import generate_patients, load_reference
 from sim.run import append, load_reference_tables
@@ -140,11 +141,13 @@ def build_runs(runs_dir: Path) -> dict:
             for events in sim.warm_up():
                 append(con, "events", events)
             state = StateEngine(con, hf)
+            risk = RiskModel(hf)
             for d in range(DAYS):
                 append(con, "events", sim.step(d))
                 state.update(con, d)
+                risk.update(con, state, d)
                 state.refresh_kpi(con, d)
-                state.refresh_map(con, d)
+                state.refresh_map(con, d, risk.risk, HIGH_RISK)
                 if agents and d == CALL_DAY:  # Intervention runs after the views (SPEC §9, steps 5–6)
                     call_maria(con, sim, d)
                 if agents and d == ALARM_DAY:

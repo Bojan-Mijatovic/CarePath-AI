@@ -16,6 +16,7 @@ import pandas as pd
 
 from engine import pathway as pathway_model
 from engine.db import RUNS_DIR, create_run, open_run
+from engine.risk import HIGH_RISK, RiskModel
 from engine.state import StateEngine
 from sim.population import generate_patients, load_reference
 from sim.step import Simulator, load_scenario
@@ -48,6 +49,7 @@ def run(run_id: str, days: int = 365, seed: int = 42, overwrite: bool = False, r
     with open_run(run_id, runs_dir) as con:
         load_reference_tables(con, ref, patients, mmg)
         state = StateEngine(con, sim.pathway)
+        risk = RiskModel(sim.pathway)
         for d in range(sim.first_day, days):
             t0 = time.perf_counter()
             events = sim.step(d)
@@ -56,8 +58,9 @@ def run(run_id: str, days: int = 365, seed: int = 42, overwrite: bool = False, r
             t2 = time.perf_counter()
             if d >= 0:  # the first update reads the warm-up as history
                 state.update(con, d)
+                risk.update(con, state, d)
                 state.refresh_kpi(con, d)
-                state.refresh_map(con, d)
+                state.refresh_map(con, d, risk.risk, HIGH_RISK)
                 sim_ms.append((t1 - t0) * 1000)
                 write_ms.append((t2 - t1) * 1000)
                 state_ms.append((time.perf_counter() - t2) * 1000)

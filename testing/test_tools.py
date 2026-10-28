@@ -86,6 +86,9 @@ def test_definitions_are_the_spec_tools_with_flat_schemas():
     ("adherence_by_group", {"pathway_id": PW, "grouping": "age_band", "measure": "telemonitoring"}),
     ("readmissions_by_comune", {"pathway_id": PW}),
     ("compare_segments", {"pathway_id": PW, "a": {"lives_alone": True, "age_min": 75}, "b": {}, "metric": "on_time_fraction"}),
+    ("compare_segments", {"pathway_id": PW, "a": {"lives_alone": True}, "b": {}, "metric": "risk_mean"}),
+    ("risk_drivers", {"pathway_id": PW}),
+    ("risk_drivers", {"pathway_id": PW, "segment": {"asst_id": "asst_mantova", "age_min": 75}}),
 ])
 def test_envelope(ctx, name, args):
     result = tools.call(ctx, name, args)
@@ -106,8 +109,7 @@ def test_envelope(ctx, name, args):
     ("adherence_by_group", {"pathway_id": PW, "grouping": "street"}, "bad_argument"),
     ("compare_segments", {"pathway_id": PW, "a": {"colour": "red"}, "b": {}, "metric": "dispensing"}, "bad_argument"),
     ("compare_segments", {"pathway_id": PW, "a": {"age_min": 120}, "b": {}, "metric": "dispensing"}, "empty_result"),
-    ("compare_segments", {"pathway_id": PW, "a": {}, "b": {}, "metric": "risk_mean"}, "empty_result"),  # step 2.3
-    ("risk_drivers", {"pathway_id": PW}, "empty_result"),  # step 2.3
+    ("risk_drivers", {"pathway_id": PW, "segment": {"age_max": 40}}, "empty_result"),  # nobody at high risk
     ("wait_by_hospital", {"pathway_id": "../../demo/truth/scenario_2", "step": "echo"}, "bad_argument"),
     ("text_to_sql", {"sql": "SELECT 1"}, "bad_argument"),
 ])
@@ -150,6 +152,25 @@ def test_wait_by_hospital_reproduces_the_fixture(ctx):
     fixture = json.loads((FIXTURES / "tools" / "wait_by_hospital.json").read_text(encoding="utf-8"))
     again = tools.call(tools.Context("s2_agents", ctx.db, 35), "wait_by_hospital", fixture["source"]["args"])
     assert again["data"] == fixture["data"]
+
+
+def test_risk_tools_read_what_risk_wrote(ctx):
+    data = tools.call(ctx, "risk_drivers", {"pathway_id": PW})["data"]
+    high = ctx.db.rows("SELECT count(*) FROM pathway_state WHERE risk_score >= $h", {"h": tools.HIGH_RISK})[0][0]
+    assert data["patients"] == high > 0
+    weights = [d["weight"] for d in data["drivers"]]
+    assert weights == sorted(weights, reverse=True)
+    assert 0 < weights[-1] <= weights[0] <= 1
+    mean = tools.call(ctx, "compare_segments", {"pathway_id": PW, "a": {}, "b": {}, "metric": "risk_mean"})["data"]["a"]
+    assert mean == ctx.db.rows("SELECT round(avg(risk_score), 4) FROM pathway_state")[0][0]
+
+
+def test_risk_tools_say_when_risk_never_ran(tick):
+    _, q = tick  # an empty run: nobody scored
+    ctx = tools.Context("s2_agents", q, 0)
+    for name, args in [("risk_drivers", {"pathway_id": PW}),
+                       ("compare_segments", {"pathway_id": PW, "a": {}, "b": {}, "metric": "risk_mean"})]:
+        assert tools.call(ctx, name, args)["error"]["code"] == "empty_result"
 
 
 def test_agents_reach_the_database_only_through_query():

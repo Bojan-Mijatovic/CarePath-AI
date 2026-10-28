@@ -29,8 +29,12 @@
       "overdue_steps": [],
       "escalation_step": 0,
       "last_event_day": 62,
-      "risk_score": 0.0,
-      "risk_drivers": [],
+      "risk_score": 0.1316,
+      "risk_drivers": [
+        "days_since_discharge",
+        "distance_km",
+        "lives_alone"
+      ],
       "flags": [],
       "updated_day": 62
     }

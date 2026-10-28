@@ -33,6 +33,7 @@ DRUG_WINDOW_DAYS = 60
 READING_WINDOW_DAYS = 7
 MAP_MIN_PATIENTS = 10  # fewer, and a comune has no adherence and no alarm
 MAP_ALARM_BELOW = 0.5  # the prototype's low band (< 50%)
+WEIGHT_DAYS = 5  # readings kept per patient for weight_gain_kg_3d
 
 
 def matches(codes: pd.Series, patterns: list[str]) -> np.ndarray:
@@ -50,10 +51,14 @@ def _nullable(values: np.ndarray, present: np.ndarray) -> pd.arrays.IntegerArray
 class StateEngine:
     def __init__(self, con: duckdb.DuckDBPyConnection, pathway: Pathway):
         self.pathway = pathway
-        patients = con.execute("SELECT patient_id, asst_id, comune_istat FROM patients ORDER BY patient_id").df()
+        patients = con.execute("SELECT patient_id, asst_id, comune_istat, age, distance_km, lives_alone "
+                               "FROM patients ORDER BY patient_id").df()
         self.ids = pd.Index(patients.patient_id)
         self.asst = patients.asst_id.to_numpy(object)
         self.comune = patients.comune_istat.to_numpy(object)
+        self.age = patients.age.to_numpy(float)  # static features for Risk (step 2.3)
+        self.distance_km = patients.distance_km.to_numpy(float)
+        self.lives_alone = patients.lives_alone.to_numpy(bool)
         n, k = len(patients), len(pathway.steps)
         self.step_ids = np.array([s.id for s in pathway.steps], object)
         self.pos = {s.id: j for j, s in enumerate(pathway.steps)}
@@ -68,6 +73,10 @@ class StateEngine:
         self.last_drug = np.full((len(pathway.eligibility.any_drug_atc), n), NO_DAY)  # last DISPENSE per drug
         self.telemon_started = np.zeros(n, bool)  # ever a TELEMON_START or reading, warm-up included
         self.last_reading = np.full(n, NO_DAY)
+        self.weight = np.full((WEIGHT_DAYS, n), np.nan)  # reading values of the last WEIGHT_DAYS days, by day % WEIGHT_DAYS
+        self.weight_day = np.full((WEIGHT_DAYS, n), NO_DAY)
+        self.last_admission = np.full(n, NO_DAY)
+        self.last_discharge = np.full(n, NO_DAY)  # any diagnosis, to tell who is in hospital
         self.last_index_discharge = np.full(n, NO_DAY)
         self.index_discharges = np.zeros(n, np.int64)  # from day 0, for kpi_daily
         self.readmissions = np.zeros(n, np.int64)
@@ -75,6 +84,8 @@ class StateEngine:
         self.day: int | None = None
         self.seen = np.empty(0, object)  # ids of the events of `day` already applied
         self.status = np.zeros(n, np.int64)
+        self.n_overdue = np.zeros(n, np.int64)
+        self.days_overdue = np.zeros(n, np.int64)  # of the most overdue step
         self.written: np.ndarray | None = None  # engine columns as last written, to find changed rows
         self.units = {"ats": (np.zeros(n, np.int64), np.array(["ats"], object)),  # level -> (code per patient, keys)
                       "asst": pd.factorize(self.asst, sort=True), "comune": pd.factorize(self.comune, sort=True)}
@@ -126,6 +137,13 @@ class StateEngine:
             np.maximum.at(self.last_drug[r], i[hit], day[hit])
         self.telemon_started[i[reading | (etype == "TELEMON_START").to_numpy(bool)]] = True
         np.maximum.at(self.last_reading, i[reading], day[reading])
+        recent = reading & (day > day.max() - WEIGHT_DAYS)  # at most one reading a patient a day
+        slot = day[recent] % WEIGHT_DAYS
+        self.weight[slot, i[recent]] = ev.value.to_numpy(float)[recent]
+        self.weight_day[slot, i[recent]] = day[recent]
+        for event_type, last in (("ADMISSION", self.last_admission), ("DISCHARGE", self.last_discharge)):
+            hit = (etype == event_type).to_numpy(bool)
+            np.maximum.at(last, i[hit], day[hit])
         for j, s in enumerate(self.pathway.steps):
             own = self._is_step(s, etype, code)
             np.maximum.at(self.own[j], i[own], day[own])
@@ -181,6 +199,7 @@ class StateEngine:
         n_overdue = overdue.sum(axis=0)
         worst = np.where(overdue, -left, 0).max(axis=0)
         dropped = (n_overdue >= th.dropped_if_overdue_steps) | (worst > th.dropped_after_days)
+        self.n_overdue, self.days_overdue = n_overdue, worst
         self.status = np.select([dropped, n_overdue > 0, due_soon.any(axis=0)], [DROPPED, OVERDUE, DUE_SOON], ON_TRACK)
 
         cols = np.arange(n)
@@ -240,6 +259,22 @@ class StateEngine:
                 con.unregister("state_rows")
         return len(c)
 
+    def reading_on(self, day: int, fallback: int) -> np.ndarray:
+        """The weight read on `day`, or else on `fallback`; NaN without either."""
+        def on(d):
+            slot = d % WEIGHT_DAYS
+            return np.where(self.weight_day[slot] == d, self.weight[slot], np.nan)
+        now = on(day)
+        return np.where(np.isnan(now), on(fallback), now)
+
+    def weight_gain_kg_3d(self, day: int) -> np.ndarray:
+        """Rule feature of SPEC §4: today's weight minus the weight 3 days ago. A missing reading is replaced
+        by the one a day earlier (85% of patients on telemonitoring read on a given day); NaN otherwise."""
+        return np.round(self.reading_on(day, day - 1) - self.reading_on(day - 3, day - 4), 1)
+
+    def in_hospital(self) -> np.ndarray:
+        return self.last_admission > self.last_discharge
+
     def refresh_kpi(self, con: duckdb.DuckDBPyConnection, day: int) -> None:
         """kpi_daily rows of `day` for the ATS, each ASST and each comune (SPEC §5.2), after update(day).
         Patients count where they live; actions count where their patient lives, and at ATS level only
@@ -276,11 +311,13 @@ class StateEngine:
         kpi = kpi.drop(columns=["on_track", "discharges"]).astype({"actions_executed": np.int64, "actions_pending": np.int64})
         self._replace(con, "kpi_daily", kpi, day)
 
-    def refresh_map(self, con: duckdb.DuckDBPyConnection, day: int) -> None:
+    def refresh_map(self, con: duckdb.DuckDBPyConnection, day: int, risk: np.ndarray | None = None,
+                    high_risk: float | None = None) -> None:
         """map_comuni rows on `day` (SPEC §5.2, C18), after update(day). `adherence_pct` is the share of
         enrolled patients who are on track, collected every drug of the pathway in the last 60 days and, if
         they ever started telemonitoring, sent a reading in the last 7 days. A comune with fewer than 10
-        patients has no adherence and no alarm. risk_mean and high_risk_patients come with Risk (step 2.3)."""
+        patients has no adherence and no alarm. `risk` is every patient's score from Risk (C19); without it
+        risk_mean and high_risk_patients are NULL."""
         if day != self.day:
             raise ValueError(f"refresh_map({day}) needs update({day}) first")
         e = self.enrolled_day <= day
@@ -293,12 +330,14 @@ class StateEngine:
         discharges = count(np.where(e, self.index_discharges, 0))
         rate = (count(np.where(e, self.readmissions, 0)) / np.maximum(discharges, 1)).round(4)
         enough = patients >= MAP_MIN_PATIENTS
-        none = np.ones(len(keys), bool)
+        no_risk = np.full(len(keys), risk is None)  # the mask of a nullable array: True is NULL
+        if risk is None:
+            risk, high_risk = np.zeros(len(e)), 1.0
         rows = pd.DataFrame({
             "comune_istat": keys, "pathway_id": self.pathway.pathway_id,
             "adherence_pct": pd.arrays.FloatingArray(adherence, ~enough),
-            "risk_mean": pd.arrays.FloatingArray(np.zeros(len(keys)), none),
-            "high_risk_patients": pd.arrays.IntegerArray(np.zeros(len(keys), np.int32), none),
+            "risk_mean": pd.arrays.FloatingArray((count(np.where(e, risk, 0)) / np.maximum(patients, 1)).round(4), no_risk),
+            "high_risk_patients": pd.arrays.IntegerArray(count(e & (risk >= high_risk)).astype(np.int32), no_risk),
             "readmission_rate_30d": pd.arrays.FloatingArray(rate, discharges == 0),
             "alarm": enough & (adherence < MAP_ALARM_BELOW),
         })[patients > 0]

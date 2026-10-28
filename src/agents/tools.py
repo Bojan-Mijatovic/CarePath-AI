@@ -24,8 +24,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from engine.db import RUNS_DIR, connect_for_tools
 from engine.pathway import ID, PATHWAYS_DIR, Pathway, Step, load
+from engine.risk import HIGH_RISK
 
-RISK_MODEL = Path(__file__).resolve().parents[2] / "models" / "risk.json"  # step 2.3
 ERROR_CODES = ("unknown_pathway", "unknown_step", "bad_argument", "empty_result")
 GROUPS_SHOWN, MIN_GROUP_PATIENTS, MIN_GROUP_DISCHARGES = 10, 10, 5
 COMPLIANCE_PERIOD_DAYS = 90  # compliance_by_step and the on_time_fraction metric
@@ -292,7 +292,9 @@ def _per_patient(p: Pathway, metric: str, period: int) -> str:
     if metric == "on_time_fraction":
         deadlines = " UNION ALL ".join(_deadlines(p, s) for s in _timed(p))
         return f"SELECT patient_id, count_if(met) AS num, count(*) AS den FROM ({deadlines}) GROUP BY 1"
-    raise ToolError("empty_result", "risk scores come with the risk model (step 2.3)")
+    # risk_mean: integers, so the sum is exact (C7); risk_score has 4 decimals (SPEC §2)
+    return """SELECT patient_id, round(risk_score * 10000)::BIGINT AS num, 10000 AS den FROM pathway_state
+              WHERE pathway_id = $pw AND enrolled_day <= $d"""
 
 
 def _grouped(db: Query, ctx: Context, p: Pathway, metric: str, period: int, key: str, worst: str,
@@ -390,15 +392,34 @@ def readmissions_by_comune(ctx: Context, a: ReadmissionArgs) -> dict:
     return _grouped(ctx.db, ctx, p, "readmission_rate_30d", a.period_days, "c.name", "highest", MIN_GROUP_DISCHARGES)
 
 
+def _require_risk(ctx: Context, p: Pathway) -> None:
+    if not ctx.db.rows("SELECT count(*) FROM pathway_state WHERE pathway_id = $pw AND risk_score > 0",
+                       {"pw": p.pathway_id})[0][0]:
+        raise ToolError("empty_result", "this run has no risk scores: Risk did not run on its ticks")
+
+
 def risk_drivers(ctx: Context, a: RiskDriversArgs) -> dict:
-    _pathway(a.pathway_id)
-    if not RISK_MODEL.exists():
-        raise ToolError("empty_result", "risk drivers come with the risk model (step 2.3)")
-    raise NotImplementedError("step 2.3")
+    """Among the segment's high-risk patients (C19), the share whose top 3 drivers include each driver."""
+    p = _pathway(a.pathway_id)
+    _require_risk(ctx, p)
+    where, params = _segment(a.segment or Segment(), "s")
+    high = f"""
+        SELECT ps.patient_id, ps.risk_drivers FROM pathway_state ps JOIN patients p USING (patient_id)
+        JOIN mmg m ON m.mmg_id = p.mmg_id
+        WHERE ps.pathway_id = $pw AND ps.enrolled_day <= $d AND ps.risk_score >= {HIGH_RISK} AND {where}"""
+    args = {"pw": p.pathway_id, "d": ctx.day} | params
+    patients = ctx.db.rows(f"SELECT count(*) FROM ({high})", args)[0][0]
+    if not patients:
+        raise ToolError("empty_result", f"no patient of the segment has a risk of {HIGH_RISK} or more")
+    counts = ctx.db.rows(f"SELECT name, count(*) FROM (SELECT unnest(risk_drivers) AS name FROM ({high})) GROUP BY 1", args)
+    drivers = sorted(((name, round(n / patients, 4)) for name, n in counts), key=lambda d: (-d[1], d[0]))
+    return {"drivers": [{"name": name, "weight": w} for name, w in drivers], "patients": patients}
 
 
 def compare_segments(ctx: Context, a: CompareArgs) -> dict:
     p = _pathway(a.pathway_id)
+    if a.metric == "risk_mean":
+        _require_risk(ctx, p)
     period = {"dispensing": 60, "telemonitoring": 60, "readmission_rate_30d": 180,
               "on_time_fraction": COMPLIANCE_PERIOD_DAYS}.get(a.metric, 0)
     values = {}

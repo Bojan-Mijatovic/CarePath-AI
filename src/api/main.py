@@ -1,7 +1,7 @@
 """CarePath API: REST endpoints and the /api/stream WebSocket the console listens to (spec/SPEC.md §10).
 
 The API runs the demo (engine.tick, step 2.1). At start-up it replays the six runs to day 23 in the
-background, about 25 s, and the data endpoints answer 503 until then. A clock task advances the scenario
+background, about 30 s, and the data endpoints answer 503 until then. A clock task advances the scenario
 on screen at the chosen speed and pushes each day's messages to every connected console. Maria's story
 (demo step 1) comes from the file recorded in demo/story/ (D35).
 """
@@ -53,7 +53,7 @@ class Live:
 
     def need_ready(self) -> None:
         if not self.demo.ready:
-            raise HTTPException(503, "the demo runs are being prepared (about 25 s after start-up)")
+            raise HTTPException(503, "the demo runs are being prepared (about 30 s after start-up)")
 
     def set_speed(self, factor: int) -> None:
         try:

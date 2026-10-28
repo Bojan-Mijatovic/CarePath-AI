@@ -3,6 +3,7 @@
 import duckdb
 import pytest
 
+from engine.risk import HIGH_RISK
 from engine.state import MAP_ALARM_BELOW, MAP_MIN_PATIENTS
 
 DAY = 62
@@ -49,8 +50,17 @@ def test_map_readmissions_match_kpi_daily(con):
         WHERE k.level = 'comune' AND k.day = $d AND m.readmission_rate_30d IS DISTINCT FROM k.readmission_rate_30d""",
                              {"d": DAY}).fetchall()
     assert mismatched == []
-    assert con.execute("SELECT count(*) FROM map_comuni WHERE risk_mean IS NOT NULL OR high_risk_patients IS NOT NULL"
-                       ).fetchone() == (0,)  # until Risk (step 2.3)
+
+
+def test_map_risk_matches_pathway_state(con):
+    # Risk ran on every tick of the fixture run (C19); the map aggregates the scores it wrote.
+    mismatched = con.execute("""
+        SELECT m.comune_istat FROM map_comuni m JOIN (
+            SELECT p.comune_istat, round(avg(s.risk_score), 4) AS mean, count_if(s.risk_score >= $h) AS high
+            FROM pathway_state s JOIN patients p USING (patient_id) GROUP BY 1) x USING (comune_istat)
+        WHERE abs(m.risk_mean - x.mean) > 0.00011 OR m.high_risk_patients != x.high""", {"h": HIGH_RISK}).fetchall()
+    assert mismatched == []
+    assert con.execute("SELECT sum(high_risk_patients) FROM map_comuni").fetchone()[0] > 0
 
 
 def test_sankey_counts_every_patient_once(con):

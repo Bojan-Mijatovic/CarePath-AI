@@ -2,7 +2,7 @@
   {
     "rank": 1,
     "patient_id": "p_03980",
-    "risk_score": 0.0,
+    "risk_score": 0.0642,
     "reasons": {
       "it": "telemonitoraggio in ritardo",
       "en": "telemonitoring overdue"
@@ -17,7 +17,7 @@
   {
     "rank": 2,
     "patient_id": "p_00618",
-    "risk_score": 0.0,
+    "risk_score": 0.0677,
     "reasons": {
       "it": "telemonitoraggio in ritardo",
       "en": "telemonitoring overdue"
@@ -32,7 +32,7 @@
   {
     "rank": 3,
     "patient_id": "p_08275",
-    "risk_score": 0.0,
+    "risk_score": 0.0209,
     "reasons": {
       "it": "telemonitoraggio in ritardo",
       "en": "telemonitoring overdue"
@@ -47,7 +47,7 @@
   {
     "rank": 4,
     "patient_id": "p_08799",
-    "risk_score": 0.0,
+    "risk_score": 0.0277,
     "reasons": {
       "it": "telemonitoraggio in ritardo",
       "en": "telemonitoring overdue"
@@ -62,7 +62,7 @@
   {
     "rank": 5,
     "patient_id": "p_01200",
-    "risk_score": 0.0,
+    "risk_score": 0.0163,
     "reasons": {
       "it": "telemonitoraggio in ritardo",
       "en": "telemonitoring overdue"
@@ -77,7 +77,7 @@
   {
     "rank": 6,
     "patient_id": "p_01725",
-    "risk_score": 0.0,
+    "risk_score": 0.0571,
     "reasons": {
       "it": "telemonitoraggio in ritardo",
       "en": "telemonitoring overdue"
@@ -92,7 +92,7 @@
   {
     "rank": 7,
     "patient_id": "p_03841",
-    "risk_score": 0.0,
+    "risk_score": 0.0438,
     "reasons": {
       "it": "telemonitoraggio in ritardo; visita cardiologica in ritardo; ecocardiogramma in ritardo",
       "en": "telemonitoring overdue; cardiology visit overdue; echocardiogram overdue"
@@ -107,7 +107,7 @@
   {
     "rank": 8,
     "patient_id": "p_05493",
-    "risk_score": 0.0,
+    "risk_score": 0.0243,
     "reasons": {
       "it": "telemonitoraggio in ritardo; ecocardiogramma in ritardo",
       "en": "telemonitoring overdue; echocardiogram overdue"
@@ -122,7 +122,7 @@
   {
     "rank": 9,
     "patient_id": "p_02121",
-    "risk_score": 0.0,
+    "risk_score": 0.0359,
     "reasons": {
       "it": "telemonitoraggio in ritardo",
       "en": "telemonitoring overdue"
@@ -137,7 +137,7 @@
   {
     "rank": 10,
     "patient_id": "p_07188",
-    "risk_score": 0.0,
+    "risk_score": 0.0557,
     "reasons": {
       "it": "telemonitoraggio in ritardo; ecocardiogramma in ritardo; esame BNP in ritardo",
       "en": "telemonitoring overdue; echocardiogram overdue; BNP test overdue"
@@ -152,7 +152,7 @@
   {
     "rank": 11,
     "patient_id": "p_01695",
-    "risk_score": 0.0,
+    "risk_score": 0.0136,
     "reasons": {
       "it": "telemonitoraggio in ritardo; esame BNP in ritardo",
       "en": "telemonitoring overdue; BNP test overdue"
@@ -167,7 +167,7 @@
   {
     "rank": 12,
     "patient_id": "p_05416",
-    "risk_score": 0.0,
+    "risk_score": 0.052,
     "reasons": {
       "it": "telemonitoraggio in ritardo; ecocardiogramma in ritardo",
       "en": "telemonitoring overdue; echocardiogram overdue"
@@ -182,7 +182,7 @@
   {
     "rank": 13,
     "patient_id": "p_05738",
-    "risk_score": 0.0,
+    "risk_score": 0.0335,
     "reasons": {
       "it": "telemonitoraggio in ritardo",
       "en": "telemonitoring overdue"
@@ -197,7 +197,7 @@
   {
     "rank": 14,
     "patient_id": "p_01044",
-    "risk_score": 0.0,
+    "risk_score": 0.0535,
     "reasons": {
       "it": "telemonitoraggio in ritardo; visita cardiologica in ritardo; ecocardiogramma in ritardo",
       "en": "telemonitoring overdue; cardiology visit overdue; echocardiogram overdue"
@@ -212,7 +212,7 @@
   {
     "rank": 15,
     "patient_id": "p_03734",
-    "risk_score": 0.0,
+    "risk_score": 0.0577,
     "reasons": {
       "it": "telemonitoraggio in ritardo",
       "en": "telemonitoring overdue"
@@ -227,7 +227,7 @@
   {
     "rank": 16,
     "patient_id": "p_02979",
-    "risk_score": 0.0,
+    "risk_score": 0.087,
     "reasons": {
       "it": "telemonitoraggio in ritardo; ecocardiogramma in ritardo; esame BNP in ritardo",
       "en": "telemonitoring overdue; echocardiogram overdue; BNP test overdue"
@@ -242,7 +242,7 @@
   {
     "rank": 17,
     "patient_id": "p_02337",
-    "risk_score": 0.0,
+    "risk_score": 0.0384,
     "reasons": {
       "it": "telemonitoraggio in ritardo; esame BNP in ritardo",
       "en": "telemonitoring overdue; BNP test overdue"
@@ -257,7 +257,7 @@
   {
     "rank": 18,
     "patient_id": "p_07867",
-    "risk_score": 0.0,
+    "risk_score": 0.0313,
     "reasons": {
       "it": "telemonitoraggio in ritardo",
       "en": "telemonitoring overdue"
@@ -272,7 +272,7 @@
   {
     "rank": 19,
     "patient_id": "p_07649",
-    "risk_score": 0.0,
+    "risk_score": 0.0743,
     "reasons": {
       "it": "telemonitoraggio in ritardo",
       "en": "telemonitoring overdue"
@@ -287,7 +287,7 @@
   {
     "rank": 20,
     "patient_id": "p_00557",
-    "risk_score": 0.0,
+    "risk_score": 0.0666,
     "reasons": {
       "it": "telemonitoraggio in ritardo",
       "en": "telemonitoring overdue"
