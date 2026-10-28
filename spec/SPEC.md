@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Status | **v1.1**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, proposed 28 Oct 2026, step 1.22). Changes follow §0 |
+| Status | **v1.2**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), both proposed 28 Oct 2026. Changes follow §0 |
 | Last updated | 28 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
-| Rule | Nobody builds against anything that is not in this file. Whoever waits on another role works with fixtures of the same shape (`testing/fixtures/`) |
+| Rule | Nobody builds against anything that is not in this file. Whoever waits on another part works with fixtures of the same shape (`testing/fixtures/`, step 1.23) |
 
 ## 0. Sign-off and change control
 
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14 proposed in v1.1)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14 and C15 proposed in v1.1 and v1.2)
 
 | # | Change | Why |
 |---|---|---|
@@ -44,6 +44,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C12 (D29) | In the process that runs the simulation, tools get a cursor of the run's single connection instead of their own connection (§6) | DuckDB refuses a second connection to a file already open with another configuration, so `connect_for_tools` cannot open while the tick writes (tested 28 Oct 2026) |
 | C13 (D30, D31) | User text fields become language-keyed JSON `{"it": "...", "en": "..."}` and lose the `_it` suffix: `actions.rationale_it` → `rationale`, alert `text_it` → `text`, investigation `result_summary_it` → `result_summary`, `worklist_today.reasons` and `script` likewise | The console is bilingual (D30). Templates fill both keys; for LLM texts the 30B model writes `it` and the 4B model translates it into `en` during the warm-up, both cached (D31) |
 | C14 (D32) | Pathway steps get an optional `service` (§4). §5.1 says how a step is evaluated, §5.2 how `kpi_daily` is computed | `due_soon` ("not booked") and `next_booked_day` need to know which `BOOKING` belongs to which step, and so does `wait_by_hospital(step)` (§6); v1.0 did not say. The mapping lived only in the simulator's config. Without a rule for when a periodic step's clock starts, Maria, who has no BNP in her history, would be "Fuori percorso" from day 1 |
+| C15 (D33) | Shapes of `GET /patients/{id}` and of the tick's `kpi` (§10), and the steps of `sankey_flows` (§5.2) | The fixtures (step 1.23) and the first screens (step 1.25) need them; v1.1 said only "timeline of events and actions, state per pathway" and `{...}`. The meaning of `map_comuni` `adherence_pct` and `alarm`, and of `worklist_today` `pathways` and `outcome`, waits for steps 2.2 and 2.4 (Q7); their fixtures use stand-in values |
 
 ## 1. Scope
 
@@ -238,6 +239,8 @@ All views are DuckDB views or tables refreshed once per tick and must answer in 
 | `map_comuni` | comune × pathway | `adherence_pct`, `risk_mean`, `high_risk_patients`, `readmission_rate_30d`, `alarm` |
 | `worklist_today` | patient (all pathways merged) | `rank`, `risk_score`, `reasons` (JSON `{"it", "en"}`, C13), `pathways`, `escalation_step`, `script` (JSON `{"it", "en"}`, filled by Daily Worklist), `outcome` (filled by the operator or the simulation) |
 
+**`sankey_flows`** (C15): `from_step` is `current_step` and `to_step` is `next_step` of `pathway_state`, NULL when the patient has none; `patients` counts the rows with that pathway, both steps and status.
+
 **Readmission, PNE-style:** an unplanned `ADMISSION` within 30 days after a `DISCHARGE` with an HF main diagnosis. Rate = such readmissions ÷ HF discharges in the period. Simplified versus the official PNE protocol; the simplification is listed in the limitations.
 
 **Cost:** `est_readmission_cost_eur = readmissions × readmission_cost_eur`, a single configured parameter. Its value and source (e.g. the DRG tariff) are open question Q2; until then the column is NULL.
@@ -406,7 +409,7 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `GET /sankey?run&pathway_id` | `sankey_flows` |
 | `GET /map?run&pathway_id` | `map_comuni` + alarms |
 | `GET /worklist?run&day` | `worklist_today` |
-| `GET /patients/{id}?run` | Paziente 360: timeline of events and actions, state per pathway |
+| `GET /patients/{id}?run` | Paziente 360: timeline of events and actions, state per pathway (shape below, C15) |
 | `GET /actions?run&status` | action queue and feed |
 | `POST /actions/{id}/approve`, `/reject`, `/undo` | decisions |
 | `GET /settings`, `PUT /settings/autonomy` | autonomy per action type |
@@ -429,6 +432,25 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `alert` | `{"level": "patient" \| "regional", "text": {"it": "...", "en": "..."}, "facility_id": "osp_B", "investigation_id": "..."}` |
 | `action` | one row of `actions` |
 | `investigation` | `{"investigation_id", "step": n, "tool", "args", "result_summary": {"it", "en"}, "verified": true \| false \| null, "final": false}` |
+
+**Tick `kpi`** (C15): the `ats` row of `kpi_daily` for the pathway on screen and the tick's day, without `day`, `level` and `key`.
+
+**Paziente 360** (C15), `GET /patients/{id}?run`. The console calls it once per arm for the with/without toggle:
+
+```json
+{
+  "patient": {"patient_id": "p_00001", "...": "every patients column", "comune_name": "Poggio Rusco"},
+  "pathways": [{"...": "the patient's pathway_state rows"}],
+  "timeline": [
+    {"day": 31, "kind": "action", "action_id": "act_s2_agents_1", "type": "call_task", "agent": "intervention",
+     "status": "executed", "rationale": {"it": "...", "en": "..."}},
+    {"day": 31, "kind": "event", "event_id": "ev_2345", "event_type": "CALL", "code": "delivery_arranged", "value": null,
+     "facility_id": null, "facility_name": null, "source": "agent_action", "action_id": "act_s2_agents_1"}
+  ]
+}
+```
+
+The timeline holds every event of the patient, warm-up history included, and every action on the patient (on its `created_day`). It is sorted by day; within a day, actions come before events and events keep their order.
 
 ## 11. Acceptance criteria
 
@@ -462,7 +484,8 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 |---|---|---|---|
 | Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D. **Closed** (D28): demo values, no clinical confirmation for the PoC | Italian colleague via R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source | R5 | week 2 |
-| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14 proposed with D32 (28 Oct 2026) | all, at the sync | week 1 |
+| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14 and C15 proposed with D32 and D33 (28 Oct 2026) | all, at the sync | week 1 |
 | Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |
 | Q5 | Daily limit of automatic actions per facility: 50 a sensible default? | R3, R5 | week 2 |
 | Q6 | Do we need calendar dates on screen, or is "Giorno N" enough for the audience? | R5 | week 2 |
+| Q7 | `map_comuni`: what `adherence_pct` measures and when `alarm` is true; `worklist_today`: the type of `pathways` and the values of `outcome` (C15). Fixtures use stand-ins until then | R2, R4 | steps 2.2 and 2.4 |

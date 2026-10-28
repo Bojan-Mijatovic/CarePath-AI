@@ -1,0 +1,302 @@
+[
+  {
+    "rank": 1,
+    "patient_id": "p_03980",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo",
+      "en": "telemonitoring overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 2,
+    "patient_id": "p_00618",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo",
+      "en": "telemonitoring overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 3,
+    "patient_id": "p_08275",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo",
+      "en": "telemonitoring overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 4,
+    "patient_id": "p_08799",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo",
+      "en": "telemonitoring overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 5,
+    "patient_id": "p_01200",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo",
+      "en": "telemonitoring overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 6,
+    "patient_id": "p_01725",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo",
+      "en": "telemonitoring overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 7,
+    "patient_id": "p_03841",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo; visita cardiologica in ritardo; ecocardiogramma in ritardo",
+      "en": "telemonitoring overdue; cardiology visit overdue; echocardiogram overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 8,
+    "patient_id": "p_05493",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo; ecocardiogramma in ritardo",
+      "en": "telemonitoring overdue; echocardiogram overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 9,
+    "patient_id": "p_02121",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo",
+      "en": "telemonitoring overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 10,
+    "patient_id": "p_07188",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo; ecocardiogramma in ritardo; esame BNP in ritardo",
+      "en": "telemonitoring overdue; echocardiogram overdue; BNP test overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 11,
+    "patient_id": "p_01695",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo; esame BNP in ritardo",
+      "en": "telemonitoring overdue; BNP test overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 12,
+    "patient_id": "p_05416",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo; ecocardiogramma in ritardo",
+      "en": "telemonitoring overdue; echocardiogram overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 13,
+    "patient_id": "p_05738",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo",
+      "en": "telemonitoring overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 14,
+    "patient_id": "p_01044",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo; visita cardiologica in ritardo; ecocardiogramma in ritardo",
+      "en": "telemonitoring overdue; cardiology visit overdue; echocardiogram overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 15,
+    "patient_id": "p_03734",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo",
+      "en": "telemonitoring overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 16,
+    "patient_id": "p_02979",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo; ecocardiogramma in ritardo; esame BNP in ritardo",
+      "en": "telemonitoring overdue; echocardiogram overdue; BNP test overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 17,
+    "patient_id": "p_02337",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo; esame BNP in ritardo",
+      "en": "telemonitoring overdue; BNP test overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 18,
+    "patient_id": "p_07867",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo",
+      "en": "telemonitoring overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 19,
+    "patient_id": "p_07649",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo",
+      "en": "telemonitoring overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  },
+  {
+    "rank": 20,
+    "patient_id": "p_00557",
+    "risk_score": 0.0,
+    "reasons": {
+      "it": "telemonitoraggio in ritardo",
+      "en": "telemonitoring overdue"
+    },
+    "pathways": [
+      "hf_lombardia_v1"
+    ],
+    "escalation_step": 0,
+    "script": null,
+    "outcome": null
+  }
+]

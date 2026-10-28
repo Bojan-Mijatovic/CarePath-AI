@@ -1,0 +1,394 @@
+[
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "cardio_visit",
+    "to_step": "echo",
+    "status": "dropped",
+    "patients": 6
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "cardio_visit",
+    "to_step": "echo",
+    "status": "due_soon",
+    "patients": 2
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "cardio_visit",
+    "to_step": "echo",
+    "status": "on_track",
+    "patients": 61
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "cardio_visit",
+    "to_step": "lab_bnp",
+    "status": "dropped",
+    "patients": 11
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "cardio_visit",
+    "to_step": "lab_bnp",
+    "status": "due_soon",
+    "patients": 1
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "cardio_visit",
+    "to_step": "lab_bnp",
+    "status": "on_track",
+    "patients": 49
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "cardio_visit",
+    "to_step": "lab_bnp",
+    "status": "overdue",
+    "patients": 5
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "cardio_visit",
+    "to_step": "telemon",
+    "status": "dropped",
+    "patients": 17
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "cardio_visit",
+    "to_step": "telemon",
+    "status": "due_soon",
+    "patients": 7
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "cardio_visit",
+    "to_step": "telemon",
+    "status": "overdue",
+    "patients": 24
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "discharge",
+    "to_step": "cardio_visit",
+    "status": "due_soon",
+    "patients": 3
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "discharge",
+    "to_step": "cardio_visit",
+    "status": "on_track",
+    "patients": 12
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "discharge",
+    "to_step": "cardio_visit",
+    "status": "overdue",
+    "patients": 2
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "discharge",
+    "to_step": "telemon",
+    "status": "dropped",
+    "patients": 3
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "discharge",
+    "to_step": "telemon",
+    "status": "due_soon",
+    "patients": 29
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "discharge",
+    "to_step": "telemon",
+    "status": "overdue",
+    "patients": 3
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "echo",
+    "to_step": "cardio_visit",
+    "status": "dropped",
+    "patients": 18
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "echo",
+    "to_step": "cardio_visit",
+    "status": "due_soon",
+    "patients": 7
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "echo",
+    "to_step": "cardio_visit",
+    "status": "on_track",
+    "patients": 5
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "echo",
+    "to_step": "cardio_visit",
+    "status": "overdue",
+    "patients": 16
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "echo",
+    "to_step": "lab_bnp",
+    "status": "dropped",
+    "patients": 7
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "echo",
+    "to_step": "lab_bnp",
+    "status": "due_soon",
+    "patients": 4
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "echo",
+    "to_step": "lab_bnp",
+    "status": "on_track",
+    "patients": 90
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "echo",
+    "to_step": "lab_bnp",
+    "status": "overdue",
+    "patients": 3
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "echo",
+    "to_step": "telemon",
+    "status": "dropped",
+    "patients": 34
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "echo",
+    "to_step": "telemon",
+    "status": "due_soon",
+    "patients": 5
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "echo",
+    "to_step": "telemon",
+    "status": "overdue",
+    "patients": 16
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "cardio_visit",
+    "status": "dropped",
+    "patients": 117
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "cardio_visit",
+    "status": "due_soon",
+    "patients": 2
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "cardio_visit",
+    "status": "on_track",
+    "patients": 1
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "cardio_visit",
+    "status": "overdue",
+    "patients": 22
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "echo",
+    "status": "dropped",
+    "patients": 37
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "echo",
+    "status": "due_soon",
+    "patients": 2
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "echo",
+    "status": "on_track",
+    "patients": 32
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "echo",
+    "status": "overdue",
+    "patients": 23
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "lab_bnp",
+    "status": "dropped",
+    "patients": 889
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "lab_bnp",
+    "status": "due_soon",
+    "patients": 367
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "lab_bnp",
+    "status": "on_track",
+    "patients": 6787
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "lab_bnp",
+    "status": "overdue",
+    "patients": 531
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "telemon",
+    "status": "dropped",
+    "patients": 119
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "telemon",
+    "status": "due_soon",
+    "patients": 1
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "lab_bnp",
+    "to_step": "telemon",
+    "status": "overdue",
+    "patients": 9
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "telemon",
+    "to_step": "cardio_visit",
+    "status": "dropped",
+    "patients": 17
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "telemon",
+    "to_step": "cardio_visit",
+    "status": "due_soon",
+    "patients": 6
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "telemon",
+    "to_step": "cardio_visit",
+    "status": "on_track",
+    "patients": 21
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "telemon",
+    "to_step": "cardio_visit",
+    "status": "overdue",
+    "patients": 11
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "telemon",
+    "to_step": "echo",
+    "status": "dropped",
+    "patients": 4
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "telemon",
+    "to_step": "echo",
+    "status": "due_soon",
+    "patients": 1
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "telemon",
+    "to_step": "echo",
+    "status": "on_track",
+    "patients": 36
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "telemon",
+    "to_step": "lab_bnp",
+    "status": "dropped",
+    "patients": 6
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "telemon",
+    "to_step": "lab_bnp",
+    "status": "due_soon",
+    "patients": 2
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "telemon",
+    "to_step": "lab_bnp",
+    "status": "on_track",
+    "patients": 42
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": "telemon",
+    "to_step": "lab_bnp",
+    "status": "overdue",
+    "patients": 2
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": null,
+    "to_step": "lab_bnp",
+    "status": "dropped",
+    "patients": 452
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": null,
+    "to_step": "lab_bnp",
+    "status": "on_track",
+    "patients": 1
+  },
+  {
+    "pathway_id": "hf_lombardia_v1",
+    "from_step": null,
+    "to_step": "lab_bnp",
+    "status": "overdue",
+    "patients": 5
+  }
+]

@@ -1,0 +1,81 @@
+[
+  {
+    "action_id": "act_s2_agents_1",
+    "agent": "intervention",
+    "type": "call_task",
+    "patient_id": "p_00001",
+    "scope": null,
+    "pathway_id": "hf_lombardia_v1",
+    "payload": {
+      "cs_id": "cs_16"
+    },
+    "rationale": {
+      "it": "Scorta di furosemide finita da 31 giorni; vive sola a 44,8 km dall'ospedale. Chiamata del Centro Servizi per capire che cosa la ferma.",
+      "en": "Furosemide supply ran out 31 days ago; lives alone 44.8 km from the hospital. Centro Servizi call to find out what stops her."
+    },
+    "evidence": [
+      {
+        "tool": "adherence_by_group",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "grouping": "comune",
+          "measure": "dispensing",
+          "period_days": 60
+        },
+        "run_id": "s2_agents",
+        "day": 31
+      }
+    ],
+    "autonomy_level": 3,
+    "status": "executed",
+    "created_day": 31,
+    "executed_day": 31,
+    "decided_by": "auto"
+  },
+  {
+    "action_id": "act_s2_agents_2",
+    "agent": "intervention",
+    "type": "reschedule",
+    "patient_id": null,
+    "scope": {
+      "facility_id": "osp_B",
+      "patients": 43
+    },
+    "pathway_id": "hf_lombardia_v1",
+    "payload": {
+      "from_facility": "osp_B",
+      "to_facility": "osp_A",
+      "service": "echo"
+    },
+    "rationale": {
+      "it": "Ospedale B: attesa media per l'ecocardiogramma 35,1 giorni, negli altri ospedali 2,0. 43 pazienti in attesa a Ospedale B; Ospedale A ha 116 posti liberi nei prossimi 21 giorni.",
+      "en": "Ospedale B: mean wait for an echo 35.1 days, 2.0 at the other hospitals. 43 patients waiting at Ospedale B; Ospedale A has 116 free slots in the next 21 days."
+    },
+    "evidence": [
+      {
+        "tool": "wait_by_hospital",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "step": "echo",
+          "period_days": 7
+        },
+        "run_id": "s2_agents",
+        "day": 35
+      },
+      {
+        "tool": "free_slots",
+        "args": {
+          "service": "echo",
+          "horizon_days": 21
+        },
+        "run_id": "s2_agents",
+        "day": 35
+      }
+    ],
+    "autonomy_level": 2,
+    "status": "proposed",
+    "created_day": 35,
+    "executed_day": null,
+    "decided_by": null
+  }
+]

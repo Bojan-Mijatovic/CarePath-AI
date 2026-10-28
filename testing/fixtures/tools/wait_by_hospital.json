@@ -1,0 +1,17 @@
+{
+  "data": {
+    "Ospedale A": 2.1,
+    "Ospedale B": 35.1,
+    "Ospedale C": 2.0
+  },
+  "source": {
+    "tool": "wait_by_hospital",
+    "args": {
+      "pathway_id": "hf_lombardia_v1",
+      "step": "echo",
+      "period_days": 7
+    },
+    "run_id": "s2_agents",
+    "day": 35
+  }
+}

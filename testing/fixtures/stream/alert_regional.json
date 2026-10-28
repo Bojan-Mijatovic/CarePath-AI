@@ -1,0 +1,14 @@
+{
+  "type": "alert",
+  "scenario": 2,
+  "day": 35,
+  "payload": {
+    "level": "regional",
+    "facility_id": "osp_B",
+    "investigation_id": "inv_s2_agents_1",
+    "text": {
+      "it": "Ospedale B: attesa per l'ecocardiogramma 35,1 giorni, negli altri ospedali 2,0",
+      "en": "Ospedale B: echo wait 35.1 days, 2.0 at the other hospitals"
+    }
+  }
+}

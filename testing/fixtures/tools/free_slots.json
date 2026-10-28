@@ -1,0 +1,16 @@
+{
+  "data": {
+    "Ospedale A": 116,
+    "Ospedale B": 0,
+    "Ospedale C": 99
+  },
+  "source": {
+    "tool": "free_slots",
+    "args": {
+      "service": "echo",
+      "horizon_days": 21
+    },
+    "run_id": "s2_agents",
+    "day": 35
+  }
+}

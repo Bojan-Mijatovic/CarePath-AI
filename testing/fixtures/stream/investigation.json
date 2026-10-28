@@ -1,0 +1,43 @@
+[
+  {
+    "type": "investigation",
+    "scenario": 2,
+    "day": 35,
+    "payload": {
+      "investigation_id": "inv_s2_agents_1",
+      "step": 1,
+      "tool": "wait_by_hospital",
+      "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "step": "echo",
+        "period_days": 7
+      },
+      "result_summary": {
+        "it": "Attesa media più alta a Ospedale B: 35,1 giorni",
+        "en": "Longest mean wait at Ospedale B: 35.1 days"
+      },
+      "verified": null,
+      "final": false
+    }
+  },
+  {
+    "type": "investigation",
+    "scenario": 2,
+    "day": 35,
+    "payload": {
+      "investigation_id": "inv_s2_agents_1",
+      "step": 2,
+      "tool": "free_slots",
+      "args": {
+        "service": "echo",
+        "horizon_days": 21
+      },
+      "result_summary": {
+        "it": "Ospedale A ha 116 posti liberi nei prossimi 21 giorni",
+        "en": "Ospedale A has 116 free slots in the next 21 days"
+      },
+      "verified": null,
+      "final": true
+    }
+  }
+]

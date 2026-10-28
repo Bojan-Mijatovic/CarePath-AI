@@ -1,0 +1,38 @@
+{
+  "type": "action",
+  "scenario": 2,
+  "day": 31,
+  "payload": {
+    "action_id": "act_s2_agents_1",
+    "agent": "intervention",
+    "type": "call_task",
+    "patient_id": "p_00001",
+    "scope": null,
+    "pathway_id": "hf_lombardia_v1",
+    "payload": {
+      "cs_id": "cs_16"
+    },
+    "rationale": {
+      "it": "Scorta di furosemide finita da 31 giorni; vive sola a 44,8 km dall'ospedale. Chiamata del Centro Servizi per capire che cosa la ferma.",
+      "en": "Furosemide supply ran out 31 days ago; lives alone 44.8 km from the hospital. Centro Servizi call to find out what stops her."
+    },
+    "evidence": [
+      {
+        "tool": "adherence_by_group",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "grouping": "comune",
+          "measure": "dispensing",
+          "period_days": 60
+        },
+        "run_id": "s2_agents",
+        "day": 31
+      }
+    ],
+    "autonomy_level": 3,
+    "status": "executed",
+    "created_day": 31,
+    "executed_day": 31,
+    "decided_by": "auto"
+  }
+}

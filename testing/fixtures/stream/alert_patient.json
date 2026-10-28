@@ -1,0 +1,14 @@
+{
+  "type": "alert",
+  "scenario": 2,
+  "day": 31,
+  "payload": {
+    "level": "patient",
+    "facility_id": null,
+    "investigation_id": null,
+    "text": {
+      "it": "p_00001 (81 anni, Poggio Rusco): scorta di furosemide finita da 31 giorni",
+      "en": "p_00001 (81, Poggio Rusco): furosemide supply ran out 31 days ago"
+    }
+  }
+}
