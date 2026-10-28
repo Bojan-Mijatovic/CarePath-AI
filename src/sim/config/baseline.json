@@ -23,6 +23,7 @@
   "p_book": 0.85,
   "booking_delay_max": 5,
   "booking_lead_days": 2,
+  "max_wait_days": 60,
   "p_attend": 0.92,
   "periodic_window_days": 7,
   "p_book_periodic": 0.85,

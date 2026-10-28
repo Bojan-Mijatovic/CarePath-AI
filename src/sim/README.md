@@ -183,3 +183,29 @@ and is admitted 3–7 days later. During those days a telemonitored patient's we
 All inside the 10–16% range. Admissions per patient-year rise with each factor: 0.28 living with others against 0.43 alone; 0.29 within 10 km against 0.37 beyond 30 km; 0.27 under 75 against 0.42 at 85 and over.
 
 Simulation time with the outcome model: 6.2 ms per day.
+
+## 10. Scenarios (step 1.17)
+
+`scenarios/{1,2,3}.json`, validated by `sim.step.Scenario`, applied with `Simulator.apply_scenario` before the warm-up. `uv run carepath-sim s2_baseline` reads scenario 2 from the run id. The population is the same in all three; only the places of the patterns change. JSON instead of the planned YAML: same format and validation as `config/baseline.json`, no new dependency.
+
+| | Scenario 1 | Scenario 2 | Scenario 3 |
+|---|---|---|---|
+| Pattern 1: echo bottleneck (slots a day) | `osp_A` 6 → 2 from day 0 | `osp_B` 3 → 1 from day 13 | `osp_C` 3 → 1 from day −58 |
+| Pattern 1: spare echo slots | `osp_B` 3 → 5 | `osp_C` 3 → 5 | `osp_B` 3 → 5 |
+| Pattern 2: cooperative collecting the drug less (×0.15 daily chance) | `coop_6` (ASST Cremona) | `coop_3` (ASST Crema) | `coop_11` (ASST Mantova) |
+| Pattern 3: rural comuni where patients aged 70+, living alone, over 40 km away leave telemonitoring (dropout ×15, start ×0.3) | Casalasco: Martignana di Po, Tornata, Calvatone, Casalmaggiore, Rivarolo del Re ed Uniti, Spineda | Oltrepò: Poggio Rusco, Magnacavallo, Borgocarbonara, Sermide e Felonica | Alto Mantovano: Casalromano, Canneto sull'Oglio, Casalmoro, Solferino |
+
+The start days are set so the bottleneck's echo wait reaches about six weeks around day 35, when the alarm should fire (delivery plan step 2.8). Measured, seed 42, bookings made on days 30–40:
+
+| | Scenario 1 | Scenario 2 | Scenario 3 |
+|---|---|---|---|
+| Echo wait at the bottleneck | 45 days | 39 days | 38 days |
+| Echo wait elsewhere | 2 days | 2 days | 2 days |
+| Drug collections a year, cooperative vs rest | 7.3 vs 11.2 | 7.5 vs 11.2 | 7.4 vs 11.2 |
+| Admissions per patient-year, cooperative vs rest | 0.48 vs 0.33 | 0.44 vs 0.33 | 0.48 vs 0.33 |
+| Pattern-3 patients, share on telemonitoring vs rest | 75, 1% vs 27% | 52, 4% vs 28% | 39, 3% vs 27% |
+| 30-day readmission, ATS | 12.3% | 12.4% | 12.3% |
+
+A booking further than 60 days away is refused (`max_wait_days`): the patient stays unbooked and the step becomes overdue, which raises their admission risk. That keeps the queue bounded and makes the bottleneck cost readmissions, which agents can then reduce by rescheduling to the hospital with spare slots (step 1.20).
+
+Pattern 3 hits few patients (39–75) by design: they are a small group of comuni. Step 1.21 checks that the tools still see them.

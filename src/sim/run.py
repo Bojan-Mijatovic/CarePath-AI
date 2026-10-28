@@ -1,7 +1,8 @@
 """Run the simulator for one run into its DuckDB file and report the time per simulated day.
 
-Delivery plan step 1.15. Baseline behaviour only: scenarios (1.17), Maria's script (1.19) and the
-agents' feedback (1.20) come later. The engine's real-time tick (2.1) will call Simulator.step itself.
+Delivery plan steps 1.15 and 1.17. The scenario comes from the run id (s2_baseline → scenarios/2.json).
+Maria's script (1.19) and the agents' feedback (1.20) come later. The engine's real-time tick (2.1) will
+call Simulator.step itself.
 
     uv run carepath-sim s2_baseline [--days 365] [--seed 42] [--overwrite]
 """
@@ -16,7 +17,7 @@ import pandas as pd
 from engine import pathway as pathway_model
 from engine.db import create_run
 from sim.population import generate_patients, load_reference
-from sim.step import Simulator
+from sim.step import Simulator, load_scenario
 
 PATHWAY_ID = "hf_lombardia_v1"
 
@@ -39,8 +40,9 @@ def append(con: duckdb.DuckDBPyConnection, table: str, df: pd.DataFrame) -> None
 def run(run_id: str, days: int = 365, seed: int = 42, overwrite: bool = False) -> dict[str, float]:
     ref = load_reference()
     patients, mmg = generate_patients(seed, ref)
+    path = create_run(run_id, overwrite=overwrite)  # validates the run id first
     sim = Simulator(seed, patients, ref, pathway_model.load(PATHWAY_ID), days=days)
-    path = create_run(run_id, overwrite=overwrite)
+    sim.apply_scenario(load_scenario(int(run_id[1])), mmg)
     sim_ms, write_ms = [], []
     with duckdb.connect(path) as con:
         load_reference_tables(con, ref, patients, mmg)

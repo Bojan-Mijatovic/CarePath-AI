@@ -26,6 +26,7 @@ from sim.rng import component_rng
 
 NO_DAY = -(10**6)
 CONFIG_DIR = Path(__file__).resolve().parent / "config"
+SCENARIOS_DIR = Path(__file__).resolve().parent / "scenarios"
 EVENT_COLUMNS = ["event_id", "patient_id", "day", "event_type", "code", "value", "facility_id", "asst_id",
                  "mmg_id", "comune_istat", "source", "action_id"]
 
@@ -63,6 +64,7 @@ class SimParams(Frozen):
     p_book: float                     # books a post-discharge step at all
     booking_delay_max: int            # days between discharge and the booking request
     booking_lead_days: int            # the earliest slot is this many days after the request
+    max_wait_days: int                # a patient does not book a slot further away than this
     p_attend: float
     periodic_window_days: int         # a periodic step is booked in the week before it is due
     p_book_periodic: float
@@ -84,6 +86,41 @@ def load_params(name: str = "baseline") -> SimParams:
     return SimParams.model_validate_json((CONFIG_DIR / f"{name}.json").read_text(encoding="utf-8"))
 
 
+class CapacityChange(Frozen):
+    facility_id: str
+    service: str
+    slots_per_day: int
+    from_day: int
+
+
+class LowAdherence(Frozen):
+    """Pattern 2: patients of one MMG cooperative collect their drug less often."""
+    coop_id: str
+    collect_multiplier: float
+
+
+class RuralDropout(Frozen):
+    """Pattern 3: older patients living alone far away in a group of comuni leave telemonitoring."""
+    comuni: list[str]
+    min_age: int
+    min_distance_km: float
+    dropout_multiplier: float
+    start_multiplier: float
+
+
+class Scenario(Frozen):
+    """One envelope (Solution Plan §11): same pattern types as the others, different places."""
+    scenario: int
+    echo_bottleneck: CapacityChange  # pattern 1: fewer slots at one hospital ...
+    echo_free_capacity: CapacityChange  # ... and spare slots at another
+    low_adherence: LowAdherence
+    rural_dropout: RuralDropout
+
+
+def load_scenario(n: int) -> Scenario:
+    return Scenario.model_validate_json((SCENARIOS_DIR / f"{n}.json").read_text(encoding="utf-8"))
+
+
 class Simulator:
     def __init__(self, seed: int, patients: pd.DataFrame, ref: dict[str, pd.DataFrame], pathway: Pathway,
                  params: SimParams | None = None, days: int = 365):
@@ -97,6 +134,9 @@ class Simulator:
         self.patient_id = patients.patient_id.to_numpy(object)
         self.mmg_id = patients.mmg_id.to_numpy(object)
         self.comune = patients.comune_istat.to_numpy(object)
+        self.age = patients.age.to_numpy()
+        self.lives_alone = patients.lives_alone.to_numpy(bool)
+        self.distance_km = patients.distance_km.to_numpy()
         r = p.risk  # static part of the log hazard
         self.static_risk = (r.per_10_km * np.minimum(patients.distance_km.to_numpy(), r.distance_cap_km) / 10
                             + r.lives_alone * patients.lives_alone.to_numpy()
@@ -155,6 +195,26 @@ class Simulator:
         self.supply_end = self.first_day + (rng.random(n) * p.supply_days).astype(int)
         self.collect_q = rng.beta(*p.collect_beta, n)
         self.base_weight = np.clip(rng.normal(p.weight_mean_kg, p.weight_sd_kg, n), 45, 140)
+        self.telemon_start_p = np.full(n, p.p_telemon_start)
+        self.telemon_dropout_p = np.full(n, p.telemon_dropout_daily)
+
+    def apply_scenario(self, scenario: Scenario, mmg: pd.DataFrame) -> None:
+        """Inject the three patterns of one envelope (step 1.17). Call before the warm-up."""
+        for change in (scenario.echo_bottleneck, scenario.echo_free_capacity):
+            r = np.flatnonzero((self.fac_id[self.res_fac] == change.facility_id) & (self.res_service == change.service))
+            if len(r) != 1:
+                raise ValueError(f"no capacity row for {change.facility_id} {change.service}")
+            self.cap[r[0], max(change.from_day - self.first_day, 0):] = change.slots_per_day
+        low = scenario.low_adherence
+        coop = pd.Series(self.mmg_id).map(mmg.set_index("mmg_id").coop_id).to_numpy()
+        if not (coop == low.coop_id).any():
+            raise ValueError(f"{low.coop_id} has no patients")
+        self.collect_q[coop == low.coop_id] *= low.collect_multiplier
+        rural = scenario.rural_dropout
+        hit = (np.isin(self.comune, rural.comuni) & (self.age >= rural.min_age) & self.lives_alone
+               & (self.distance_km > rural.min_distance_km))
+        self.telemon_dropout_p[hit] *= rural.dropout_multiplier
+        self.telemon_start_p[hit] *= rural.start_multiplier
 
     def _u(self, component: str, day: int) -> np.ndarray:
         return component_rng(self.seed, f"{component}:{day}").random(self.n)
@@ -175,17 +235,18 @@ class Simulator:
         return p.admission_daily * np.where(recent, p.post_discharge_multiplier, 1.0) * np.exp(log_risk)
 
     def _book(self, day: int, res: np.ndarray) -> np.ndarray:
-        """First free slot from day + lead for each request, in patient order. Updates `booked`."""
-        slots = np.empty(len(res), int)
+        """First free slot from day + lead for each request, in patient order; NO_DAY when the first free
+        slot is more than max_wait_days away (the patient gives up). Updates `booked`."""
+        slots = np.full(len(res), NO_DAY)
         start = day + self.p.booking_lead_days - self.first_day
+        last = day + self.p.max_wait_days - self.first_day
         for r in np.unique(res):
             sel = np.flatnonzero(res == r)
-            free = np.clip(self.cap[r, start:] - self.booked[r, start:], 0, None)
+            free = np.clip(self.cap[r, start:last + 1] - self.booked[r, start:last + 1], 0, None)
             pos = np.searchsorted(np.cumsum(free), np.arange(1, len(sel) + 1))
-            if pos[-1] >= len(free):
-                raise RuntimeError(f"booking horizon too short for resource {r}")
-            np.add.at(self.booked[r], start + pos, 1)
-            slots[sel] = start + pos + self.first_day
+            ok = pos < len(free)
+            np.add.at(self.booked[r], start + pos[ok], 1)
+            slots[sel[ok]] = start + pos[ok] + self.first_day
         return slots
 
     def step(self, day: int) -> pd.DataFrame:
@@ -205,7 +266,7 @@ class Simulator:
         if len(out):
             for s in self.telemon_steps:
                 self.last_done[s.id][out[self.telemon_on[out]]] = day  # already on telemonitoring
-                go = out[(self._u(f"tel_start:{s.id}", day)[out] < p.p_telemon_start) & ~self.telemon_on[out]]
+                go = out[(self._u(f"tel_start:{s.id}", day)[out] < self.telemon_start_p[out]) & ~self.telemon_on[out]]
                 delay = self._u(f"tel_delay:{s.id}", day)[go]
                 self.telemon_start_on[go] = day + 1 + (delay * p.telemon_start_delay_max).astype(int)
             for s in self.cap_steps:
@@ -244,9 +305,12 @@ class Simulator:
             if len(idx):
                 res = self.step_res[s.id][idx]
                 slots = self._book(day, res)
-                self.appt_day[s.id][idx] = slots
                 self.book_on[s.id][idx] = NO_DAY
-                emit(idx, "BOOKING", self.res_service[res], slots.astype(float), self.res_fac[res])
+                ok = slots != NO_DAY
+                self.appt_day[s.id][idx[ok]] = slots[ok]
+                if s.every_days:
+                    self.next_due[s.id][idx[~ok]] += s.every_days  # gave up on this cycle
+                emit(idx[ok], "BOOKING", self.res_service[res[ok]], slots[ok].astype(float), self.res_fac[res[ok]])
 
         # 5. Appointments due today.
         for s in self.cap_steps:
@@ -281,7 +345,7 @@ class Simulator:
         gain = np.where(self.decomp_start > NO_DAY, (day - self.decomp_start + 1) * p.decomp_weight_gain_kg_per_day, 0.0)
         weight = self.base_weight + gain + p.reading_noise_kg * noise
         emit(reading, "TELEMON_READING", None, np.round(weight[reading], 1))
-        self.telemon_on &= ~(self._u("dropout", day) < p.telemon_dropout_daily)
+        self.telemon_on &= ~(self._u("dropout", day) < self.telemon_dropout_p)
 
         # 7. Pharmacy: once the supply has run out, a patient collects with their own daily chance.
         coll = np.flatnonzero(~self.in_hosp & (day >= self.supply_end) & (self._u("collect", day) < self.collect_q))

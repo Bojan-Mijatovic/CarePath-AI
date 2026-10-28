@@ -1,0 +1,10 @@
+{
+  "scenario": 2,
+  "echo_bottleneck": {"facility_id": "osp_B", "service": "echo", "slots_per_day": 1, "from_day": 13},
+  "echo_free_capacity": {"facility_id": "osp_C", "service": "echo", "slots_per_day": 5, "from_day": 13},
+  "low_adherence": {"coop_id": "coop_3", "collect_multiplier": 0.15},
+  "rural_dropout": {
+    "comuni": ["020042", "020029", "020073", "020061"],
+    "min_age": 70, "min_distance_km": 40, "dropout_multiplier": 15, "start_multiplier": 0.3
+  }
+}

@@ -132,7 +132,7 @@ Stored **outside** the run databases, in `demo/truth/scenario_<n>.json`. Only ac
   "scenario": 2,
   "echo_bottleneck": {"facility_id": "osp_B", "asst_id": "asst_cremona"},
   "echo_free_capacity": {"facility_id": "osp_C"},
-  "rural_dropout_comuni": ["Sermide e Felonica", "Poggio Rusco", "Ostiglia"],
+  "rural_dropout_comuni": ["Poggio Rusco", "Magnacavallo", "Borgocarbonara", "Sermide e Felonica"],
   "low_adherence_group": {"coop_id": "coop_3"},
   "option_b": {"hba1c_gap_group": "coop_5", "enrollment_candidates": ["p_10412", "p_10877"]}
 }
