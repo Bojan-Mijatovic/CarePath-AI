@@ -5,7 +5,7 @@ Rules for the AI assistant in this repo. They come from the [Solution Plan](docs
 ## 1. Sources and precedence
 
 1. **Solution Plan** (22 Oct 2026): what we build and why. It is the source of truth.
-2. **Decision register** (Delivery Plan §11, D11 onward): a decision marked *Decided* overrides the Solution Plan on that point. Current overrides: models are `qwen3:30b-instruct` and `qwen3:4b-instruct`, not 7–8B and 14B (D11); the console is React, not Angular or Streamlit (D13); demo LLM output is cache-only (D14); all work goes directly to `main` (D20); Pathway Builder is in option B (D23); the demo may be online (D25); the console is Italian and English (D30). *Proposed* decisions are the working assumption, but not yet binding (none open on 28 Oct 2026).
+2. **Decision register** (Delivery Plan §11, D11 onward): a decision marked *Decided* overrides the Solution Plan on that point. Current overrides: models are `qwen3:30b-instruct` and `qwen3:4b-instruct`, not 7–8B and 14B (D11); the console is React, not Angular or Streamlit (D13); demo LLM output is cache-only (D14); all work goes directly to `main` (D20); Pathway Builder is in option B (D23); the demo may be online (D25); the console is Italian and English, with cached LLM texts written in Italian and translated by the 4B model during the warm-up (D30, D31). *Proposed* decisions are the working assumption, but not yet binding (none open on 28 Oct 2026).
 3. **Delivery Plan**: how and when, step by step, with owners and gates.
 4. **SPEC.md**: the contracts. Nothing is built against an interface that is not in it.
 5. **UI prototype** ([CarePath-AI-UI-demo-srpski.html](docs/CarePath-AI-UI-demo-srpski.html)): screen layout and demo steps 1–10.
@@ -27,7 +27,7 @@ These come from the design principles and guardrails. Code that breaks one needs
 2. **No diagnosis and no therapy change**, in any code path, prompt or text.
 3. **One writer.** Agents only read, through the tools in SPEC §6. Only the action service changes state, after the autonomy and guardrail checks. Every action has a rationale and evidence, goes to the audit log and can be undone.
 4. **No free SQL from agents.** The Investigator uses tools only.
-5. **`scenario_truth` is unreachable for agents.** Only tests (AC13) and the Rivelazione screen read it. Tools get their connection only from `engine.db.connect_for_tools` (read-only, no file access, locked), agent code never imports `sim`, and `testing/test_truth_isolation.py` enforces both.
+5. **`scenario_truth` is unreachable for agents.** Only tests (AC13) and the Rivelazione screen read it. Tools get their database only through `engine.db`: `connect_for_tools` for a finished run (read-only, no file access, locked), and in the simulation process a cursor of the tick's locked connection behind a SELECT-only guard (D29). Agent code never imports `sim`, and `testing/test_truth_isolation.py` enforces both.
 6. **Disease is configuration.** No `if pathway == "hf"` in code. Every tool, view and screen takes `pathway_id` (AC17).
 7. **Local and zero cost.** Models, data and the cache run on the laptop; no patient data goes to an external API; no telemetry, no paid tier. The network may be used for downloads and during the demo (D25). A new dependency needs a free licence, and I name it in the commit message.
 8. **Synthetic data only.** Hospital names are invented, the geography is real. Prompts carry aggregates and the top N patients, never the whole database. Logs contain nothing that could not leave the system if the data were real.

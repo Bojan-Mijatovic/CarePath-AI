@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **DRAFT v0.3**: changes C1–C11 accepted (§12, Q3); freezes as tag `spec-v1` at step 1.9 (delivery plan) |
+| Status | **DRAFT v0.3**: changes C1–C13 accepted (§12, Q3); freezes as tag `spec-v1` at step 1.9 (delivery plan) |
 | Last updated | 28 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -39,8 +39,8 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C9 | Only the 2 runs of the scenario on screen advance after the envelope; jump forward continues from the current day; performance budgets beyond AC2 (§9) | Demo pacing and budgets, delivery plan D21 and D22 |
 | C10 | Cache completeness check (§8) | Any change to the simulator, engine, tools or prompts after the warm-up can change cache keys; the check finds misses before a rehearsal does |
 | C11 | Days before 0 are history: the simulator warms up for 120 days (−120..−1) and keeps those events (§2) | Rules and tools look back 30–180 days; without history, `no_dispense('C03CA01', 30)` would fire for every patient on day 30 |
-| C12 (proposed, D29) | In the process that runs the simulation, tools get a cursor of the run's single connection instead of their own connection (§6) | DuckDB refuses a second connection to a file already open with another configuration, so `connect_for_tools` cannot open while the tick writes (tested 28 Oct 2026) |
-| C13 (proposed, D30) | User text fields become language-keyed JSON `{"it": "...", "en": "..."}` and lose the `_it` suffix: `actions.rationale_it` → `rationale`, alert `text_it` → `text`, investigation `result_summary_it` → `result_summary`, `worklist_today.reasons` and `script` likewise | The console is bilingual (D30). Whether LLM texts fill both keys is open (delivery plan §13, item 3); templates always fill both |
+| C12 (D29) | In the process that runs the simulation, tools get a cursor of the run's single connection instead of their own connection (§6) | DuckDB refuses a second connection to a file already open with another configuration, so `connect_for_tools` cannot open while the tick writes (tested 28 Oct 2026) |
+| C13 (D30, D31) | User text fields become language-keyed JSON `{"it": "...", "en": "..."}` and lose the `_it` suffix: `actions.rationale_it` → `rationale`, alert `text_it` → `text`, investigation `result_summary_it` → `result_summary`, `worklist_today.reasons` and `script` likewise | The console is bilingual (D30). Templates fill both keys; for LLM texts the 30B model writes `it` and the 4B model translates it into `en` during the warm-up, both cached (D31) |
 
 ## 1. Scope
 
@@ -55,7 +55,7 @@ The PoC monitors heart-failure patients of ATS della Val Padana (ASST Mantova, C
 | Scenarios | `1`, `2`, `3`. Same pattern types, different locations (Solution Plan §6) |
 | Codes | Diagnoses ICD-9-CM, drugs ATC, labs LOINC. The codes in `spec/pathways/` are demo values, not clinically confirmed (delivery plan D28) |
 | Units | Days, km, EUR. Rates are fractions 0–1 in data, percentages only in the UI |
-| Language | Data and code in English. Every user-facing string (UI, reports, call scripts, rationales) in Italian and English, Italian by default (delivery plan D30). Fields that carry user text become language-keyed (C13, proposed) |
+| Language | Data and code in English. Every user-facing string (UI, reports, call scripts, rationales) in Italian and English, Italian by default (delivery plan D30). Fields that carry user text are language-keyed `{"it", "en"}` (C13); cached LLM texts are written in Italian and translated into English during the warm-up (D31) |
 | Determinism | Every random draw comes from a generator seeded by `(run seed, component)`; same seed, same run, byte for byte (AC14) |
 | Numeric precision (C7) | Every DOUBLE that a tool, view or API returns is rounded in SQL after aggregation: fractions and rates to 4 decimals; days, km and kg to 1 decimal; EUR to whole euros. Counts stay integers. Reason: with 8 threads, DuckDB 2.0 returned 12 different `avg(DOUBLE)` results in 12 runs over 2,000,000 rows (differences in the last bits); `round(avg, 4)`, `avg(INTEGER)` and `threads = 1` each gave one result. Below one row group (about 122,000 rows) the results were stable, so small fixtures do not show the problem |
 | Missing values | `NULL`, never sentinel numbers |
@@ -232,7 +232,7 @@ All tools are **read-only**, take typed arguments and return JSON. The Investiga
 
 Every tool gets its database from `engine.db.connect_for_tools(run_id)` and from nothing else: the run database read-only, with DuckDB's access to files disabled and the configuration locked. A tool therefore cannot read `demo/truth/` or the scenario files, attach another database, or write. Agent code does not import the simulator (step 1.18, tested).
 
-**Proposed (C12, delivery plan D29), to settle before steps 1.24 and 2.1:** while the tick holds a run open for writing, DuckDB refuses any second connection to that file in the same process, `connect_for_tools` included. The proposal: the tick opens each run once, with file access disabled and the configuration locked, and tools get a cursor of that connection through `engine.db`. Truth and scenario files stay unreachable (tested); write protection moves from the database to the tools' code, with a guard that runs only `SELECT`/`WITH` statements and a test. `connect_for_tools` stays for notebooks and tests, which read a finished run.
+**In the simulation process (C12, delivery plan D29):** while the tick holds a run open for writing, DuckDB refuses any second connection to that file in the same process, `connect_for_tools` included. So the tick opens each run once, with file access disabled and the configuration locked, and tools get a cursor of that connection through `engine.db`. Truth and scenario files stay unreachable (tested); write protection moves from the database to the tools' code, with a guard that runs only `SELECT`/`WITH` statements and a test. `connect_for_tools` stays for notebooks and tests, which read a finished run.
 
 Every result has the same envelope (C5):
 
@@ -444,7 +444,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 |---|---|---|---|
 | Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D. **Closed** (D28): demo values, no clinical confirmation for the PoC | Italian colleague via R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source | R5 | week 2 |
-| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 are proposed (delivery plan D29, D30) and must be settled before `spec-v1` | all, at the sync | week 1 |
+| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026) | all, at the sync | week 1 |
 | Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |
 | Q5 | Daily limit of automatic actions per facility: 50 a sensible default? | R3, R5 | week 2 |
 | Q6 | Do we need calendar dates on screen, or is "Giorno N" enough for the audience? | R5 | week 2 |
