@@ -158,7 +158,7 @@ The critical path is R1 and R5 in week 2.
 | 1.18 | `scenario_truth` written to a separate path; agent tools are given a DuckDB connection without that table; a test asserts it. **Done** (reviewed 28 Oct 2026): `engine.db.connect_for_tools` is read-only with file access disabled and locked; a probe tool reading the truth made the test fail | `demo/truth/` + test | Test fails if any tool can read it |
 | 1.19 | Maria: scripted trajectory present in all 3 scenarios; without agents she is readmitted on day 47; with agents a day-31 call leads to delivery on day 33, HbA1c on day 40 and no readmission. **Done** (reviewed 28 Oct 2026): `sim/maria.py`, entry point `Simulator.receive_call` | Maria overrides + test | AC14 passes 10 runs out of 10 |
 | 1.20 | Action feedback hook: an executed action on day D becomes events on day D+1 (interface plus a no-op implementation). **Done** (reviewed 28 Oct 2026): `feedback.apply(run_id, actions)` records calls and reminders on day D, effects from D+1; Maria's day-31 call goes through it (AC14) | `src/sim/feedback.py` | R3 can call it |
-| 1.21 | Pattern-proof notebook: for each scenario shows patterns 1–3 and the PNE calibration from data alone | `testing/notebooks/patterns.ipynb` | R5 reviews; this is the gate evidence |
+| 1.21 | Pattern-proof notebook: for each scenario shows patterns 1–3 and the PNE calibration from data alone. **Done** (reviewed 28 Oct 2026): read only through the tool connection; 12 of 12 places detected blind match `demo/truth`; same check in `testing/test_patterns.py` | `testing/notebooks/patterns.ipynb` | R5 reviews; this is the gate evidence |
 
 ### 6.4 Parallel work in week 2
 

@@ -234,4 +234,20 @@ The with-agents branch starts when a `call_task` for `p_00001` executed on any d
 
 The process running a run registers its simulator first: `sim.feedback.register(run_id, sim)`.
 
+## 13. Pattern proof (step 1.21, scope-gate evidence)
+
+`testing/notebooks/patterns.ipynb` simulates the baseline arm of each envelope for a year and reads the run databases only through `engine.db.connect_for_tools`, the connection agent tools get. `sim.pattern_proof.detect` names the places of patterns 1–3 from the data alone; only then is `demo/truth/` opened. Result: **12 of 12 places matched** (3 scenarios × 4 places). `testing/test_patterns.py` runs the same check on 120 days.
+
+| | Scenario 1 | Scenario 2 | Scenario 3 |
+|---|---|---|---|
+| Echo wait, days 30–40: bottleneck vs others | 45 vs 2 | 39 vs 2 | 37 vs 2 |
+| Free echo slots, days 36–56, at the hospital named free | 48 | 67 | 55 |
+| Drug collections per patient-year: cooperative vs next lowest | 7.3 vs 11.1 | 7.5 vs 11.1 | 7.4 vs 11.1 |
+| Hidden rural comuni found (all found are correct) | 4 of 6 | 3 of 4 | 4 of 4 |
+| 30-day readmission, ATS | 12.3% | 12.4% | 12.3% |
+
+Pattern 3 is the weakest signal: the segment (75+, living alone, over 40 km) has only 1–38 telemonitored patients per comune, so a comune needs at least 2 of them to count. If agents miss it in AC1/AC13, the first lever is a larger effect in `scenarios/*.json` (more comuni or a lower `min_age`), not a looser test.
+
+The SQL readmission of SPEC §5.2 (`pattern_proof.readmission_30d`) and the pandas one used for calibration give the same rate (tested).
+
 Maria follows her story, not the pathway file: she is the one place where HF steps are written in code, on purpose. Her comune is Poggio Rusco (§3), while the prototype header says Sermide e Felonica; the console shows the data.
