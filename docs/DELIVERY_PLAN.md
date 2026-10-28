@@ -151,7 +151,7 @@ The critical path is R1 and R5 in week 2.
 
 | # | Step | Output | Done when |
 |---|---|---|---|
-| 1.14 | Population generator: 10,000 HF patients sampled by comune and age; lives alone; distance; MMG assignment; MMG grouped into cooperatives with a Centro Servizi | `patients` table | Distributions plotted in the notebook |
+| 1.14 | Population generator: 10,000 HF patients sampled by comune and age; lives alone; distance; MMG assignment; MMG grouped into cooperatives with a Centro Servizi. **Done** (reviewed 28 Oct 2026): `sim.population`, seeded per component; 540 MMG in 16 cooperatives; plots in `testing/notebooks/population.ipynb` | `patients` table | Distributions plotted in the notebook |
 | 1.15 | Daily vectorised step (numpy and pandas, fixed seed): discharges, visits, imaging, labs, dispensing, telemonitoring readings, admissions; capacity-driven waits from `capacity_slots` | `src/sim/step.py` | 365 days for 10k patients run; one day under 1 s (early AC2); ms per day recorded against the budgets in SPEC §9 (500 ms for both arms at ×4, 27–55 ms per arm-day for what-if) |
 | 1.16 | Outcome model: readmission hazard rising with non-collection, missed visits, long waits, distance and living alone; calibrated so 30-day HF readmission falls inside the published PNE range | Config with every assumed probability | Notebook shows the rate inside the range |
 | 1.17 | Patterns 1–3 parameterised per scenario: echo bottleneck at one hospital with free slots at another; one MMG group with low furosemide collection; rural cluster (lives alone, more than 40 km) dropping telemonitoring | `src/sim/scenarios/{1,2,3}.yaml` | Same pattern types, different locations per scenario |

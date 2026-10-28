@@ -109,3 +109,21 @@ Not found: PNE values for the hospitals of ATS Val Padana. The PNE portal (pne.a
 - Step 1.10, done: `uv run carepath-reference-data` downloads sources 1–2 plus ISTAT's province totals, writes `data/comuni.csv`, `data/population_by_age.csv` and `data/sources.csv`, and fails unless the comuni add up to ISTAT's province totals per age and sex. The ATS list (source 3) is transcribed in `data/asst_cremona_comuni.csv`.
 - Step 1.11, done: the same command reads source 6, writes `lat`/`lon` (area centroid) into `data/comuni.csv` and the map file `src/ui/assets/comuni.geojson` (0.28 MB, no simplification needed, so neighbouring comuni share exact borders). `src/ui/map-test.html` draws it (`npm run dev`, then `/map-test.html`).
 - The ATS list is from 2022. The script fails if any of its names is missing from the current ISTAT list, so a later merger of comuni shows up at once.
+
+## 7. Population (step 1.14)
+
+`sim.population.generate_patients(seed)` returns the `patients` and `mmg` tables of SPEC §3.2. Every random draw uses `sim.rng.component_rng(seed, "population")`, so the same seed gives the same population, byte for byte. The distributions are plotted in `testing/notebooks/population.ipynb`.
+
+With seed 42: 10,000 patients, mean age 77.3, 57% women, 34% living alone, 853 patients more than 40 km from their hospital; 540 MMG in 16 cooperatives, about 18 HF patients per MMG.
+
+| What | How | Assumption |
+|---|---|---|
+| Age, sex, comune | ISTAT cells (comune × sex × 5-year band, ages 45+) sampled with weight population × HF prevalence; age uniform inside the band | prevalence by band start: 45: 0.4%, 50: 0.6%, 55: 1%, 60: 1.5%, 65: 2.5%, 70: 4%, 75: 6%, 80: 9%, 85+: 12–15%. Only the relative weights matter |
+| Lives alone | Bernoulli by age and sex | under 65: 15%; 65–74: F 30%, M 15%; 75–84: F 45%, M 20%; 85+: F 55%, M 30% |
+| MMG | per comune, adults (15+) ÷ 1,300, rounded, at least one; a patient gets a random MMG of their comune | 1,300 adults per MMG (Lombardy ceiling 1,500) |
+| Cooperative, Centro Servizi | within each ASST, comuni walked west to east and cut into groups of about 30 MMG; comuni are never split; one Centro Servizi per cooperative | 30 MMG per cooperative. Cremona city alone has 48 MMG, so it forms one cooperative |
+| Reference hospital, distance | the hospital of the patient's ASST; road distance from `data/distances.csv` | — |
+| Conditions | `['HF']`; Maria `['HF', 'T2D']`. Other T2D patients come with option B | — |
+| Maria | `p_00001`, F, 81, Poggio Rusco, lives alone, 44.8 km from `osp_A`, in every seed | Solution Plan §6 |
+
+Known limit: about 22% of patients live in the comune of their hospital (Mantova, Cremona, Crema) and get 0 km. If the risk model or the outcome model uses distance, step 1.16 should give them a small in-town distance instead.
