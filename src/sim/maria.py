@@ -7,9 +7,10 @@ on day 24; her furosemide supply ran out on day 0 and she collects nothing, so o
 30 days without it, and her HbA1c is late; she starts to decompensate on day 40 (weight +0.7 kg a day)
 and is readmitted on day 47.
 
-With agents: a Centro Servizi call between day 31 and 46 finds that nobody can bring her the drug.
-Home delivery arrives 2 days later and HbA1c is done 9 days later (day 33 and 40 for a day-31 call); the
-decompensation never happens. The call and its effects carry the action id (SPEC §3.1).
+With agents: a Centro Servizi call between day 31 and 46 finds that nobody can bring her the drug
+(sim.feedback records the CALL on the call day). From the next day: HbA1c booked, home delivery 2 days
+after the call, HbA1c done 9 days after it (days 32, 33 and 40 for a day-31 call); the decompensation never
+happens. The effects carry the action id (SPEC §3.1).
 
 Her slots do not use facility capacity, so no scenario can shift her days.
 """
@@ -17,6 +18,7 @@ Her slots do not use facility capacity, so no scenario can shift her days.
 from sim.rng import component_rng
 
 PATIENT_ID = "p_00001"
+CALL_OUTCOME = "delivery_arranged"
 HOSPITAL, CLINIC = "osp_A", "amb_3"  # her hospital; the nearest clinic, for the HbA1c draw
 HF_CODE, DRUG, HBA1C = "428.0", "C03CA01", "4548-4"  # demo codes (delivery plan D28)
 ADMITTED, DISCHARGED = -8, 0
@@ -67,8 +69,7 @@ class MariaScript:
             ev.append(("TELEMON_START", None, None, None, None))
         if self.call_day is not None:
             c = self.call_day
-            if day == c:
-                ev.append(("CALL", "delivery_arranged", None, None, act))
+            if day == c + 1:
                 ev.append(("BOOKING", "lab", float(c + HBA1C_AFTER), CLINIC, act))
             if day >= c + DELIVERY_AFTER and (day - c - DELIVERY_AFTER) % SUPPLY_DAYS == 0:
                 ev.append(("DISPENSE", DRUG, float(SUPPLY_DAYS), None, act))  # home delivery

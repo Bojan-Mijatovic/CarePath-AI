@@ -220,11 +220,18 @@ Pattern 3 hits few patients (39–75) by design: they are a small group of comun
 | −120 … −30 | collects furosemide every 30 days; the supply runs out on day 0 | same |
 | 3, 24 | cardiology visit booked, done on day 24 | same |
 | 6 | telemonitoring starts, daily readings about 71.5 kg | same |
-| 31 | 30 days without furosemide; HbA1c late | `CALL` "delivery_arranged"; HbA1c booked at `amb_3` |
+| 31 | 30 days without furosemide; HbA1c late | `CALL` "delivery_arranged" (recorded by `sim.feedback`) |
+| 32 | — | HbA1c booked at `amb_3` |
 | 33 | — | furosemide delivered home, then every 30 days |
 | 40 | decompensation starts, weight +0.7 kg a day | HbA1c done (LOINC 4548-4, 8.4%) |
 | 47 | **readmitted** at `osp_A`, discharged on day 55 | no readmission |
 
-The with-agents branch starts when `Simulator.receive_call("p_00001", day, action_id)` is called on any day from 31 to 46; delivery comes 2 days and HbA1c 9 days after the call, and the call and its effects carry `source = agent_action` and the action id. Before the call both arms are identical (tested). Step 1.20 wires this entry point to the action service; for other patients it does nothing until then.
+The with-agents branch starts when a `call_task` for `p_00001` executed on any day from 31 to 46 goes through `sim.feedback.apply` (§12); booking comes the next day, delivery 2 days and HbA1c 9 days after the call, and all carry `source = agent_action` and the action id. Before the call both arms are identical (tested).
+
+## 12. Action feedback (step 1.20)
+
+`sim.feedback.apply(run_id, actions)` is how the action service (step 2.12) tells the simulation what it executed on day D, after the simulator's step for D (SPEC §9 tick order). It returns the events that record the actions on day D: `call_task` → `CALL`, `reminder` → `REMINDER`; other types leave no patient event. Effects appear from D + 1 in `Simulator.step`. Until step 2.13 they are a no-op for everyone but Maria, and a test checks that a call or a reschedule changes no simulated event. Step 2.13 adds the effects with their probabilities in the config, which is where AC8 is measured.
+
+The process running a run registers its simulator first: `sim.feedback.register(run_id, sim)`.
 
 Maria follows her story, not the pathway file: she is the one place where HF steps are written in code, on purpose. Her comune is Poggio Rusco (§3), while the prototype header says Sermide e Felonica; the console shows the data.

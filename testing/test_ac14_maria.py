@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from engine import pathway as pathway_model
-from sim import maria
+from sim import feedback, maria
 from sim.population import generate_patients, load_reference
 from sim.step import Simulator, load_scenario
 
@@ -23,11 +23,15 @@ def maria_events(ref, seed, scenario, call):
     patients, mmg = generate_patients(seed, ref)
     sim = Simulator(seed, patients, ref, pathway_model.load("hf_lombardia_v1"), days=DAYS)
     sim.apply_scenario(load_scenario(scenario), mmg)
+    run_id = f"s{scenario}_{'agents' if call else 'baseline'}"
+    feedback.register(run_id, sim)
     frames = sim.warm_up()
     for d in range(DAYS):
-        if call and d == 31:
-            assert sim.receive_call(maria.PATIENT_ID, d, "act_s_agents_1")
         frames.append(sim.step(d))
+        if call and d == 31:  # the action service runs after the simulator's day (SPEC §9)
+            frames.append(feedback.apply(run_id, [{"action_id": "act_s_agents_1", "type": "call_task",
+                                                   "patient_id": maria.PATIENT_ID, "executed_day": d}]))
+    feedback.unregister(run_id)
     ev = pd.concat(frames, ignore_index=True)
     return ev[ev.patient_id == maria.PATIENT_ID][KEEP].reset_index(drop=True)
 
@@ -69,7 +73,10 @@ def test_ac14_without_agents_readmitted_on_day_47(runs):
 @pytest.mark.acceptance
 def test_ac14_with_agents_call_on_31_delivery_33_hba1c_40_no_readmission(runs):
     ev = runs[RUNS[0] + (True,)]
-    assert days_of(ev, "CALL") == [31]
+    call = ev[ev.event_type == "CALL"]
+    assert call.day.tolist() == [31]
+    assert call.code.tolist() == [maria.CALL_OUTCOME]
+    assert days_of(ev, "BOOKING") == [3, 32]  # cardiology, then HbA1c booked the day after the call
     assert 33 in days_of(ev, "DISPENSE")
     lab = ev[ev.event_type == "LAB"]
     assert lab.day.tolist() == [40]
@@ -84,8 +91,8 @@ def test_ac14_with_agents_call_on_31_delivery_33_hba1c_40_no_readmission(runs):
 
 def test_arms_differ_only_after_the_call(runs):
     without, with_ = runs[RUNS[0] + (False,)], runs[RUNS[0] + (True,)]
-    pd.testing.assert_frame_equal(without[without.day < 31].reset_index(drop=True),
-                                  with_[with_.day < 31].reset_index(drop=True))
+    before = lambda ev: ev[(ev.day < 31) | ((ev.day == 31) & (ev.event_type != "CALL"))].reset_index(drop=True)
+    pd.testing.assert_frame_equal(before(without), before(with_), check_dtype=False)  # values, not dtypes
 
 
 def test_a_call_outside_the_window_changes_nothing():

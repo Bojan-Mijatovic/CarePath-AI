@@ -209,13 +209,27 @@ class Simulator:
             for s in self.periodic_steps:
                 self.next_due[s.id][0] = maria_script.NOT_SCHEDULED
 
-    def receive_call(self, patient_id: str, day: int, action_id: str) -> bool:
-        """A Centro Servizi call to a patient, executed on `day` by the action service. Returns whether it
-        changed the patient's path. Maria's script reacts now; other patients get their effects with the
-        feedback hook of step 1.20."""
-        if self.maria is not None and patient_id == maria_script.PATIENT_ID:
-            return self.maria.receive_call(day, action_id)
-        return False
+    def apply_actions(self, day: int, actions: pd.DataFrame) -> pd.DataFrame:
+        """Actions the action service executed on `day`, after step(day) (SPEC §9 tick order). Returns the
+        events that record them on `day`; their effects appear from day + 1 in step().
+
+        Step 1.20 records calls and reminders and runs Maria's script; every other effect is a no-op until
+        the Intervention agent (step 2.13) gives them probabilities in the config."""
+        index = {pid: i for i, pid in enumerate(self.patient_id)}
+        chunks = []
+        for a in actions.itertuples():
+            if a.patient_id not in index:
+                raise ValueError(f"action {a.action_id}: unknown patient {a.patient_id}")
+            idx = np.array([index[a.patient_id]])
+            if a.type == "call_task":
+                outcome = "completed"
+                if self.maria is not None and a.patient_id == maria_script.PATIENT_ID \
+                        and self.maria.receive_call(day, a.action_id):
+                    outcome = maria_script.CALL_OUTCOME
+                chunks.append((idx, "CALL", outcome, None, None, a.action_id))
+            elif a.type == "reminder":
+                chunks.append((idx, "REMINDER", "sms", None, None, a.action_id))
+        return self._frame(day, chunks)
 
     def apply_scenario(self, scenario: Scenario, mmg: pd.DataFrame) -> None:
         """Inject the three patterns of one envelope (step 1.17). Call before the warm-up."""

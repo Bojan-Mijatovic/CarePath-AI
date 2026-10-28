@@ -367,7 +367,7 @@ The baseline arm skips steps 6 and 7.
 
 What-if runs skip LLM calls, view refreshes and WebSocket pushes; they compute KPIs once at the end. If AC4 is missed at the week-3 checkpoint, the demo lever's results are precomputed per scenario and replayed (D22).
 
-**Feedback hook:** `sim.feedback.apply(run_id, actions_executed_today) -> list[event]`. The probabilities of each effect (for example, how much a call raises dispensing) are configuration, listed in the limitations.
+**Feedback hook:** `sim.feedback.apply(run_id, actions_executed_today) -> DataFrame of events` (§3.1 columns). The action service calls it once a day, after the simulator's step for that day, with the §7.1 rows it executed (`action_id`, `type`, `patient_id`, `executed_day` required; one day per call). The returned events record the actions themselves on day D (`call_task` → `CALL`, `reminder` → `REMINDER`, with `source = agent_action` and the `action_id`); their effects appear from day D + 1 in the simulator's own events. The process running a run registers its simulator with `sim.feedback.register(run_id, sim)`. Until step 2.13 the effects are a no-op except Maria's scripted response (step 1.19). The probabilities of each effect (for example, how much a call raises dispensing) will be configuration, listed in the limitations.
 
 ## 10. API and WebSocket
 
