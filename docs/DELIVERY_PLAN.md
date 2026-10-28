@@ -136,7 +136,7 @@ The critical path is R1 and R5 in week 2.
 | 1.6 | API and WebSocket contract: REST endpoints from Solution Plan §7; WS envelope `{type: tick\|alert\|action\|investigation, scenario, day, payload}` | R5, R4 | SPEC §API | R4 signs off |
 | 1.7 | Acceptance criteria AC1–AC19 copied into SPEC with owner, measurement method and test file name. **Done** (reviewed 28 Oct 2026): 18 stubs generated from the SPEC table, each skipped with the step that replaces it; AC14 is already real; `test_spec_acceptance_files.py` fails if an AC loses its file | R5 | SPEC §Acceptance | Each AC has a test stub in `testing/` |
 | 1.8 | PDTA texts in Italian: heart failure (final), type 2 diabetes (draft). **Done** (reviewed 28 Oct 2026): Italian sources with English translations (D30); a test keeps the HF text in line with `hf_lombardia_v1.json`; demo values (D28); the Italian wording still goes to the Italian colleague before rehearsals (step 4.6) | R5 | `spec/pdta/` | Reviewed by the Italian colleague |
-| 1.9 | **Contract freeze** at the end of day 2; later changes only via the sync and the decision register | R5 | Tag `spec-v1` | Tag pushed |
+| 1.9 | **Contract freeze** at the end of day 2; later changes only via the sync and the decision register. **Done** 28 Oct 2026: SPEC v1.0 with C1–C13 applied in the text and the code (`actions.rationale` is JSON `{"it", "en"}`), every section signed off by the lead | R5 | Tag `spec-v1` | Tag pushed |
 
 ### 6.2 Reference data (R1)
 
@@ -169,7 +169,7 @@ The critical path is R1 and R5 in week 2.
 | 1.24 | Tools v1 against fixtures; 10 benchmark questions with expected answers per scenario. At least 3 of the 10 have a "no" or "not here" answer (for example a hospital without an echo bottleneck), so the benchmark also shows that agents do not find patterns that are not there | R3 | `src/agents/tools.py`, `testing/benchmark/` |
 | 1.25 | Screens on fixtures: Storia di Maria, Buste, Panoramica, Attività agenti side panel | R4 | `src/ui/` |
 
-**Scope gate (end of week 2):** the pattern notebook passes for all 3 scenarios, Maria is stable (AC14), one simulated day runs in under 1 s, and SPEC `spec-v1` is tagged.
+**Scope gate (end of week 2):** the pattern notebook passes for all 3 scenarios, Maria is stable (AC14), one simulated day runs in under 1 s, and SPEC `spec-v1` is tagged. **Passed 28 Oct 2026** (week 1): 12 of 12 places found blind (1.21), AC14 10 of 10 (1.19), about 6 ms per simulated day (1.15), `spec-v1` tagged (1.9). Steps 1.22–1.25 continue in parallel.
 **If it fails:** option B (diabetes) moves to a slide immediately; generic contracts stay; R1 keeps working on the simulator in week 3 and R2 takes the state engine alone.
 
 ---

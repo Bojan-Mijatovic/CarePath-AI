@@ -122,7 +122,7 @@ TABLES = {
         scope           JSON,
         pathway_id      VARCHAR,
         payload         JSON NOT NULL,
-        rationale_it    VARCHAR NOT NULL,
+        rationale       JSON NOT NULL,
         evidence        JSON NOT NULL,
         autonomy_level  INTEGER NOT NULL CHECK (autonomy_level BETWEEN 0 AND 3),
         status          VARCHAR NOT NULL CHECK (status IN {_one_of(ACTION_STATUSES)}),

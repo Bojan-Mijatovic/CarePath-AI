@@ -18,7 +18,7 @@ SPEC_COLUMNS = {
     "pathway_state": ["patient_id", "pathway_id", "enrolled_day", "enrolled_by", "current_step", "next_step",
                       "next_due_day", "next_booked_day", "status", "overdue_steps", "escalation_step",
                       "last_event_day", "risk_score", "risk_drivers", "flags", "updated_day"],
-    "actions": ["action_id", "agent", "type", "patient_id", "scope", "pathway_id", "payload", "rationale_it",
+    "actions": ["action_id", "agent", "type", "patient_id", "scope", "pathway_id", "payload", "rationale",
                 "evidence", "autonomy_level", "status", "created_day", "executed_day", "decided_by"],
     "audit_log": ["ts_day", "action_id", "event", "actor", "details"],
 }

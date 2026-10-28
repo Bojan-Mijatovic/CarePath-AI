@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **DRAFT v0.3**: changes C1–C13 accepted (§12, Q3); freezes as tag `spec-v1` at step 1.9 (delivery plan) |
+| Status | **v1.0, frozen** as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9). Changes from now on follow §0 |
 | Last updated | 28 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -10,21 +10,23 @@
 
 ## 0. Sign-off and change control
 
+Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he approves for the team); the TL reviewed the draft the same day.
+
 | Section | Co-owner | Signed off |
 |---|---|---|
-| §2 Conventions, §3 Data | R1 | ☐ |
-| §4 Pathway model | R2 | ☐ |
-| §5 State and views | R2, R4 | ☐ |
-| §6 Tools | R3 | ☐ |
-| §7 Actions and autonomy | R3 | ☐ |
-| §8 LLM gateway | R3 | ☐ |
-| §9 Simulation runtime | R1, R2 | ☐ |
-| §10 API and WebSocket | R4 | ☐ |
-| §11 Acceptance criteria | all | ☐ |
+| §2 Conventions, §3 Data | R1 | ☑ 28 Oct 2026 |
+| §4 Pathway model | R2 | ☑ 28 Oct 2026 |
+| §5 State and views | R2, R4 | ☑ 28 Oct 2026 |
+| §6 Tools | R3 | ☑ 28 Oct 2026 |
+| §7 Actions and autonomy | R3 | ☑ 28 Oct 2026 |
+| §8 LLM gateway | R3 | ☑ 28 Oct 2026 |
+| §9 Simulation runtime | R1, R2 | ☑ 28 Oct 2026 |
+| §10 API and WebSocket | R4 | ☑ 28 Oct 2026 |
+| §11 Acceptance criteria | all | ☑ 28 Oct 2026 |
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (proposed in this draft, need agreement)
+### Changes vs Solution Plan (all accepted in `spec-v1`)
 
 | # | Change | Why |
 |---|---|---|
@@ -220,7 +222,7 @@ All views are DuckDB views or tables refreshed once per tick and must answer in 
 | `kpi_daily` | day × pathway × level (`ats`, `asst`, `comune`) × key | `patients`, `on_track_pct`, `overdue`, `dropped`, `readmissions_30d`, `readmission_rate_30d`, `actions_executed`, `actions_pending`, `est_readmission_cost_eur` |
 | `sankey_flows` | pathway × from_step × to_step × status | `patients` |
 | `map_comuni` | comune × pathway | `adherence_pct`, `risk_mean`, `high_risk_patients`, `readmission_rate_30d`, `alarm` |
-| `worklist_today` | patient (all pathways merged) | `rank`, `risk_score`, `reasons` (Italian), `pathways`, `escalation_step`, `script` (filled by Daily Worklist), `outcome` (filled by the operator or the simulation) |
+| `worklist_today` | patient (all pathways merged) | `rank`, `risk_score`, `reasons` (JSON `{"it", "en"}`, C13), `pathways`, `escalation_step`, `script` (JSON `{"it", "en"}`, filled by Daily Worklist), `outcome` (filled by the operator or the simulation) |
 
 **Readmission, PNE-style:** an unplanned `ADMISSION` within 30 days after a `DISCHARGE` with an HF main diagnosis. Rate = such readmissions ÷ HF discharges in the period. Simplified versus the official PNE protocol; the simplification is listed in the limitations.
 
@@ -283,7 +285,7 @@ The canonical JSON schemas for these tools live in `src/agents/tools.py` and are
 | `scope` | JSON NULL | e.g. `{"facility_id": "osp_B", "patients": 18}` |
 | `pathway_id` | VARCHAR NULL | |
 | `payload` | JSON | type-specific, e.g. `{"from_facility": "osp_B", "to_facility": "osp_C", "day": 39}` |
-| `rationale_it` | VARCHAR | Italian text for the UI |
+| `rationale` | JSON | `{"it": "...", "en": "..."}` text for the UI (C13) |
 | `evidence` | JSON | list of tool `source` blocks that support the action |
 | `autonomy_level` | INTEGER | level in force when created |
 | `status` | VARCHAR | `proposed`, `approved`, `executed`, `rejected`, `undone` |
@@ -408,9 +410,9 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `type` | `payload` |
 |---|---|
 | `tick` | `{"speed": 4, "kpi": {...}}`: headline numbers for the cards |
-| `alert` | `{"level": "patient" \| "regional", "text_it": "...", "facility_id": "osp_B", "investigation_id": "..."}` |
+| `alert` | `{"level": "patient" \| "regional", "text": {"it": "...", "en": "..."}, "facility_id": "osp_B", "investigation_id": "..."}` |
 | `action` | one row of `actions` |
-| `investigation` | `{"investigation_id", "step": n, "tool", "args", "result_summary_it", "verified": true \| false \| null, "final": false}` |
+| `investigation` | `{"investigation_id", "step": n, "tool", "args", "result_summary": {"it", "en"}, "verified": true \| false \| null, "final": false}` |
 
 ## 11. Acceptance criteria
 
