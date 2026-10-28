@@ -24,7 +24,7 @@ uv run python testing/fixtures/scenario.py   # rewrite every JSON file here (abo
 | `api/actions_s2_agents.json` | `GET /api/actions`: `actions` rows (SPEC §7.1) | written by the builder, not by the action service; the reschedule's numbers and evidence come from the tools; the call's evidence is a shape example, since no tool answers for a single patient |
 | `api/sankey_s2_agents.json` | `GET /api/sankey`: `sankey_flows` on day 62 (SPEC §5.2, C15) | real |
 | `api/map_s2_agents.json` | `GET /api/map`: `map_comuni` on day 62 (SPEC §5.2, C18) | real, with Risk on every tick (step 2.3) |
-| `api/worklist_s2_agents.json` | `GET /api/worklist`: `worklist_today`, 20 rows | **stand-in**: ranked dropped first, then by days late; `risk_score` 0, `script` and `outcome` null; the ranking comes in step 2.4 (SPEC Q7) |
+| `api/worklist_s2_agents.json` | `GET /api/worklist`: the top 20 of `worklist_today` on day 62 (SPEC §5.2, C20) | real; `script` and `outcome` are null until the Daily Worklist agent and the action service |
 | `stream/tick.json` | `tick` on day 35, `kpi` as in C15 | real |
 | `stream/alert_patient.json`, `stream/alert_regional.json` | `alert`, Maria on day 31 and Ospedale B on day 35 | numbers real (the regional one from the tools); when Monitoring raises them is step 2.8 |
 | `stream/action.json` | `action`: Maria's call | as `actions` |

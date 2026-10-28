@@ -95,6 +95,15 @@ def test_sankey_and_map(client):
         r["key"] for r in client.get("/api/kpi", params={"level": "comune"}).json() if r["day"] == day}
 
 
+def test_worklist_by_day(client):
+    day = client.post("/api/sim/pause").json()["day"]
+    today = client.get("/api/worklist").json()
+    assert today == client.get("/api/worklist", params={"day": day}).json()
+    assert [r["rank"] for r in today] == list(range(1, len(today) + 1))
+    assert client.get("/api/worklist", params={"day": day - 1}).json()  # earlier lists stay (demo step 9a)
+    assert client.get("/api/worklist", params={"run": "s2_baseline"}).json() == []
+
+
 def test_patient_actions_and_story(client):
     maria = client.get("/api/patients/p_00001", params={"run": "s2_baseline"}).json()
     assert maria["patient"]["comune_name"] == "Poggio Rusco"

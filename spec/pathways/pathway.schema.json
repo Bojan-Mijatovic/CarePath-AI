@@ -2,6 +2,28 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "pathway.schema.json",
   "$defs": {
+    "Bilingual": {
+      "additionalProperties": false,
+      "description": "A name the console and the worklist show (SPEC §2 language rule).",
+      "properties": {
+        "it": {
+          "minLength": 1,
+          "title": "It",
+          "type": "string"
+        },
+        "en": {
+          "minLength": 1,
+          "title": "En",
+          "type": "string"
+        }
+      },
+      "required": [
+        "it",
+        "en"
+      ],
+      "title": "Bilingual",
+      "type": "object"
+    },
     "Eligibility": {
       "additionalProperties": false,
       "properties": {
@@ -20,6 +42,14 @@
           },
           "title": "Any Drug Atc",
           "type": "array"
+        },
+        "drug_names": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Bilingual"
+          },
+          "description": "name of each drug in any_drug_atc",
+          "title": "Drug Names",
+          "type": "object"
         }
       },
       "title": "Eligibility",
@@ -116,6 +146,9 @@
           "pattern": "^[a-z][a-z0-9_]*$",
           "title": "Id",
           "type": "string"
+        },
+        "label": {
+          "$ref": "#/$defs/Bilingual"
         },
         "event": {
           "enum": [
@@ -235,6 +268,7 @@
       },
       "required": [
         "id",
+        "label",
         "event"
       ],
       "title": "Step",

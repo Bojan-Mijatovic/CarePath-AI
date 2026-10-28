@@ -75,7 +75,8 @@ class RiskModel:
         if json.loads(self.booster.attr("features")) != self.names:
             raise ValueError(f"{self.path} was trained on other features; retrain with python -m engine.risk")
         self.written: tuple[np.ndarray, np.ndarray] | None = None  # scores and driver indexes as last written
-        self.risk: np.ndarray | None = None  # every patient's score on the last update
+        self.risk: np.ndarray | None = None  # every patient's score and driver indexes on the last update
+        self.top: np.ndarray | None = None
 
     def score(self, state: StateEngine, day: int) -> tuple[np.ndarray, np.ndarray]:
         """(risk per patient rounded as SPEC §2, top driver indexes per patient with -1 for none). Drivers
@@ -98,7 +99,7 @@ class RiskModel:
         """Score everyone and write risk_score, and risk_drivers only where they changed (a list column
         costs a whole-row rewrite, as for overdue_steps). Returns how many rows changed."""
         risk, top = self.score(state, day)
-        self.risk = risk
+        self.risk, self.top = risk, top
         old_risk, old_top = self.written or (np.full_like(risk, -1.0), np.full_like(top, -2))
         enrolled = state.enrolled_day <= day
         new_risk = enrolled & (risk != old_risk)

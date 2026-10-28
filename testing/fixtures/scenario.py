@@ -25,7 +25,9 @@ import pandas as pd
 from agents import tools
 from engine import pathway as pathway_model
 from engine.db import create_run, open_run, tool_cursor
+from engine import worklist
 from engine.queries import kpi_headline, map_comuni, patient_360, rows, sankey
+from engine.queries import worklist as worklist_rows
 from engine.risk import HIGH_RISK, RiskModel
 from engine.state import StateEngine
 from sim.population import generate_patients, load_reference
@@ -148,6 +150,8 @@ def build_runs(runs_dir: Path) -> dict:
                 risk.update(con, state, d)
                 state.refresh_kpi(con, d)
                 state.refresh_map(con, d, risk.risk, HIGH_RISK)
+                if agents:
+                    worklist.refresh(con, state, risk, d)
                 if agents and d == CALL_DAY:  # Intervention runs after the views (SPEC §9, steps 5–6)
                     call_maria(con, sim, d)
                 if agents and d == ALARM_DAY:
@@ -155,22 +159,6 @@ def build_runs(runs_dir: Path) -> dict:
             con.execute("DELETE FROM capacity_slots")
             append(con, "capacity_slots", sim.capacity_slots())
     return live
-
-
-def worklist_stand_in(con, day: int) -> list[dict]:
-    """worklist_today shape with stand-in values (README.md): ranked by status and lateness until Risk
-    (step 2.3) and the worklist (step 2.4) exist."""
-    late = rows(con, f"""
-        SELECT patient_id, risk_score, overdue_steps, escalation_step, $d - next_due_day AS days_late
-        FROM pathway_state WHERE status IN ('overdue', 'dropped')
-        ORDER BY status = 'dropped' DESC, days_late DESC, patient_id LIMIT {WORKLIST_SIZE}""", {"d": day})
-    label = {"telemon": ("telemonitoraggio", "telemonitoring"), "cardio_visit": ("visita cardiologica", "cardiology visit"),
-             "echo": ("ecocardiogramma", "echocardiogram"), "lab_bnp": ("esame BNP", "BNP test")}
-    return [{"rank": i, "patient_id": r["patient_id"], "risk_score": r["risk_score"],
-             "reasons": {"it": "; ".join(f"{label[s][0]} in ritardo" for s in r["overdue_steps"]),
-                         "en": "; ".join(f"{label[s][1]} overdue" for s in r["overdue_steps"])},
-             "pathways": [PATHWAY_ID], "escalation_step": r["escalation_step"], "script": None, "outcome": None}
-            for i, r in enumerate(late, 1)]
 
 
 def stream(con, live: dict) -> dict[str, object]:
@@ -228,7 +216,7 @@ def export(runs_dir: Path, live: dict) -> dict[str, object]:
         out["api/actions_s2_agents.json"] = rows(con, "SELECT * FROM actions ORDER BY created_day, action_id")
         out["api/sankey_s2_agents.json"] = sankey(con, None)
         out["api/map_s2_agents.json"] = map_comuni(con, None)
-        out["api/worklist_s2_agents.json"] = worklist_stand_in(con, last)
+        out["api/worklist_s2_agents.json"] = worklist_rows(con, last)[:WORKLIST_SIZE]
         out |= {f"stream/{name}": m for name, m in stream(con, live).items()}
         out["tools/wait_by_hospital.json"] = live["wait"]
         out["tools/free_slots.json"] = live["free"]

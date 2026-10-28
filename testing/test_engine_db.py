@@ -24,6 +24,8 @@ SPEC_COLUMNS = {
     "map_comuni": ["comune_istat", "pathway_id", "adherence_pct", "risk_mean", "high_risk_patients",
                    "readmission_rate_30d", "alarm"],
     "sankey_flows": ["pathway_id", "from_step", "to_step", "status", "patients"],
+    "worklist_today": ["day", "rank", "patient_id", "risk_score", "reasons", "pathways", "escalation_step", "script",
+                       "outcome"],
     "actions": ["action_id", "agent", "type", "patient_id", "scope", "pathway_id", "payload", "rationale",
                 "evidence", "autonomy_level", "status", "created_day", "executed_day", "decided_by"],
     "audit_log": ["ts_day", "action_id", "event", "actor", "details"],

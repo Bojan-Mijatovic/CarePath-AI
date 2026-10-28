@@ -1,11 +1,11 @@
 [
   {
     "rank": 1,
-    "patient_id": "p_03980",
-    "risk_score": 0.0642,
+    "patient_id": "p_05556",
+    "risk_score": 0.9676,
     "reasons": {
-      "it": "telemonitoraggio in ritardo",
-      "en": "telemonitoring overdue"
+      "it": "Rischio alto: 97% di ricovero in 30 giorni (+2,2 kg in 3 giorni, dimessa 29 giorni fa, 85 anni)",
+      "en": "High risk: 97% chance of admission in 30 days (+2.2 kg in 3 days, discharged 29 days ago, aged 85)"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -16,11 +16,11 @@
   },
   {
     "rank": 2,
-    "patient_id": "p_00618",
-    "risk_score": 0.0677,
+    "patient_id": "p_06600",
+    "risk_score": 0.9662,
     "reasons": {
-      "it": "telemonitoraggio in ritardo",
-      "en": "telemonitoring overdue"
+      "it": "Rischio alto: 97% di ricovero in 30 giorni (+3,1 kg in 3 giorni, ultimo ritiro di furosemide 11 giorni fa)",
+      "en": "High risk: 97% chance of admission in 30 days (+3.1 kg in 3 days, furosemide last collected 11 days ago)"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -31,11 +31,11 @@
   },
   {
     "rank": 3,
-    "patient_id": "p_08275",
-    "risk_score": 0.0209,
+    "patient_id": "p_03527",
+    "risk_score": 0.8946,
     "reasons": {
-      "it": "telemonitoraggio in ritardo",
-      "en": "telemonitoring overdue"
+      "it": "Rischio alto: 89% di ricovero in 30 giorni (+2,3 kg in 3 giorni, dimesso 147 giorni fa, 55,6 km dall'ospedale)",
+      "en": "High risk: 89% chance of admission in 30 days (+2.3 kg in 3 days, discharged 147 days ago, 55.6 km from hospital)"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -46,11 +46,11 @@
   },
   {
     "rank": 4,
-    "patient_id": "p_08799",
-    "risk_score": 0.0277,
+    "patient_id": "p_03204",
+    "risk_score": 0.5369,
     "reasons": {
-      "it": "telemonitoraggio in ritardo",
-      "en": "telemonitoring overdue"
+      "it": "Rischio alto: 54% di ricovero in 30 giorni (+1,9 kg in 3 giorni, 88 anni, ultimo ritiro di furosemide 5 giorni fa)",
+      "en": "High risk: 54% chance of admission in 30 days (+1.9 kg in 3 days, aged 88, furosemide last collected 5 days ago)"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -61,11 +61,11 @@
   },
   {
     "rank": 5,
-    "patient_id": "p_01200",
-    "risk_score": 0.0163,
+    "patient_id": "p_05108",
+    "risk_score": 0.4948,
     "reasons": {
-      "it": "telemonitoraggio in ritardo",
-      "en": "telemonitoring overdue"
+      "it": "Rischio alto: 49% di ricovero in 30 giorni (dimesso 7 giorni fa, ultimo ritiro di furosemide 128 giorni fa, ultima lettura oggi)",
+      "en": "High risk: 49% chance of admission in 30 days (discharged 7 days ago, furosemide last collected 128 days ago, last reading today)"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -76,11 +76,11 @@
   },
   {
     "rank": 6,
-    "patient_id": "p_01725",
-    "risk_score": 0.0571,
+    "patient_id": "p_01345",
+    "risk_score": 0.3875,
     "reasons": {
-      "it": "telemonitoraggio in ritardo",
-      "en": "telemonitoring overdue"
+      "it": "Rischio alto: 39% di ricovero in 30 giorni (dimesso 16 giorni fa, +1,5 kg in 3 giorni, 89 anni)",
+      "en": "High risk: 39% chance of admission in 30 days (discharged 16 days ago, +1.5 kg in 3 days, aged 89)"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -91,11 +91,11 @@
   },
   {
     "rank": 7,
-    "patient_id": "p_03841",
-    "risk_score": 0.0438,
+    "patient_id": "p_03803",
+    "risk_score": 0.363,
     "reasons": {
-      "it": "telemonitoraggio in ritardo; visita cardiologica in ritardo; ecocardiogramma in ritardo",
-      "en": "telemonitoring overdue; cardiology visit overdue; echocardiogram overdue"
+      "it": "Rischio alto: 36% di ricovero in 30 giorni (+2,0 kg in 3 giorni, ultimo ritiro di furosemide 10 giorni fa); Esame BNP in ritardo di 80 giorni",
+      "en": "High risk: 36% chance of admission in 30 days (+2.0 kg in 3 days, furosemide last collected 10 days ago); BNP test 80 days overdue"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -106,11 +106,11 @@
   },
   {
     "rank": 8,
-    "patient_id": "p_05493",
-    "risk_score": 0.0243,
+    "patient_id": "p_09199",
+    "risk_score": 0.3284,
     "reasons": {
-      "it": "telemonitoraggio in ritardo; ecocardiogramma in ritardo",
-      "en": "telemonitoring overdue; echocardiogram overdue"
+      "it": "Rischio alto: 33% di ricovero in 30 giorni (ultimo ritiro di furosemide oggi, 96 anni, 48,7 km dall'ospedale)",
+      "en": "High risk: 33% chance of admission in 30 days (furosemide last collected today, aged 96, 48.7 km from hospital)"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -121,11 +121,11 @@
   },
   {
     "rank": 9,
-    "patient_id": "p_02121",
-    "risk_score": 0.0359,
+    "patient_id": "p_01239",
+    "risk_score": 0.3025,
     "reasons": {
-      "it": "telemonitoraggio in ritardo",
-      "en": "telemonitoring overdue"
+      "it": "Rischio alto: 30% di ricovero in 30 giorni (ultimo ritiro di furosemide oggi, dimessa 69 giorni fa); Telemonitoraggio in ritardo di 62 giorni; Visita cardiologica in ritardo di 39 giorni",
+      "en": "High risk: 30% chance of admission in 30 days (furosemide last collected today, discharged 69 days ago); Telemonitoring 62 days overdue; Cardiology visit 39 days overdue"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -136,11 +136,11 @@
   },
   {
     "rank": 10,
-    "patient_id": "p_07188",
-    "risk_score": 0.0557,
+    "patient_id": "p_08131",
+    "risk_score": 0.2993,
     "reasons": {
-      "it": "telemonitoraggio in ritardo; ecocardiogramma in ritardo; esame BNP in ritardo",
-      "en": "telemonitoring overdue; echocardiogram overdue; BNP test overdue"
+      "it": "Rischio alto: 30% di ricovero in 30 giorni (dimesso 6 giorni fa, ultimo ritiro di furosemide 50 giorni fa, vive solo)",
+      "en": "High risk: 30% chance of admission in 30 days (discharged 6 days ago, furosemide last collected 50 days ago, lives alone)"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -151,11 +151,11 @@
   },
   {
     "rank": 11,
-    "patient_id": "p_01695",
-    "risk_score": 0.0136,
+    "patient_id": "p_08288",
+    "risk_score": 0.2942,
     "reasons": {
-      "it": "telemonitoraggio in ritardo; esame BNP in ritardo",
-      "en": "telemonitoring overdue; BNP test overdue"
+      "it": "Rischio alto: 29% di ricovero in 30 giorni (+1,8 kg in 3 giorni, dimessa 79 giorni fa); Visita cardiologica in ritardo di 49 giorni",
+      "en": "High risk: 29% chance of admission in 30 days (+1.8 kg in 3 days, discharged 79 days ago); Cardiology visit 49 days overdue"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -166,11 +166,11 @@
   },
   {
     "rank": 12,
-    "patient_id": "p_05416",
-    "risk_score": 0.052,
+    "patient_id": "p_02120",
+    "risk_score": 0.2575,
     "reasons": {
-      "it": "telemonitoraggio in ritardo; ecocardiogramma in ritardo",
-      "en": "telemonitoring overdue; echocardiogram overdue"
+      "it": "Rischio alto: 26% di ricovero in 30 giorni (dimessa 28 giorni fa, 98 anni, vive sola); Telemonitoraggio in ritardo di 21 giorni",
+      "en": "High risk: 26% chance of admission in 30 days (discharged 28 days ago, aged 98, lives alone); Telemonitoring 21 days overdue"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -181,11 +181,11 @@
   },
   {
     "rank": 13,
-    "patient_id": "p_05738",
-    "risk_score": 0.0335,
+    "patient_id": "p_00704",
+    "risk_score": 0.2563,
     "reasons": {
-      "it": "telemonitoraggio in ritardo",
-      "en": "telemonitoring overdue"
+      "it": "Rischio alto: 26% di ricovero in 30 giorni (+1,5 kg in 3 giorni, dimessa 28 giorni fa, vive sola)",
+      "en": "High risk: 26% chance of admission in 30 days (+1.5 kg in 3 days, discharged 28 days ago, lives alone)"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -196,11 +196,11 @@
   },
   {
     "rank": 14,
-    "patient_id": "p_01044",
-    "risk_score": 0.0535,
+    "patient_id": "p_03279",
+    "risk_score": 0.2396,
     "reasons": {
-      "it": "telemonitoraggio in ritardo; visita cardiologica in ritardo; ecocardiogramma in ritardo",
-      "en": "telemonitoring overdue; cardiology visit overdue; echocardiogram overdue"
+      "it": "Rischio alto: 24% di ricovero in 30 giorni (dimessa 14 giorni fa, 45,9 km dall'ospedale, ultima lettura oggi); Telemonitoraggio in ritardo di 7 giorni",
+      "en": "High risk: 24% chance of admission in 30 days (discharged 14 days ago, 45.9 km from hospital, last reading today); Telemonitoring 7 days overdue"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -211,11 +211,11 @@
   },
   {
     "rank": 15,
-    "patient_id": "p_03734",
-    "risk_score": 0.0577,
+    "patient_id": "p_02411",
+    "risk_score": 0.2345,
     "reasons": {
-      "it": "telemonitoraggio in ritardo",
-      "en": "telemonitoring overdue"
+      "it": "Rischio alto: 23% di ricovero in 30 giorni (dimessa 13 giorni fa, ultima lettura oggi, 31,7 km dall'ospedale); Telemonitoraggio in ritardo di 6 giorni",
+      "en": "High risk: 23% chance of admission in 30 days (discharged 13 days ago, last reading today, 31.7 km from hospital); Telemonitoring 6 days overdue"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -226,11 +226,11 @@
   },
   {
     "rank": 16,
-    "patient_id": "p_02979",
-    "risk_score": 0.087,
+    "patient_id": "p_02362",
+    "risk_score": 0.2283,
     "reasons": {
-      "it": "telemonitoraggio in ritardo; ecocardiogramma in ritardo; esame BNP in ritardo",
-      "en": "telemonitoring overdue; echocardiogram overdue; BNP test overdue"
+      "it": "Rischio alto: 23% di ricovero in 30 giorni (dimessa 10 giorni fa, ultimo ritiro di furosemide 35 giorni fa, ultima lettura oggi); Telemonitoraggio in ritardo di 3 giorni",
+      "en": "High risk: 23% chance of admission in 30 days (discharged 10 days ago, furosemide last collected 35 days ago, last reading today); Telemonitoring 3 days overdue"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -241,11 +241,11 @@
   },
   {
     "rank": 17,
-    "patient_id": "p_02337",
-    "risk_score": 0.0384,
+    "patient_id": "p_00568",
+    "risk_score": 0.2269,
     "reasons": {
-      "it": "telemonitoraggio in ritardo; esame BNP in ritardo",
-      "en": "telemonitoring overdue; BNP test overdue"
+      "it": "Rischio alto: 23% di ricovero in 30 giorni (dimessa 9 giorni fa, ultima lettura oggi, vive sola); Telemonitoraggio in ritardo di 2 giorni",
+      "en": "High risk: 23% chance of admission in 30 days (discharged 9 days ago, last reading today, lives alone); Telemonitoring 2 days overdue"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -256,11 +256,11 @@
   },
   {
     "rank": 18,
-    "patient_id": "p_07867",
-    "risk_score": 0.0313,
+    "patient_id": "p_06700",
+    "risk_score": 0.2266,
     "reasons": {
-      "it": "telemonitoraggio in ritardo",
-      "en": "telemonitoring overdue"
+      "it": "Rischio alto: 23% di ricovero in 30 giorni (dimessa 5 giorni fa, ultima lettura 168 giorni fa, 33,9 km dall'ospedale)",
+      "en": "High risk: 23% chance of admission in 30 days (discharged 5 days ago, last reading 168 days ago, 33.9 km from hospital)"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -271,11 +271,11 @@
   },
   {
     "rank": 19,
-    "patient_id": "p_07649",
-    "risk_score": 0.0743,
+    "patient_id": "p_03516",
+    "risk_score": 0.2177,
     "reasons": {
-      "it": "telemonitoraggio in ritardo",
-      "en": "telemonitoring overdue"
+      "it": "Rischio alto: 22% di ricovero in 30 giorni (dimessa 15 giorni fa, 91 anni, ultima lettura oggi); Telemonitoraggio in ritardo di 8 giorni",
+      "en": "High risk: 22% chance of admission in 30 days (discharged 15 days ago, aged 91, last reading today); Telemonitoring 8 days overdue"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -286,11 +286,11 @@
   },
   {
     "rank": 20,
-    "patient_id": "p_00557",
-    "risk_score": 0.0666,
+    "patient_id": "p_07981",
+    "risk_score": 0.214,
     "reasons": {
-      "it": "telemonitoraggio in ritardo",
-      "en": "telemonitoring overdue"
+      "it": "Rischio alto: 21% di ricovero in 30 giorni (dimessa 2 giorni fa, 97 anni, vive sola)",
+      "en": "High risk: 21% chance of admission in 30 days (discharged 2 days ago, aged 97, lives alone)"
     },
     "pathways": [
       "hf_lombardia_v1"

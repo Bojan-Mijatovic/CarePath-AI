@@ -8,7 +8,7 @@ import json
 
 import duckdb
 
-JSON_COLUMNS = {"scope", "payload", "rationale", "evidence", "details"}
+JSON_COLUMNS = {"scope", "payload", "rationale", "evidence", "details", "reasons", "script"}
 
 
 def rows(con: duckdb.DuckDBPyConnection, sql: str, params: dict | None = None) -> list[dict]:
@@ -43,6 +43,13 @@ def map_comuni(con: duckdb.DuckDBPyConnection, pathway_id: str | None) -> list[d
     """GET /api/map: map_comuni (SPEC §5.2, C18), one row per comune with enrolled patients."""
     return rows(con, "SELECT * FROM map_comuni WHERE $pw IS NULL OR pathway_id = $pw ORDER BY comune_istat, pathway_id",
                 {"pw": pathway_id})
+
+
+def worklist(con: duckdb.DuckDBPyConnection, day: int | None) -> list[dict]:
+    """GET /api/worklist: the list of `day`, or of the run's last day (SPEC §5.2, C20)."""
+    return rows(con, """
+        SELECT * EXCLUDE (day) FROM worklist_today
+        WHERE day = coalesce($d, (SELECT max(day) FROM worklist_today)) ORDER BY rank""", {"d": day})
 
 
 def actions(con: duckdb.DuckDBPyConnection, status: str | None) -> list[dict]:

@@ -192,6 +192,10 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
     def map_comuni(run: str | None = None, pathway_id: str | None = None) -> list[dict]:
         return live.read(run, lambda con: queries.map_comuni(con, pathway_id))
 
+    @api.get("/worklist")
+    def worklist(run: str | None = None, day: int | None = None) -> list[dict]:
+        return live.read(run, lambda con: queries.worklist(con, day))
+
     @api.get("/patients/{patient_id}")
     def patient(patient_id: str, run: str | None = None, day: int | None = None) -> dict:
         if day is None:

@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from engine import pathway as pathway_model
+from engine import worklist
 from engine.db import RUNS_DIR, create_run, open_run
 from engine.risk import HIGH_RISK, RiskModel
 from engine.state import StateEngine
@@ -50,6 +51,7 @@ def run(run_id: str, days: int = 365, seed: int = 42, overwrite: bool = False, r
         load_reference_tables(con, ref, patients, mmg)
         state = StateEngine(con, sim.pathway)
         risk = RiskModel(sim.pathway)
+        agents = run_id.split("_")[1] == "agents"
         for d in range(sim.first_day, days):
             t0 = time.perf_counter()
             events = sim.step(d)
@@ -61,6 +63,8 @@ def run(run_id: str, days: int = 365, seed: int = 42, overwrite: bool = False, r
                 risk.update(con, state, d)
                 state.refresh_kpi(con, d)
                 state.refresh_map(con, d, risk.risk, HIGH_RISK)
+                if agents:
+                    worklist.refresh(con, state, risk, d)
                 sim_ms.append((t1 - t0) * 1000)
                 write_ms.append((t2 - t1) * 1000)
                 state_ms.append((time.perf_counter() - t2) * 1000)

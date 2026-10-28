@@ -51,7 +51,7 @@ def _nullable(values: np.ndarray, present: np.ndarray) -> pd.arrays.IntegerArray
 class StateEngine:
     def __init__(self, con: duckdb.DuckDBPyConnection, pathway: Pathway):
         self.pathway = pathway
-        patients = con.execute("SELECT patient_id, asst_id, comune_istat, age, distance_km, lives_alone "
+        patients = con.execute("SELECT patient_id, asst_id, comune_istat, age, distance_km, lives_alone, sex "
                                "FROM patients ORDER BY patient_id").df()
         self.ids = pd.Index(patients.patient_id)
         self.asst = patients.asst_id.to_numpy(object)
@@ -59,6 +59,7 @@ class StateEngine:
         self.age = patients.age.to_numpy(float)  # static features for Risk (step 2.3)
         self.distance_km = patients.distance_km.to_numpy(float)
         self.lives_alone = patients.lives_alone.to_numpy(bool)
+        self.female = (patients.sex == "F").to_numpy(bool)  # Italian agreement in the worklist's texts
         n, k = len(patients), len(pathway.steps)
         self.step_ids = np.array([s.id for s in pathway.steps], object)
         self.pos = {s.id: j for j, s in enumerate(pathway.steps)}
@@ -84,6 +85,7 @@ class StateEngine:
         self.day: int | None = None
         self.seen = np.empty(0, object)  # ids of the events of `day` already applied
         self.status = np.zeros(n, np.int64)
+        self.due = np.full((k, n), NEVER)
         self.n_overdue = np.zeros(n, np.int64)
         self.days_overdue = np.zeros(n, np.int64)  # of the most overdue step
         self.written: np.ndarray | None = None  # engine columns as last written, to find changed rows
@@ -192,6 +194,7 @@ class StateEngine:
             elif s.every_days is not None:
                 due[j] = np.minimum(np.maximum.reduce([self.done[j], start, self.enrolled_day]) + s.every_days, NEVER)
         pending = due < NEVER
+        self.due = due  # per step and patient, NEVER when nothing is due; the worklist reads it
         left = due - day
         overdue = pending & (left < 0)
         booked = (self.booked_for >= day) & (self.booked_on > self.done)

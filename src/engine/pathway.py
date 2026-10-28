@@ -40,14 +40,23 @@ class Strict(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class Bilingual(Strict):
+    """A name the console and the worklist show (SPEC §2 language rule)."""
+    it: str = Field(min_length=1)
+    en: str = Field(min_length=1)
+
+
 class Eligibility(Strict):
     any_diagnosis: list[str] = Field(default_factory=list, description="ICD-9-CM codes; a trailing * matches a prefix")
     any_drug_atc: list[str] = Field(default_factory=list, description="ATC codes")
+    drug_names: dict[str, Bilingual] = Field(default_factory=dict, description="name of each drug in any_drug_atc")
 
     @model_validator(mode="after")
     def not_empty(self):
         if not (self.any_diagnosis or self.any_drug_atc):
             raise ValueError("eligibility needs at least one diagnosis or drug")
+        if set(self.drug_names) != set(self.any_drug_atc):
+            raise ValueError("drug_names needs exactly one name for each drug of any_drug_atc")
         return self
 
 
@@ -59,6 +68,7 @@ class StatusThresholds(Strict):
 
 class Step(Strict):
     id: str = Field(pattern=ID)
+    label: Bilingual
     event: EventType
     codes: list[str] | None = Field(None, description="ICD-9-CM or procedure codes")
     specialty: str | None = None

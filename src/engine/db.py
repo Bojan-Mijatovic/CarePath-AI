@@ -1,9 +1,9 @@
 """DuckDB layout of a run: one file per run, with the tables from spec/SPEC.md §3, §5.1 and §7.
 
 A run is scenario × arm × levers (SPEC C2), stored as runs/<run_id>.duckdb. `scenario_truth`
-is never in a run database (SPEC §3.3); it lives in demo/truth/. Of the views of SPEC §5.2, kpi_daily and
-map_comuni are tables that the state engine fills once per tick (steps 1.22 and 2.2), sankey_flows is a
-DuckDB view over pathway_state (step 2.2), and worklist_today comes with step 2.4.
+is never in a run database (SPEC §3.3); it lives in demo/truth/. Of the views of SPEC §5.2, kpi_daily,
+map_comuni and worklist_today are tables filled once per tick (steps 1.22, 2.2 and 2.4), and sankey_flows
+is a DuckDB view over pathway_state (step 2.2).
 
     uv run carepath-db s2_agents [--overwrite]
 """
@@ -140,6 +140,17 @@ TABLES = {
         readmission_rate_30d  DOUBLE,
         alarm                 BOOLEAN NOT NULL,
         PRIMARY KEY (comune_istat, pathway_id)""",
+    "worklist_today": """
+        day              INTEGER NOT NULL,
+        rank             INTEGER NOT NULL,
+        patient_id       VARCHAR NOT NULL,
+        risk_score       DOUBLE NOT NULL,
+        reasons          JSON NOT NULL,
+        pathways         VARCHAR[] NOT NULL,
+        escalation_step  INTEGER NOT NULL,
+        script           JSON,
+        outcome          VARCHAR,
+        PRIMARY KEY (day, patient_id)""",
     "actions": f"""
         action_id       VARCHAR PRIMARY KEY,
         agent           VARCHAR NOT NULL,

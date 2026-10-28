@@ -2,9 +2,9 @@
 
 A Run is one simulator with its run database and state engine, kept open in this process. `Run.tick()`
 does the next day in the order of SPEC §9. Steps 4 to 7 of that order arrive with their own plan steps:
-Monitoring (2.8), the worklist (2.4), Intervention through the action service (2.12, 2.13) and the
-Investigator (2.9). Until then a tick is steps 1, 2, 3 (Risk), 5 (kpi_daily, map_comuni, sankey_flows) and
-8, and the two arms of a scenario do not differ.
+Monitoring (2.8), Intervention through the action service (2.12, 2.13) and the Investigator (2.9). Until
+then a tick is steps 1, 2, 3 (Risk), 5 (kpi_daily, map_comuni, sankey_flows), 6 (worklist_today, agents
+arm only) and 8, and the two arms differ only in the worklist.
 
 Demo holds the six runs (3 scenarios × 2 arms): `start()` replays them to the start day and leaves them
 paused (D21); afterwards only the two runs of the scenario on screen advance (C9). A jump forward
@@ -21,7 +21,7 @@ from pathlib import Path
 import duckdb
 
 from engine import pathway as pathway_model
-from engine import queries
+from engine import queries, worklist
 from engine.db import RUNS_DIR, create_run, open_run
 from engine.risk import HIGH_RISK, RiskModel
 from engine.state import StateEngine
@@ -52,6 +52,7 @@ class Run:
     def __init__(self, run_id: str, population: Population, runs_dir: Path = RUNS_DIR, days: int = HORIZON_DAYS):
         p = population
         self.run_id, self.scenario = run_id, int(run_id[1])
+        self.agents = run_id.split("_")[1] == "agents"
         self.pathway_id = p.pathway.pathway_id
         self.sim = Simulator(p.seed, p.patients, p.ref, p.pathway, days=days)
         self.sim.apply_scenario(load_scenario(self.scenario), p.mmg)
@@ -76,6 +77,8 @@ class Run:
         self.risk.update(self.con, self.state, d)       # 3
         self.state.refresh_kpi(self.con, d)             # 5: views (sankey_flows is a DuckDB view)
         self.state.refresh_map(self.con, d, self.risk.risk, HIGH_RISK)
+        if self.agents:                                 # 6: the baseline arm is without CarePath
+            worklist.refresh(self.con, self.state, self.risk, d)
         self._write_capacity()
         self.day = d
         self.last_ms = (time.perf_counter() - t) * 1000
