@@ -1,3 +1,3 @@
 # brief
 
-Owner: R5. Team charter (step 0.1) and problem brief (step 0.11).
+Owner: R5. Team charter (step 0.1) and [problem brief](problem.md) (step 0.11).
