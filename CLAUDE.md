@@ -5,7 +5,7 @@ Rules for the AI assistant in this repo. They come from the [Solution Plan](docs
 ## 1. Sources and precedence
 
 1. **Solution Plan** (22 Oct 2026): what we build and why. It is the source of truth.
-2. **Decision register** (Delivery Plan §11, D11 onward): a decision marked *Decided* overrides the Solution Plan on that point. Current overrides: models are `qwen3:30b-instruct` and `qwen3:4b-instruct`, not 7–8B and 14B (D11); the console is React, not Angular or Streamlit (D13); demo LLM output is cache-only (D14). *Proposed* decisions (D15–D18) are the working assumption, but not yet binding.
+2. **Decision register** (Delivery Plan §11, D11 onward): a decision marked *Decided* overrides the Solution Plan on that point. Current overrides: models are `qwen3:30b-instruct` and `qwen3:4b-instruct`, not 7–8B and 14B (D11); the console is React, not Angular or Streamlit (D13); demo LLM output is cache-only (D14); all work goes directly to `main` (D20). *Proposed* decisions (D15–D18, D21–D24) are the working assumption, but not yet binding.
 3. **Delivery Plan**: how and when, step by step, with owners and gates.
 4. **SPEC.md**: the contracts. Nothing is built against an interface that is not in it.
 5. **UI prototype** ([CarePath-AI-UI-demo-srpski.html](docs/CarePath-AI-UI-demo-srpski.html)): screen layout and demo steps 1–10.
@@ -29,9 +29,9 @@ These come from the design principles and guardrails. Code that breaks one needs
 4. **No free SQL from agents.** The Investigator uses tools only.
 5. **`scenario_truth` is unreachable for agents.** Only tests (AC13) and the Rivelazione screen read it. Tools get a connection without it, and a test enforces that.
 6. **Disease is configuration.** No `if pathway == "hf"` in code. Every tool, view and screen takes `pathway_id` (AC17).
-7. **Offline and zero cost.** No CDN, no external URLs, no public APIs, no telemetry, no paid tier. Fonts, JS, GeoJSON, models and the cache live on disk. A new dependency needs a free licence, and I name it in the pull request.
+7. **Offline and zero cost.** No CDN, no external URLs, no public APIs, no telemetry, no paid tier. Fonts, JS, GeoJSON, models and the cache live on disk. A new dependency needs a free licence, and I name it in the commit message.
 8. **Synthetic data only.** Hospital names are invented, the geography is real. Prompts carry aggregates and the top N patients, never the whole database. Logs contain nothing that could not leave the system if the data were real.
-9. **Determinism.** Every random draw comes from a generator seeded by `(run seed, component)`. Same seed, same run, byte for byte (AC14). No wall-clock time or unseeded randomness in the simulator or the engine.
+9. **Determinism.** Every random draw comes from a generator seeded by `(run seed, component)`. Same seed, same run, byte for byte (AC14). No wall-clock time or unseeded randomness in the simulator or the engine. Tools, views and the API round every DOUBLE as in SPEC §2, because DuckDB's parallel aggregation of DOUBLE is not bit-stable.
 10. **Language.** Code, data, identifiers and docs are in English. Every string a user sees (UI, reports, call scripts, rationales) is in Italian, and the Italian colleague reviews it before rehearsals.
 
 ## 4. LLM work
@@ -41,14 +41,14 @@ These come from the design principles and guardrails. Code that breaks one needs
 - Sampling: temperature 0, fixed seed, JSON schema through structured output, validation, 1 retry.
 - A changed prompt means a new `prompt_version`. The old cache stays valid for the old version.
 - The demo starts in `cache_only` (D14). Warm-up runs use `live` with the 600 s timeout. A feature that needs a live LLM call in the demo flow is a design error.
-- The cache holds only what the demo shows, listed in `demo/cache/manifest.json` (D17). Every other rationale or call script is the template filled by code, and every LLM-backed text must have that template.
+- The cache holds only what the demo shows, listed in `demo/cache/manifest.json` (D17). Every other rationale or call script is the template filled by code, and every LLM-backed text must have that template. The exception is the Investigator, whose only fallback is the cache (Solution Plan §8); the cache completeness check (SPEC §8) guards it after every change to the simulator, engine, tools or prompts.
 - AC5 is measured from the cache (D18). I do not optimise for a live Investigator on CPU.
 - A prompt counts only if it is measured. Quality claims about prompts or models go through `testing/llm_eval.py` or the benchmark (AC6), with the result stored per prompt version. I do not judge a prompt from one good-looking answer.
 - On these CPU laptops one investigation takes about 4 minutes. Long evals and warm-ups run in the background. I note that speed varies by about ±40% with load and power mode.
 
 ## 5. Contracts, decisions and documents
 
-- Until `spec-v1` is tagged, I may propose SPEC edits in drafts. After the freeze, a contract change needs agreement at a sync, a decision-register entry, a SPEC version bump and updated fixtures in the same pull request. I prepare the change; the team agrees it.
+- Until `spec-v1` is tagged, I may propose SPEC edits in drafts. After the freeze, a contract change needs agreement at a sync, a decision-register entry, a SPEC version bump and updated fixtures in the same commit. I prepare the change; the team agrees it.
 - I mark a decision *Decided* only when the user says it is decided. Otherwise I add it as *Proposed* with the reason and the evidence.
 - When one document changes, I check the others for the same fact (Delivery Plan, SPEC, README) and update them together, so there is no contradiction between them.
 - Plan and SPEC text is plain English: short sentences, concrete numbers, links to sections, no filler. I keep "Last updated" current.
@@ -67,7 +67,7 @@ These come from the design principles and guardrails. Code that breaks one needs
 
 - **Done** means: tests pass, the AC is met or measured, it works in the end-to-end flow, the prompt log is updated, and another role has reviewed it. I can confirm the first three. Review is the team's job.
 - I report what I ran and what I did not. If a test fails or I skipped a check, I say so with the output.
-- Git: trunk-based, short branches `r<role>/<topic>`, pull requests into `main`. I commit or push only when asked, never force-push `main` and never skip hooks. Commit messages say what changed.
+- Git (D20): all work is committed directly to `main`; no feature branches and no pull requests. Before a push I pull and run `uv run pytest` (plus `npm run lint` for console changes). I commit or push only when asked, never force-push `main` and never skip hooks. Commit messages say what changed.
 - Destructive or hard-to-reverse actions (deleting models, cache files, `demo/truth/`, branches) only after confirmation.
 
 ## 8. Demo protection
@@ -75,7 +75,8 @@ These come from the design principles and guardrails. Code that breaks one needs
 Everything serves the demo running 10 out of 10 times, offline (AC9). In practice:
 
 - I do not change Maria's trajectory (`p_00001`, days 31, 33, 40 and 47) or the scenario patterns without the owner's (R1) agreement, and AC14 must still pass.
-- I keep the cut order from the Solution Plan §4: Bed Finder → option B → optional agents → parallel what-if → Pathway Builder (manual JSON stays) → map (comune table stays). When time is short I suggest cutting, not stretching.
+- I keep the cut order from Delivery Plan §8 (Solution Plan §4 with D22 and D23): Bed Finder → option B, including the Pathway Builder (manual JSON stays) → optional agents → parallel what-if (precomputed demo lever stays) → map (comune table stays). When time is short I suggest cutting, not stretching.
+- Demo pacing and performance budgets are in SPEC §9 (D21, D22). AC2 alone does not prove the demo works.
 - From week 4, feature freeze: only bug fixes.
 
 ## 9. Environment notes (Windows team laptops)

@@ -2,7 +2,8 @@
 
 | | |
 |---|---|
-| Status | **DRAFT v0.1**, for review at the week-1 sync. Freezes as tag `spec-v1` at the end of week 2, day 2 (delivery plan, step 1.9) |
+| Status | **DRAFT v0.2**, for review at the week-1 sync. Freezes as tag `spec-v1` at the end of week 2, day 2 (delivery plan, step 1.9) |
+| Last updated | 27 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
 | Rule | Nobody builds against anything that is not in this file. Whoever waits on another role works with fixtures of the same shape (`testing/fixtures/`) |
@@ -21,7 +22,7 @@
 | §10 API and WebSocket | R4 | ☐ |
 | §11 Acceptance criteria | all | ☐ |
 
-After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same pull request.
+After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
 ### Changes vs Solution Plan (proposed in this draft, need agreement)
 
@@ -33,6 +34,10 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C4 | Supporting tables `comuni`, `mmg`, `bed_occupancy` | Needed by the map, the MMG-group pattern and Bed Finder; implied but not listed in Solution Plan §6 |
 | C5 | Every tool result carries a `source` block | The Verifier re-runs exactly the call behind a claim (AC10) |
 | C6 | Maria has the fixed ID `p_00001` in every scenario | AC14 and the demo script reference her directly |
+| C7 | Every DOUBLE that a tool, view or API returns is rounded (§2), and a test checks that tools return identical bytes | DuckDB's parallel aggregation is not bit-stable (measured 27 Oct 2026, §2). The cache key hashes tool results (§8), so one changed last bit is a cache miss, and in `cache_only` a missing investigation has no fallback |
+| C8 | `adherence_by_group` gets a `measure` argument; segments and metrics for `compare_segments` and `risk_drivers` are defined (§6) | Pattern 3 (telemonitoring dropout in rural comuni) had no tool that returns telemonitoring by comune or segment; segment and metric were undefined in the Solution Plan |
+| C9 | Only the 2 runs of the scenario on screen advance after the envelope; jump forward continues from the current day; performance budgets beyond AC2 (§9) | Demo pacing and budgets, delivery plan D21 and D22 |
+| C10 | Cache completeness check (§8) | Any change to the simulator, engine, tools or prompts after the warm-up can change cache keys; the check finds misses before a rehearsal does |
 
 ## 1. Scope
 
@@ -49,6 +54,7 @@ The PoC monitors heart-failure patients of ATS della Val Padana (ASST Mantova, C
 | Units | Days, km, EUR. Rates are fractions 0–1 in data, percentages only in the UI |
 | Language | Data and code in English; every user-facing string in Italian (UI, reports, call scripts, rationales) |
 | Determinism | Every random draw comes from a generator seeded by `(run seed, component)`; same seed, same run, byte for byte (AC14) |
+| Numeric precision (C7) | Every DOUBLE that a tool, view or API returns is rounded in SQL after aggregation: fractions and rates to 4 decimals; days, km and kg to 1 decimal; EUR to whole euros. Counts stay integers. Reason: with 8 threads, DuckDB 2.0 returned 12 different `avg(DOUBLE)` results in 12 runs over 2,000,000 rows (differences in the last bits); `round(avg, 4)`, `avg(INTEGER)` and `threads = 1` each gave one result. Below one row group (about 122,000 rows) the results were stable, so small fixtures do not show the problem |
 | Missing values | `NULL`, never sentinel numbers |
 
 ## 3. Data contracts
@@ -230,16 +236,26 @@ Every result has the same envelope (C5):
 
 Errors: `{"error": {"code": "unknown_step", "message": "…"}}`. Codes: `unknown_pathway`, `unknown_step`, `bad_argument`, `empty_result`.
 
+Every number in `data` follows the precision rule in §2. `testing/test_tools_deterministic.py` calls every tool on two fresh connections with default threads, on a full-size run (10,000 patients, 365 days), and asserts identical bytes (C7).
+
 | Tool | Arguments | `data` |
 |---|---|---|
 | `compliance_by_step` | `pathway_id`, `asst?` | `{step: on_time_fraction}` |
 | `wait_by_hospital` | `pathway_id`, `step`, `period_days=90` | `{facility_name: mean_wait_days}` |
 | `patients_overdue` | `pathway_id`, `step`, `asst?`, `limit=20` | `{count, patients: [{patient_id, days_overdue, risk_score}]}` |
 | `free_slots` | `service`, `asst?`, `horizon_days=21` | `{facility_name: free_slots}` |
-| `adherence_by_group` | `pathway_id`, `grouping` (`mmg`, `mmg_group`, `comune`, `age_band`), `period_days=60` | `{group: fraction}`, plus `rest_of_ats` |
+| `adherence_by_group` | `pathway_id`, `grouping` (`mmg`, `mmg_group`, `comune`, `age_band`), `measure` (`dispensing`, `telemonitoring`; default `dispensing`, C8), `period_days=60` | `{group: fraction}`, plus `rest_of_ats` |
 | `readmissions_by_comune` | `pathway_id`, `period_days=180` | `{comune_name: rate}`, sorted descending |
 | `risk_drivers` | `pathway_id`, `segment?` | `{drivers: [{name, weight}]}` |
-| `compare_segments` | `pathway_id`, `a`, `b`, `metric` | `{a: value, b: value, difference}` |
+| `compare_segments` | `pathway_id`, `a`, `b` (segments), `metric` | `{a: value, b: value, difference}` |
+
+**Measures and metrics (C8):**
+
+- `dispensing`: share of patients who collected each chronic drug of the pathway within the period.
+- `telemonitoring`: share of patients with telemonitoring active who sent at least one reading in the last 7 days of the period.
+- `metric` for `compare_segments` is one of `dispensing`, `telemonitoring`, `readmission_rate_30d`, `on_time_fraction`, `risk_mean`.
+
+**Segment (C8):** a JSON object with any of `asst_id`, `comune_istat` (list), `coop_id`, `age_min`, `age_max`, `lives_alone`, `distance_km_min`. All keys are optional and combine with AND; `{}` is the whole population of the pathway. Example for pattern 3: `{"lives_alone": true, "distance_km_min": 40, "age_min": 75}`.
 | `eligibility_candidates` | `pathway_id`, `mmg?` | `{count, patients: [{patient_id, reasons}]}` |
 | `free_beds` (optional) | `diagnosis`, `asst?` | `[{facility_id, ward, free_now, free_in_2d, distance_km}]` |
 
@@ -309,7 +325,8 @@ complete(agent: str, prompt_version: str, messages: list, *, tools=None, schema=
 | Timeout | 20 s, then fall back to the cache; 600 s in warm-up runs that fill the cache |
 | Models | `qwen3:30b-instruct` for cached outputs, `qwen3:4b-instruct` for short live text (delivery plan, D11); `keep_alive` keeps the model in use loaded |
 | Cache scope | only outputs the demo script shows, listed in `demo/cache/manifest.json`; everything else uses the agent's template (delivery plan, D17) |
-| Cache key | SHA-256 of `(agent, model, prompt_version, canonical JSON of messages, tools, schema)` |
+| Cache key | SHA-256 of `(agent, model, prompt_version, canonical JSON of messages, tools, schema)`. Canonical JSON: keys sorted, no whitespace, UTF-8, numbers as tools return them after rounding (§2) |
+| Cache completeness (C10) | `testing/test_cache_complete.py` (marker `demo`) plays the demo script through the API in `cache_only` mode and fails on any cache miss. It runs after every change to the simulator, engine, tools or prompts once a cache exists, and before every rehearsal. A miss is fixed by warming the listed entries again in `live` mode. The Investigator has no template fallback (Solution Plan §8), so this check is its guard |
 | Cache store | `demo/cache/<agent>/<key>.json` |
 | Modes | `live` (call, then cache; used for warm-up), `cache_first` (development and rehearsals), `cache_only` (default at demo start, D14; the operator hotkey toggles it) |
 | Log | one line per call in `logs/llm.jsonl`: `ts`, `agent`, `model`, `prompt_version`, `key`, `mode`, `cache_hit`, `latency_ms`, `valid`, `retries` |
@@ -318,7 +335,7 @@ complete(agent: str, prompt_version: str, messages: list, *, tools=None, schema=
 
 ## 9. Simulation runtime
 
-**Run:** `run_id = s<scenario>_<arm>[_<lever-hash>]`, for example `s2_agents`, `s2_baseline`, `s2_agents_echo+1`. A run is one simulator instance with its own seed stream and its own DuckDB file. Demo start launches six runs: 3 scenarios × 2 arms. The screen shows one scenario; the arm switch drives Confronto and "Senza CarePath".
+**Run:** `run_id = s<scenario>_<arm>[_<lever-hash>]`, for example `s2_agents`, `s2_baseline`, `s2_agents_echo+1`. A run is one simulator instance with its own seed stream and its own DuckDB file. Demo start launches six runs, 3 scenarios × 2 arms, replays them to the start day (day 23) and pauses (delivery plan, D21). After the envelope is chosen, only the 2 runs of the scenario on screen advance; the other 4 stay paused (C9). The screen shows one scenario; the arm switch drives Confronto and "Senza CarePath".
 
 **Tick order for day D** (Solution Plan §9):
 
@@ -333,7 +350,17 @@ complete(agent: str, prompt_version: str, messages: list, *, tools=None, schema=
 
 The baseline arm skips steps 6 and 7.
 
-**Speed:** default 1 simulated day per 2 s; operator controls pause, ×1, ×4, and jump to a day. Jump replays deterministically from day 0 up to the target day.
+**Speed:** ×1 = 1 simulated day per 2 s, ×4 = 2 days per s; operator controls pause, ×1, ×4, and jump to a day. Jump forward continues from the current day; jump backward replays deterministically from day 0 up to the target day (C9).
+
+**Performance budgets** (C9, delivery plan D22). AC2 measures one run; the demo needs more:
+
+| Budget | Value | Why |
+|---|---|---|
+| Live tick at ×4 | both arms of the scenario on screen together under 500 ms per simulated day | ×4 = 2 days per s |
+| Start replay | all 6 runs to day 23 in under 3 min | runbook, T−5 min |
+| What-if (AC4) | 2 arms × 182 days under 10 s: about 27 ms per arm-day if the arms run one after the other, 55 ms if they run in parallel processes | 20–35 times stricter than AC2 |
+
+What-if runs skip LLM calls, view refreshes and WebSocket pushes; they compute KPIs once at the end. If AC4 is missed at the week-3 checkpoint, the demo lever's results are precomputed per scenario and replayed (D22).
 
 **Feedback hook:** `sim.feedback.apply(run_id, actions_executed_today) -> list[event]`. The probabilities of each effect (for example, how much a call raises dispensing) are configuration, listed in the limitations.
 
@@ -357,7 +384,7 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `POST /actions/{id}/approve`, `/reject`, `/undo` | decisions |
 | `GET /settings`, `PUT /settings/autonomy` | autonomy per action type |
 | `POST /ask` `{question}` | starts an investigation; steps arrive on the WebSocket |
-| `POST /pathways` `{pdta_text}` | Pathway Builder |
+| `POST /pathways` `{pdta_text}` | Pathway Builder (option B, delivery plan D23) |
 | `POST /whatif` `{levers, months}` | what-if with and without agents |
 | `POST /admissions` `{patient_id, diagnosis}` | Bed Finder (optional) |
 | `GET /reveal/{scenario}` | Rivelazione only; reads `scenario_truth` |
@@ -408,7 +435,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 |---|---|---|---|
 | Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D | Italian colleague via R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source | R5 | week 2 |
-| Q3 | Changes C1–C6: accepted as proposed? | all, at the sync | week 1 |
+| Q3 | Changes C1–C10: accepted as proposed? | all, at the sync | week 1 |
 | Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |
 | Q5 | Daily limit of automatic actions per facility: 50 a sensible default? | R3, R5 | week 2 |
 | Q6 | Do we need calendar dates on screen, or is "Giorno N" enough for the audience? | R5 | week 2 |

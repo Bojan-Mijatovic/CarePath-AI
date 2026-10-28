@@ -26,7 +26,7 @@ The biggest risk is unchanged from the Solution Plan: the simulator in week 2. T
 
 ## 2. Engineering principles
 
-These apply to every phase. A pull request that breaks one of them needs a decision-register entry.
+These apply to every phase. A change that breaks one of them needs a decision-register entry.
 
 1. **Contracts before code.** Every interface between roles is in `spec/SPEC.md` before anyone builds against it. Whoever waits on another role works with fixtures of the same shape (`testing/fixtures/`).
 2. **Code computes, the LLM phrases.** Numbers, names, dates and rankings come from code (rules, SQL views, XGBoost). The LLM only writes sentences around values it received from a tool or a template. It never produces a fact that a tool did not return.
@@ -109,9 +109,10 @@ The critical path is R1 and R5 in week 2.
 | 0.8 | Frontend decision. Streamlit is not recommended because it cannot reproduce the prototype layout. **Decided (D13):** React 19 + TypeScript on Vite 8, Node 24 via fnm; console shell in `src/ui` | R4 | Decision D13 | Recorded with reason |
 | 0.9 | DuckDB skeleton: database file layout, empty tables from the draft contracts, state-engine stub | R2 | `src/engine/db.py` | Tables created by one command |
 | 0.10 | Simulator sketch: list of comuni in ASST Mantova, Cremona and Crema; ISTAT population by age and sex; published PNE 30-day HF readmission range; Ospedale A/B/C mapped to ASSTs | R1 | `src/sim/README.md` with sources and numbers | Reviewed by R5 |
-| 0.11 | Problem brief and SPEC draft: users, pains, success metrics; draft of every contract in §6 of this plan. SPEC draft v0.1 done; `brief/problem.md` open | R5 | `brief/problem.md`, `spec/SPEC.md` draft | Reviewed at the second sync |
+| 0.11 | Problem brief and SPEC draft: users, pains, success metrics; draft of every contract in §6 of this plan. SPEC draft v0.2 done; `brief/problem.md` open | R5 | `brief/problem.md`, `spec/SPEC.md` draft | Reviewed at the second sync |
+| 0.12 | Italian reviewer: a named Italian colleague with dates for the code review (step 1.3, needed by week 2, day 1), the PDTA texts (step 1.8) and the on-screen terms (step 4.6). If there is no name by the end of week 1, R5 asks the mentor for another Italian-speaking reviewer, and SPEC marks the codes as unconfirmed | R5 | Name and dates in the charter | Confirmed in writing |
 
-**Exit gate:** a clean clone runs the hello stack and the benchmark. Models and the demo machine are chosen with numbers (D11, D12). SPEC draft has been reviewed.
+**Exit gate:** a clean clone runs the hello stack and the benchmark. Models and the demo machine are chosen with numbers (D11, D12). SPEC draft has been reviewed. The charter is signed by all five (0.1) and the Italian reviewer is confirmed (0.12).
 
 **Risks:** No GPU is already a fact (D12) and is handled: CPU only, cache-only demo (D14), first cache warm-up in week 3, day 3 (step 2.11).
 
@@ -151,7 +152,7 @@ The critical path is R1 and R5 in week 2.
 | # | Step | Output | Done when |
 |---|---|---|---|
 | 1.14 | Population generator: 10,000 HF patients sampled by comune and age; lives alone; distance; MMG assignment; MMG grouped into cooperatives with a Centro Servizi | `patients` table | Distributions plotted in the notebook |
-| 1.15 | Daily vectorised step (numpy and pandas, fixed seed): discharges, visits, imaging, labs, dispensing, telemonitoring readings, admissions; capacity-driven waits from `capacity_slots` | `src/sim/step.py` | 365 days for 10k patients run; one day under 1 s (early AC2) |
+| 1.15 | Daily vectorised step (numpy and pandas, fixed seed): discharges, visits, imaging, labs, dispensing, telemonitoring readings, admissions; capacity-driven waits from `capacity_slots` | `src/sim/step.py` | 365 days for 10k patients run; one day under 1 s (early AC2); ms per day recorded against the budgets in SPEC §9 (500 ms for both arms at ×4, 27–55 ms per arm-day for what-if) |
 | 1.16 | Outcome model: readmission hazard rising with non-collection, missed visits, long waits, distance and living alone; calibrated so 30-day HF readmission falls inside the published PNE range | Config with every assumed probability | Notebook shows the rate inside the range |
 | 1.17 | Patterns 1–3 parameterised per scenario: echo bottleneck at one hospital with free slots at another; one MMG group with low furosemide collection; rural cluster (lives alone, more than 40 km) dropping telemonitoring | `src/sim/scenarios/{1,2,3}.yaml` | Same pattern types, different locations per scenario |
 | 1.18 | `scenario_truth` written to a separate path; agent tools are given a DuckDB connection without that table; a test asserts it | `demo/truth/` + test | Test fails if any tool can read it |
@@ -165,7 +166,7 @@ The critical path is R1 and R5 in week 2.
 |---|---|---|---|
 | 1.22 | State engine over simulator output: incremental `pathway_state` update for patients with new events plus a deadline sweep; `kpi_daily` | R2 | `src/engine/state.py` |
 | 1.23 | Fixtures for every contract (one small scenario) so R3 and R4 never wait | R2 | `testing/fixtures/` |
-| 1.24 | Tools v1 against fixtures; 10 benchmark questions with expected answers per scenario | R3 | `src/agents/tools.py`, `testing/benchmark/` |
+| 1.24 | Tools v1 against fixtures; 10 benchmark questions with expected answers per scenario. At least 3 of the 10 have a "no" or "not here" answer (for example a hospital without an echo bottleneck), so the benchmark also shows that agents do not find patterns that are not there | R3 | `src/agents/tools.py`, `testing/benchmark/` |
 | 1.25 | Screens on fixtures: Storia di Maria, Buste, Panoramica, Attività agenti side panel | R4 | `src/ui/` |
 
 **Scope gate (end of week 2):** the pattern notebook passes for all 3 scenarios, Maria is stable (AC14), one simulated day runs in under 1 s, and SPEC `spec-v1` is tagged.
@@ -185,11 +186,11 @@ The critical path is R1 and R5 in week 2.
 
 | Day | Step | Output | Done when |
 |---|---|---|---|
-| 1 | 2.1 Real-time tick loop in the order of Solution Plan §9: sim emits day D → state update → Risk on changed patients → Monitoring → refresh views → Intervention → Daily Worklist → Investigator (async) → WS push | `src/engine/tick.py` | 1 day under 1 s for 10k patients (AC2) |
+| 1 | 2.1 Real-time tick loop in the order of Solution Plan §9: sim emits day D → state update → Risk on changed patients → Monitoring → refresh views → Intervention → Daily Worklist → Investigator (async) → WS push | `src/engine/tick.py` | 1 day under 1 s for 10k patients (AC2); both arms of the scenario on screen together under 500 ms per day (SPEC §9, D22) |
 | 1 | 2.2 Views `sankey_flows`, `map_comuni` | DuckDB views | Under 200 ms each (AC3) |
 | 2 | 2.3 Risk model: XGBoost trained once offline on a separate seed; model file versioned; top-3 drivers per patient | `src/engine/risk.py`, `models/risk.json` | AUC reported in notebook; scoring on a tick within budget |
 | 2 | 2.4 `worklist_today`: one row per patient across pathways, ranked by risk, all reasons, escalation step | View + test | Top 20 contain at least 15 high-risk or overdue patients (AC12 data side) |
-| 3 | 2.5 What-if: run the simulator forward 6 months with changed levers (echo capacity, telemonitoring deadline), with and without agents, same seed | `src/engine/whatif.py` | Under 10 s (AC4) |
+| 3 | 2.5 What-if: run the simulator forward 6 months with changed levers (echo capacity, telemonitoring deadline), with and without agents, same seed | `src/engine/whatif.py` | Under 10 s (AC4). If it misses at the day-3 checkpoint, the demo lever's results are precomputed per scenario and replayed (D22) |
 | 5 | 2.6 PNE forecast to year end, with and without CarePath, plus a lever | `src/engine/pne.py` | Numbers shown on step 7 come from here |
 
 ### 7.2 Agents and control (R3)
@@ -200,11 +201,11 @@ The critical path is R1 and R5 in week 2.
 | 1 | 2.8 Monitoring (rules from pathway JSON; regional alarm when the same deviation exceeds a threshold at one facility) and Risk wired to the tick | `src/agents/monitoring.py` | Echo alarm for Ospedale B fires around day 35 in scenario 2 |
 | 2 | 2.9 Investigator: tool-only loop, max 6 steps, emits a JSON list of claims, each with the tool call that supports it; no SQL | `src/agents/investigator.py` | Finds pattern 1 in all 3 scenarios without hints (AC1 part) |
 | 3 | 2.10 Benchmark run: 10 questions × 3 scenarios; scoring script; results stored per prompt version | `testing/benchmark/run.py` | At least 8 of 10 correct (AC6) |
-| 3 | 2.11 Cache warm-up v1 on the demo machine for all 3 scenarios with `qwen3:30b-instruct` (D11), unattended, on mains power with nothing else running. First list the outputs the demo script shows (D17), count them and estimate the run time at the §3.1 speeds | Cache manifest with counts and estimated time; cache files | Investigator from cache under 2 s (AC5); every manifest entry is in the cache |
+| 3 | 2.11 Cache warm-up v1 on the demo machine for all 3 scenarios with `qwen3:30b-instruct` (D11), unattended, on mains power with nothing else running. First list the outputs the demo script shows (D17), count them and estimate the run time at the §3.1 speeds | Cache manifest with counts and estimated time; cache files; `testing/test_cache_complete.py` | Investigator from cache under 2 s (AC5); the cache completeness check (SPEC §8) plays the demo in `cache_only` with zero misses |
 | 4 | 2.12 **Action service**: single writer; autonomy level per action type; guardrails from Solution Plan §8 (no therapy, no diagnosis, daily limit per facility); audit log; undo; feeds the simulator via the feedback hook | `src/agents/actions.py` | No action above its level executes without approval (AC7) |
 | 4 | 2.13 Intervention: rules choose the action (reminder, call task, notify MMG, reschedule to the earliest free slot then distance); every rationale is a template filled by code; LLM wording only for the actions the demo shows (D17) | `src/agents/intervention.py` | With-agents run has fewer readmissions on the same seed (AC8) |
 | 5 | 2.14 Reporter: monthly Italian report in PNE style; numbers from views, LLM for sentences only | `src/agents/reporter.py` | Report numbers equal the view numbers (test) |
-| 5 | 2.15 Pathway Builder lite: Italian PDTA text → pathway JSON → schema validation → retry → manual JSON fallback | `src/agents/pathway_builder.py` | HF PDTA reproduces `hf_lombardia_v1.json` |
+| 5 | 2.15 Pathway Builder lite: moved to option B (D23); the HF pathway JSON is written by hand in step 1.3 | — | — |
 
 ### 7.3 Console (R4)
 
@@ -223,7 +224,7 @@ The critical path is R1 and R5 in week 2.
 | 1 | 2.21 Acceptance tests from AC stubs, run locally with `uv run pytest -m acceptance` |
 | 2 | 2.22 Check AC1–AC3 on real data; file defects |
 | 3 | 2.23 **Checkpoint:** core runs end-to-end? Decide which optional layers enter (Phase 3) |
-| 4 | 2.24 Demo script v1: trigger sentences, operator clicks, timings from Solution Plan §11 |
+| 4 | 2.24 Demo script v1: trigger sentences, operator clicks, timings from Solution Plan §11 with the pacing of D21, checked with a stopwatch. The opening says plainly that rules and XGBoost decide, the LLM only writes the sentences, and those sentences are generated in advance because everything runs offline without a GPU (D24) |
 | 5 | 2.25 Technical review with the mentor |
 
 **Exit gate (end of week 3):** steps 1–7, 9 and 10 of the demo run end-to-end on simulator data with the cache. AC1–AC8, AC13, AC14 and AC17 have passing or measured tests.
@@ -239,10 +240,10 @@ The critical path is R1 and R5 in week 2.
 | 1 | Verifier | Re-run the tool behind each Investigator claim; compare with tolerance; label `verificato` or correct; test set of 5 answers with injected wrong numbers | R3 | AC10 | 5 |
 | 2 | Rule Advisor | From an investigation finding, propose a rule in pathway-rule format; on approval Monitoring loads it the next day | R3 | AC11 | 5 |
 | 3 | Daily Worklist | Ranking from `worklist_today` (code); Italian call script for the top 20 only, from a template, with LLM wording cached for the days the demo shows (D17); call outcome field | R2, R3 | AC12 | 9 |
-| 4 | Option B: diabetes | R1: diabetes population (~3,000, ~900 overlapping), patterns 4–5, Maria on both pathways. R2: Enrollment rules, KPIs for the second pathway with no code change. R3: Pathway Builder on diabetes PDTA, Enrollment Advisor rationale. R4: Nuova patologia screen | R1–R4 | AC15, AC16, AC17 | 8 |
+| 4 | Option B: diabetes | R1: diabetes population (~3,000, ~900 overlapping), patterns 4–5, Maria on both pathways. R2: Enrollment rules, KPIs for the second pathway with no code change. R3: Pathway Builder lite (D23): Italian PDTA text → pathway JSON → schema validation → retry → manual JSON fallback; done when the HF PDTA reproduces `hf_lombardia_v1.json` and the diabetes PDTA validates; Enrollment Advisor rationale. R4: Nuova patologia screen | R1–R4 | AC15, AC16, AC17 | 8 |
 | 5 | Bed Finder | Only if time remains after day 4. R1: `beds` and occupancy from admissions and discharges. R2: `free_beds` and ranking (diagnosis → ward, same hospital first, then distance). R3: two modes, assign (default) and propose-and-confirm, with audit and undo. R4: Posti letto screen | R1–R4 | AC18, AC19 | 9c |
 
-**Cut order if anything slips** (Solution Plan §4): Bed Finder → option B → optional agents → parallel what-if → Pathway Builder (manual JSON stays) → map (comune table stays).
+**Cut order if anything slips** (Solution Plan §4, with D22 and D23): Bed Finder → option B, including the Pathway Builder (manual JSON stays) → optional agents → parallel what-if (precomputed demo lever stays) → map (comune table stays).
 
 ---
 
@@ -252,17 +253,19 @@ The critical path is R1 and R5 in week 2.
 
 | Day | Step | Owner | Done when |
 |---|---|---|---|
-| 1 | 4.1 Feature freeze; only bug fixes merge from now on | All | Branch protection on `main` |
-| 1 | 4.2 Measure AC2–AC5, AC12, AC16 on the demo machine (AC5 from the cache, D18); profile and fix the slowest path. Measure peak RAM of the full app with the 6 runs and the models the demo loads | R2, R3 | All within target; no swap |
-| 2 | 4.3 Final cache warm-up for all 3 scenarios with `qwen3:30b-instruct`; cache files hashed and copied to the backup laptop | R3 | Hash list matches on both machines |
+| 1 | 4.1 Feature freeze; from now on only bug-fix commits go to `main`, and each names the defect it fixes (D20) | All | R5 checks the `main` log every day |
+| 1 | 4.2 Measure AC2–AC5, AC12, AC16 and the SPEC §9 budgets on the demo machine (AC5 from the cache, D18); profile and fix the slowest path. Measure peak RAM of the full app with the 6 runs and the models the demo loads | R2, R3 | All within target; no swap |
+| 2 | 4.3 Final cache warm-up for all 3 scenarios with `qwen3:30b-instruct`; cache files hashed and copied to the backup laptop | R3 | Hash list matches on both machines; the cache completeness check passes on both |
 | 2 | 4.4 Offline hardening: fonts (IBM Plex, OFL) and all JS in the repo; grep proves no `http` asset URLs; full run with the network adapter disabled | R4 | Offline run passes |
 | 2 | 4.5 Record the backup video of a full run (OBS) | R4 | Video on both machines |
 | 3 | 4.6 Rehearsals with the mentor picking the envelope; timing per step; Italian colleague reviews every on-screen term and the report. Decide whether live 4B text stays on (D14): keep it only if no rehearsal shows a slip or a wait over 10 s | R5 | Under 7 min; terms approved; live-text decision recorded |
 | 4 | 4.7 10 consecutive runs; log every cache fall-back and stop | All | AC9: 10 of 10 without a stop |
 | 4 | 4.8 Final package: SPEC, code, tests, prompt log, decision register, retrospective | R5 | Tagged release `demo-v1` |
-| Show day | 4.9 Runbook from Solution Plan §12: T−24h full rehearsal, T−60 min network off, mains power, cache-only on; `qwen3:30b-instruct` not loaded (the cache replaces it); `qwen3:4b-instruct` warmed with one call only if live text stays on (step 4.6), then `ollama ps` shows only that model, T−30 min projector check, T−5 min reset and start 3 scenarios | R4, R5 | — |
+| Show day | 4.9 Runbook from Solution Plan §12: T−24h full rehearsal, T−60 min network off, mains power, cache-only on; `qwen3:30b-instruct` not loaded (the cache replaces it); `qwen3:4b-instruct` warmed with one call only if live text stays on (step 4.6), then `ollama ps` shows only that model, T−30 min projector check, T−5 min reset, run all 6 runs to day 23 and pause (D21) | R4, R5 | — |
 
-**Fallbacks during the demo:** the demo starts in cache-only, so no LLM call is on the critical path. If live 4B text is on and silent for 10 s → cache-only hotkey. Alarm late → jump to day 34. UI frozen → reload (state is on the server). Machine down → backup laptop, same scenario, jump to the same day. Both down → video.
+**Pacing during the demo (D21):** ×1 = 1 day per 2 s, ×4 = 2 days per s. Steps 1–3 stay paused on day 23. After the envelope, only the two runs of the chosen scenario advance. Step 4 runs at ×1 and the echo alarm appears on day ~35, after about 24 s; the operator pauses. Step 6 runs ×4 for about 14 s, to day ~62. These are the days the prototype shows.
+
+**Fallbacks during the demo:** the demo starts in cache-only, so no LLM call is on the critical path. If live 4B text is on and silent for 10 s → cache-only hotkey. Alarm missing by day 40 → jump to day 34 (replays from day 0, SPEC §9). UI frozen → reload (state is on the server). Machine down → backup laptop, same scenario, jump to the same day. Both down → video.
 
 ---
 
@@ -294,7 +297,7 @@ The only real cost is hardware. Without a GPU machine, the plan still works beca
 
 **Definition of done** (Solution Plan §15): code reviewed by one other role, tests pass, its AC is met, it works in the end-to-end flow, and the prompt log is updated if AI was used.
 
-**Branching:** trunk-based; short-lived branches `r<role>/<topic>`; pull requests into `main` reviewed by one other role. Commit messages say what changed, not "refactor" boilerplate. No force-pushes to `main`.
+**Git (D20):** everyone commits directly to `main`; no feature branches and no pull requests. Pull before you push, and run `uv run pytest` (plus `npm run lint` for console changes) before every push. Another role reviews a step's commits before the step counts as done. Commit messages say what changed, not "refactor" boilerplate. No force-pushes to `main`.
 
 **Testing layers:**
 
@@ -317,6 +320,11 @@ The only real cost is hardware. Without a GPU machine, the plan still works beca
 | D17 | Cache scope: the cache holds only LLM outputs the demo script shows (investigations, Verifier wording, rule proposal, report, Pathway Builder, and the rationales and call scripts on screen), listed in a manifest (step 2.11). Every other rationale and call script is the template filled by code, which the Solution Plan already lists as the fallback. Reason: Intervention creates actions every day for 10,000 patients in 3 scenarios; at about 11.5 s per text (§3.1), caching all of them would take days of CPU time | Proposed |
 | D18 | AC5 is measured from the cache only (under 2 s). The live target of 30 s is not reachable on CPU laptops (best measured 243 s, §3.1) and is stated in the limitations | Proposed |
 | D19 | The TL confirmed that we go ahead with CarePath AI as planned. This closes the Solution Plan §17 risk about ENG's healthcare portfolio having been sold | Decided 27 Oct 2026 |
+| D20 | All work is committed directly to `main`; no feature branches and no pull requests. Review happens on the commits of a step before it counts as done (Definition of done). Replaces the `r<role>/<topic>` branching rule | Decided 27 Oct 2026 |
+| D21 | Demo pacing. At T−5 min all 6 runs replay to day 23 and pause. After the envelope only the 2 runs of the chosen scenario advance; the other 4 stay paused. ×1 = 1 day per 2 s, ×4 = 2 days per s. Step 4 at ×1 until the echo alarm (day ~35), then pause; step 6 at ×4 for about 14 s (day ~62). Reason: the written pace (1 day per 2 s from T−5 min, Solution Plan §11–§12) reaches day ~180 by step 3 and fires the day-35 alarm before the demo starts, while the prototype shows days 23, 35 and 62 | Proposed |
+| D22 | Performance budgets beyond AC2 (SPEC §9): both arms of the scenario on screen under 500 ms per simulated day (×4), and what-if 2 × 182 days in under 10 s, which is about 27 ms per arm-day if the arms run one after the other, or 55 ms if they run in parallel processes. AC2 (1 s per day for one run) alone does not prove the demo works. If what-if misses AC4 at the week-3 checkpoint, the demo lever's results are precomputed per scenario and replayed | Proposed |
+| D23 | Pathway Builder lite moves from the core to option B. The demo shows it only in step 8, which belongs to option B; without option B it has no visible effect. The HF pathway JSON is written by hand in step 1.3, which the Solution Plan already names as the fallback. This frees R3's day 5 in week 3 | Proposed |
+| D24 | The demo opens by saying that rules and XGBoost decide, the LLM only writes the sentences, and the sentences are generated in advance because everything runs offline without a GPU. The intervention effects and the euro figures come from assumed probabilities, stated in the limitations. This replaces "demo uživo, ne snimak" and "LLM uživo uz keš" in Solution Plan §1, which D14 made out of date | Proposed |
 
 ## 12. Acceptance criteria map
 
@@ -344,4 +352,5 @@ The only real cost is hardware. Without a GPU machine, the plan still works beca
 
 ## 13. Open questions
 
-1. Italian colleague: no official confirmation yet of when they are available, or whether they will attend the demo. The plan still assumes their reviews of codes (step 1.3), PDTA texts (step 1.8) and on-screen terms (step 4.6).
+1. Italian colleague: no official confirmation yet of when they are available, or whether they will attend the demo. The plan still assumes their reviews of codes (step 1.3, needed by week 2, day 1), PDTA texts (step 1.8) and on-screen terms (step 4.6). Step 0.12 sets a deadline (end of week 1) and a fallback.
+2. Scope: an external review (27 Oct 2026) suggested cutting option B, Bed Finder and Rule Advisor to a slide now instead of at the gates. Not decided; the gates in §6 and §8 stay until the team agrees otherwise at a sync.

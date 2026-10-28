@@ -104,5 +104,5 @@ On a laptop without an NVIDIA GPU, models run on the CPU and are too slow for li
 
 - Every task starts from `spec/SPEC.md`. Do not change a contract without agreeing it at the sync.
 - Numbers and facts come from code; the LLM only phrases them.
-- Short-lived branches `r<role>/<topic>`, pull request into `main`, reviewed by one other role.
+- Commit directly to `main`, no feature branches (decision D20). Pull and run `uv run pytest` before every push; another role reviews a step's commits before the step counts as done.
 - Done means: reviewed, tests pass, its acceptance criterion is met, it works in the end-to-end flow.
