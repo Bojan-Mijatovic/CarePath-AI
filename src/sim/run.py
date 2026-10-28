@@ -1,8 +1,8 @@
 """Run the simulator for one run into its DuckDB file and report the time per simulated day.
 
 Delivery plan steps 1.15, 1.17 and 1.22. The scenario comes from the run id (s2_baseline → scenarios/2.json).
-From day 0 the state engine fills pathway_state and kpi_daily after each day. The engine's real-time tick
-(2.1) will call Simulator.step and the state engine itself.
+From day 0 the state engine fills pathway_state and kpi_daily after each day. This is the batch run for
+measuring; the demo advances its runs with engine.tick (step 2.1).
 
     uv run carepath-sim s2_baseline [--days 365] [--seed 42] [--overwrite]
 """

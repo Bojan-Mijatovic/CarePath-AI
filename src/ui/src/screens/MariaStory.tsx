@@ -3,10 +3,11 @@ import { type Patient360, useApi } from '../lib/api'
 import { formatNumber, useLang } from '../lib/i18n'
 import { conditions, storyLines } from '../lib/story'
 
-/** Demo step 1 (prototype "Marija"): Maria's path without CarePath, from her baseline-arm timeline. */
+/** Demo step 1 (prototype "Marija"): Maria's path without CarePath, from her baseline-arm timeline. The runs
+ * stand on day 23 when the demo opens, so the story is the recording to day 62 (demo/story/, D35). */
 export default function MariaStory({ onStart, langSwitch }: { onStart: () => void; langSwitch: ReactNode }) {
   const { lang, t } = useLang()
-  const { data, error } = useApi<Patient360>('/api/patients/p_00001?run=s2_baseline')
+  const { data, error } = useApi<Patient360>('/api/patients/p_00001?run=s2_baseline&day=62')
   const p = data?.patient
 
   return (

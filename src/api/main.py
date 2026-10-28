@@ -1,12 +1,14 @@
-"""CarePath API: REST endpoints and the /api/stream WebSocket the console listens to.
+"""CarePath API: REST endpoints and the /api/stream WebSocket the console listens to (spec/SPEC.md §10).
 
-Until the real tick (engine.tick, step 2.1) the API runs in fixture mode (step 1.25): the SPEC §10
-endpoints the first screens need answer from testing/fixtures/, and the stream replays them one day per
-tick. Without fixtures it falls back to the phase 0 counter. The message envelope is the one of
-spec/SPEC.md §10, so the console does not change when the tick arrives.
+The API runs the demo (engine.tick, step 2.1). At start-up it replays the six runs to day 23 in the
+background, about 25 s, and the data endpoints answer 503 until then. A clock task advances the scenario
+on screen at the chosen speed and pushes each day's messages to every connected console. Maria's story
+(demo step 1) comes from the file recorded in demo/story/ (D35).
 """
 
 import asyncio
+import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Literal
 
@@ -15,10 +17,11 @@ from fastapi import APIRouter, FastAPI, HTTPException, WebSocket, WebSocketDisco
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from api.fixtures import FIXTURES_DIR, Fixtures
+from engine import queries, story
+from engine.tick import Demo
 
 UI_DIST = Path(__file__).resolve().parents[1] / "ui" / "dist"
-DEFAULT_RUN = "s2_agents"  # SPEC §10: the scenario on screen, agents arm
+log = logging.getLogger("carepath.api")
 
 
 class StreamMessage(BaseModel):
@@ -30,12 +33,111 @@ class StreamMessage(BaseModel):
     payload: dict[str, Any] = {}
 
 
-def create_app(tick_seconds: float = 2.0, scenario: int = 1, ui_dir: Path | None = UI_DIST,
-               fixtures_dir: Path | None = FIXTURES_DIR) -> FastAPI:
-    app = FastAPI(title="CarePath AI")
+class Speed(BaseModel):
+    factor: int
+
+
+class Live:
+    """The demo clock and the consoles it pushes to. `tick_seconds` is one simulated day at ×1 (SPEC §9)."""
+
+    def __init__(self, demo: Demo, tick_seconds: float):
+        self.demo, self.tick_seconds = demo, tick_seconds
+        self.consoles: set[asyncio.Queue] = set()
+        self.resume = asyncio.Event()
+
+    def publish(self, messages: list[dict]) -> None:
+        for m in messages:
+            msg = StreamMessage.model_validate(m).model_dump()
+            for q in self.consoles:
+                q.put_nowait(msg)
+
+    def need_ready(self) -> None:
+        if not self.demo.ready:
+            raise HTTPException(503, "the demo runs are being prepared (about 25 s after start-up)")
+
+    def set_speed(self, factor: int) -> None:
+        try:
+            self.demo.set_speed(factor)
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from None
+        if factor:
+            self.resume.set()
+
+    async def status(self, messages: list[dict] | None = None) -> dict[str, int]:
+        """Publishes `messages`, then returns what the console shows in its top bar."""
+        self.publish(messages or [])
+        return {"scenario": self.demo.scenario, "day": await asyncio.to_thread(lambda: self.demo.day),
+                "speed": self.demo.speed}
+
+    async def control(self, method, *args):
+        """A Demo method that rebuilds or advances runs, off the event loop; a bad argument is a 422."""
+        self.need_ready()
+        try:
+            return await asyncio.to_thread(method, *args)
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from None
+
+    def read(self, run: str | None, query):
+        self.need_ready()
+        try:
+            return self.demo.read(run or self.demo.default_run(), query)
+        except KeyError:
+            raise HTTPException(404, f"no run {run}") from None
+
+    async def tick_message(self) -> dict:
+        return await asyncio.to_thread(self.demo.tick_message)
+
+    async def run(self) -> None:
+        await asyncio.to_thread(self.demo.start)
+        self.publish([await self.tick_message()])
+        loop = asyncio.get_running_loop()
+        while True:
+            if self.demo.speed == 0:
+                self.resume.clear()
+                await self.resume.wait()
+                continue
+            started = loop.time()
+            try:
+                self.publish(await asyncio.to_thread(self.demo.advance))
+            except Exception:
+                log.exception("tick failed; the demo is paused")
+                self.demo.set_speed(0)
+                continue
+            seconds = self.tick_seconds / max(self.demo.speed, 1)
+            await asyncio.sleep(max(0.0, seconds - (loop.time() - started)))
+
+    async def serve(self, ws: WebSocket) -> None:
+        await ws.accept()
+        q: asyncio.Queue = asyncio.Queue()
+        self.consoles.add(q)
+        try:
+            if self.demo.ready:  # a console that connects late starts from the current day
+                await ws.send_json(StreamMessage.model_validate(await self.tick_message()).model_dump())
+            while True:
+                await ws.send_json(await q.get())
+        except WebSocketDisconnect:
+            pass
+        finally:
+            self.consoles.discard(q)
+
+
+def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path | None = UI_DIST,
+               story_dir: Path = story.STORY_DIR) -> FastAPI:
+    demo = demo or Demo()
+    live = Live(demo, tick_seconds)
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI):
+        task = asyncio.create_task(live.run())
+        task.add_done_callback(lambda t: t.cancelled() or t.exception() is None or
+                               log.error("demo clock stopped", exc_info=t.exception()))
+        yield
+        task.cancel()
+        await asyncio.to_thread(demo.close)
+
+    app = FastAPI(title="CarePath AI", lifespan=lifespan)
+    app.state.demo = demo
     api = APIRouter(prefix="/api")
-    fixtures = Fixtures(fixtures_dir) if fixtures_dir is not None and fixtures_dir.is_dir() else None
-    app.state.scenario = scenario
 
     @api.get("/health")
     def health() -> dict[str, str]:
@@ -43,53 +145,58 @@ def create_app(tick_seconds: float = 2.0, scenario: int = 1, ui_dir: Path | None
 
     @api.websocket("/stream")
     async def stream(ws: WebSocket) -> None:
-        await ws.accept()
-        try:
-            if fixtures is not None:
-                messages = fixtures.stream()
-                for day in sorted({m["day"] for m in messages}):
-                    for m in messages:
-                        if m["day"] == day:
-                            await ws.send_json(StreamMessage.model_validate(m).model_dump())
-                    await asyncio.sleep(tick_seconds)
-                await ws.receive_text()  # the replay is over; keep the connection until the console leaves
-            else:
-                day = 0
-                while True:
-                    msg = StreamMessage(type="tick", scenario=app.state.scenario, day=day)
-                    await ws.send_json(msg.model_dump())
-                    day += 1
-                    await asyncio.sleep(tick_seconds)
-        except WebSocketDisconnect:
-            pass
+        await live.serve(ws)
 
-    def need_fixtures() -> Fixtures:
-        if fixtures is None:
-            raise HTTPException(503, "no data source yet: the tick comes in step 2.1")
-        return fixtures
+    @api.post("/sim/start")
+    async def start() -> dict[str, int]:
+        live.need_ready()
+        live.set_speed(demo.speed or 1)
+        return await live.status()
+
+    @api.post("/sim/pause")
+    async def pause() -> dict[str, int]:
+        live.need_ready()
+        live.set_speed(0)
+        return await live.status()
+
+    @api.post("/sim/speed")
+    async def speed(body: Speed) -> dict[str, int]:
+        live.need_ready()
+        live.set_speed(body.factor)
+        return await live.status()
+
+    @api.post("/sim/reset")
+    async def reset() -> dict[str, int]:
+        await live.control(demo.start)
+        return await live.status([await live.tick_message()])
 
     @api.post("/sim/scenario/{n}")
-    def choose_scenario(n: int) -> dict[str, int]:
-        if n not in (1, 2, 3):
-            raise HTTPException(422, "scenario is 1, 2 or 3")
-        app.state.scenario = n
-        return {"scenario": n}
+    async def choose_scenario(n: int) -> dict[str, int]:
+        await live.control(demo.choose, n)
+        return await live.status([await live.tick_message()])
+
+    @api.post("/sim/jump/{day}")
+    async def jump(day: int) -> dict[str, int]:
+        return await live.status(await live.control(demo.jump, day))
 
     @api.get("/kpi")
-    def kpi(run: str = DEFAULT_RUN, pathway_id: str | None = None, level: str | None = None,
+    def kpi(run: str | None = None, pathway_id: str | None = None, level: str | None = None,
             key: str | None = None) -> list[dict]:
-        return need_fixtures().kpi(run, pathway_id, level, key)
+        return live.read(run, lambda con: queries.kpi(con, pathway_id, level, key))
 
     @api.get("/patients/{patient_id}")
-    def patient(patient_id: str, run: str = DEFAULT_RUN) -> dict:
-        found = need_fixtures().patient(patient_id, run)
+    def patient(patient_id: str, run: str | None = None, day: int | None = None) -> dict:
+        if day is None:
+            found = live.read(run, lambda con: queries.patient_360(con, patient_id))
+        else:  # a recorded story (C17)
+            found = story.load(patient_id, run or "", day, story_dir)
         if found is None:
-            raise HTTPException(404, f"no patient {patient_id} in {run}")
+            raise HTTPException(404, f"no patient {patient_id} in run {run}, day {day}")
         return found
 
     @api.get("/actions")
-    def actions(run: str = DEFAULT_RUN, status: str | None = None) -> list[dict]:
-        return need_fixtures().actions(run, status)
+    def actions(run: str | None = None, status: str | None = None) -> list[dict]:
+        return live.read(run, lambda con: queries.actions(con, status))
 
     app.include_router(api)
 

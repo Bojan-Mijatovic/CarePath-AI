@@ -1,12 +1,32 @@
+"""API on the real tick (step 2.1): a small demo, scenario 2 only, opening on day 3."""
+
+import json
+import time
+
+import pytest
 from fastapi.testclient import TestClient
 
 from api.main import create_app
+from engine import story
+from engine.tick import Demo
+
+START, DAYS = 3, 30
 
 
-def make_client(tmp_path, fixtures=False):
+def make_client(tmp_path, demo=None):
     (tmp_path / "index.html").write_text("<title>CarePath AI</title>", encoding="utf-8")
-    kw = {} if fixtures else {"fixtures_dir": None}
-    return TestClient(create_app(tick_seconds=0.001, scenario=2, ui_dir=tmp_path, **kw))
+    return TestClient(create_app(demo=demo, tick_seconds=0.05, ui_dir=tmp_path))
+
+
+@pytest.fixture(scope="module")
+def client(tmp_path_factory):
+    demo = Demo(tmp_path_factory.mktemp("api_runs"), scenarios=(2,), start_day=START, days=DAYS)
+    with make_client(tmp_path_factory.mktemp("ui"), demo) as c:
+        deadline = time.monotonic() + 120
+        while c.get("/api/kpi").status_code == 503:
+            assert time.monotonic() < deadline, "the demo runs were not ready in 120 s"
+            time.sleep(0.2)
+        yield c
 
 
 def test_health(tmp_path):
@@ -24,54 +44,52 @@ def test_api_works_without_built_console():
     assert client.get("/api/health").status_code == 200
 
 
-def test_stream_sends_tick_envelope(tmp_path):
-    with make_client(tmp_path).websocket_connect("/api/stream") as ws:
-        first, second = ws.receive_json(), ws.receive_json()
-    assert first == {"type": "tick", "scenario": 2, "day": 0, "payload": {}}
-    assert second["day"] == 1
+def test_data_waits_for_the_runs(tmp_path):
+    client = make_client(tmp_path)  # no lifespan, so the runs are never built
+    assert client.get("/api/kpi").status_code == 503
+    assert client.post("/api/sim/start").status_code == 503
 
 
-def test_without_a_data_source_the_endpoints_say_so(tmp_path):
-    assert make_client(tmp_path).get("/api/kpi").status_code == 503
+def test_opens_paused_on_the_start_day(client):
+    with client.websocket_connect("/api/stream") as ws:
+        first = ws.receive_json()
+    assert (first["type"], first["scenario"], first["day"]) == ("tick", 2, START)
+    assert first["payload"]["speed"] == 0
+    assert first["payload"]["kpi"]["pathway_id"] == "hf_lombardia_v1"
+    assert client.post("/api/sim/scenario/2").json() == {"scenario": 2, "day": START, "speed": 0}
+    assert client.post("/api/sim/scenario/1").status_code == 422  # not one of this demo's scenarios
 
 
-# Fixture mode (step 1.25): the SPEC §10 paths answered from testing/fixtures/.
+def test_start_advances_and_pause_stops(client):
+    with client.websocket_connect("/api/stream") as ws:
+        ws.receive_json()
+        assert client.post("/api/sim/start").json()["speed"] == 1
+        days = [ws.receive_json()["day"] for _ in range(3)]
+        stopped = client.post("/api/sim/pause").json()
+    assert days == list(range(days[0], days[0] + 3))
+    assert days[0] == START + 1
+    assert stopped["speed"] == 0
+    assert client.post("/api/sim/speed", json={"factor": 3}).status_code == 422
 
-def test_kpi_from_fixtures(tmp_path):
-    client = make_client(tmp_path, fixtures=True)
-    rows = client.get("/api/kpi", params={"level": "ats"}).json()
-    assert [r["day"] for r in rows] == list(range(63))
-    assert {r["key"] for r in rows} == {"ats"}
-    asst = client.get("/api/kpi", params={"level": "asst"}).json()
-    assert {r["key"] for r in asst} == {"asst_mantova", "asst_cremona", "asst_crema"}
-    baseline = client.get("/api/kpi", params={"run": "s2_baseline", "level": "ats"}).json()
-    assert baseline[-1]["actions_executed"] == 0
+
+def test_jump_back_replays_the_same_days(client):
+    client.post("/api/sim/pause")
+    client.post(f"/api/sim/jump/{START + 4}")
+    before = client.get("/api/kpi", params={"level": "ats"}).json()
+    assert client.post(f"/api/sim/jump/{START + 1}").json()["day"] == START + 1
+    assert client.post(f"/api/sim/jump/{START + 4}").json()["day"] == START + 4
+    assert client.get("/api/kpi", params={"level": "ats"}).json() == before
+    assert [r["day"] for r in before] == list(range(START + 5))
+    assert client.post(f"/api/sim/jump/{DAYS}").status_code == 422
 
 
-def test_patient_and_actions_from_fixtures(tmp_path):
-    client = make_client(tmp_path, fixtures=True)
+def test_patient_actions_and_story(client):
     maria = client.get("/api/patients/p_00001", params={"run": "s2_baseline"}).json()
     assert maria["patient"]["comune_name"] == "Poggio Rusco"
-    assert client.get("/api/patients/p_09999").status_code == 404
-    pending = client.get("/api/actions", params={"status": "proposed"}).json()
-    assert [a["type"] for a in pending] == ["reschedule"]
-
-
-def test_choose_scenario(tmp_path):
-    client = make_client(tmp_path, fixtures=True)
-    assert client.post("/api/sim/scenario/3").json() == {"scenario": 3}
-    assert client.post("/api/sim/scenario/4").status_code == 422
-
-
-def test_stream_replays_the_fixtures_from_day_23(tmp_path):
-    with make_client(tmp_path, fixtures=True).websocket_connect("/api/stream") as ws:
-        msgs = [ws.receive_json() for _ in range(40 + 6)]  # 40 ticks (days 23-62), 2 alerts, 2 actions, 2 steps
-    ticks = [m for m in msgs if m["type"] == "tick"]
-    assert [m["day"] for m in ticks] == list(range(23, 63))
-    assert set(ticks[0]["payload"]) == {"speed", "kpi"}
-    others = [(m["day"], m["type"]) for m in msgs if m["type"] != "tick"]
-    assert others == [(31, "alert"), (31, "action"), (35, "alert"), (35, "action"), (35, "investigation"),
-                      (35, "investigation")]
-    days = [m["day"] for m in msgs]
-    assert days == sorted(days)
-    assert msgs[days.index(31)]["type"] == "tick"  # a day starts with its tick
+    assert max(i["day"] for i in maria["timeline"]) <= client.post("/api/sim/pause").json()["day"]
+    assert client.get("/api/patients/p_99999").status_code == 404
+    assert client.get("/api/kpi", params={"run": "s3_agents"}).status_code == 404
+    assert client.get("/api/actions", params={"status": "proposed"}).json() == []  # no agents until 2.12
+    recorded = client.get("/api/patients/p_00001", params={"run": "s2_baseline", "day": 62}).json()
+    assert recorded == json.loads(story.path("p_00001", "s2_baseline", 62).read_text(encoding="utf-8"))
+    assert client.get("/api/patients/p_00001", params={"run": "s2_baseline", "day": 61}).status_code == 404

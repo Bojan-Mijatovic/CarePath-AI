@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **v1.3**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), all proposed 28 Oct 2026. Changes follow §0 |
+| Status | **v1.4**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), all proposed 28 Oct 2026. Changes follow §0 |
 | Last updated | 28 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C16 proposed in v1.1–v1.3)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C17 proposed in v1.1–v1.4)
 
 | # | Change | Why |
 |---|---|---|
@@ -46,6 +46,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C14 (D32) | Pathway steps get an optional `service` (§4). §5.1 says how a step is evaluated, §5.2 how `kpi_daily` is computed | `due_soon` ("not booked") and `next_booked_day` need to know which `BOOKING` belongs to which step, and so does `wait_by_hospital(step)` (§6); v1.0 did not say. The mapping lived only in the simulator's config. Without a rule for when a periodic step's clock starts, Maria, who has no BNP in her history, would be "Fuori percorso" from day 1 |
 | C15 (D33) | Shapes of `GET /patients/{id}` and of the tick's `kpi` (§10), and the steps of `sankey_flows` (§5.2) | The fixtures (step 1.23) and the first screens (step 1.25) need them; v1.1 said only "timeline of events and actions, state per pathway" and `{...}`. The meaning of `map_comuni` `adherence_pct` and `alarm`, and of `worklist_today` `pathways` and `outcome`, waits for steps 2.2 and 2.4 (Q7); their fixtures use stand-in values |
 | C16 (D34) | What each tool computes (§6): booking-to-slot waits, on-time deadlines, the 10 worst groups plus `rest_of_ats`, the `telemonitoring` measure over everyone ever started, `empty_result` for risk until step 2.3 | v1.2 gave names and shapes but not the computations, so two implementations could disagree and the Verifier could not tell which is right. With a 60-day window on the denominator, patients who stopped telemonitoring left the measure and pattern 3 disappeared (measured, scenario 2); hundreds of groups would not fit a prompt |
+| C17 (D35) | `GET /patients/{id}` takes an optional `day`: with it, the API answers from a recording in `demo/story/` instead of the live run (§10). The control endpoints return `{scenario, day, speed}` | The demo opens with every run on day 23 (D21), but Maria's story (demo step 1) tells what happens without CarePath up to her readmission on day 47. Recorded once from the baseline run of scenario 2 to day 62 (`uv run python -m engine.story`); a test checks it against the fixture run. The console needs the day and speed after a control call |
 
 ## 1. Scope
 
@@ -295,7 +296,7 @@ Every number in `data` follows the precision rule in §2. `testing/test_tools_de
 - `compliance_by_step`: for each step with a deadline, the share of deadlines that fell due in the last 90 days and were met on time. Deadlines follow §5.1: a step with `after` gets one per event of that step; a periodic step gets one per completion, discharge or enrolment. A deadline that a newer anchor replaced before it fell due does not count.
 - `wait_by_hospital`: mean days from booking to the booked day, over the `BOOKING`s of the step's `service` (C14) made in the period by patients of the pathway, by the hospital or clinic booked. A step without a service gives `bad_argument`.
 - `patients_overdue`: patients with the step overdue today by the rules of §5.1 (the same set as `overdue_steps`), the most overdue first.
-- `free_slots`: free slots from tomorrow for `horizon_days`. On a live run this needs `capacity_slots` kept current every tick (step 2.1); on a finished run it is exact only on the last day.
+- `free_slots`: free slots from tomorrow for `horizon_days`. On a live run the tick keeps `capacity_slots` current (step 2.1); on a finished run it is exact only on the last day.
 - `adherence_by_group` and `readmissions_by_comune`: at most the 10 worst groups (lowest adherence, highest readmission rate) with at least 10 patients, or 5 index discharges for readmissions; then `rest_of_ats` over every other patient of the pathway, or `null` when all groups are shown. Age bands: `<65`, `65-74`, `75-84`, `85+`. Comuni are named.
 - `readmission_rate_30d` over a period: §5.2 with the period's last `period_days` days in place of day 0 to today (180 days for `compare_segments`). `dispensing` and `telemonitoring` use 60 days and `on_time_fraction` pools every deadline of the last 90 days.
 - `risk_drivers` and the `risk_mean` metric return `empty_result` until the risk model exists (step 2.3).
@@ -408,20 +409,20 @@ What-if runs skip LLM calls, view refreshes and WebSocket pushes; they compute K
 
 ## 10. API and WebSocket
 
-REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for example `GET /api/health`, `WS /api/stream`); everything else is the built console, served by FastAPI from `src/ui/dist` (D13). `run` defaults to the scenario on screen and the `agents` arm.
+REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for example `GET /api/health`, `WS /api/stream`); everything else is the built console, served by FastAPI from `src/ui/dist` (D13). `run` defaults to the scenario on screen and the `agents` arm. The API starts the six runs itself and answers 503 on data and control paths until they stand on the start day (about 25 s on the team laptops). Control paths return `{"scenario", "day", "speed"}` (C17).
 
 | Method and path (under `/api`) | Purpose |
 |---|---|
 | `GET /health` | liveness |
-| `POST /sim/start`, `/sim/pause`, `/sim/reset` | control all runs |
+| `POST /sim/start`, `/sim/pause`, `/sim/reset` | start the scenario on screen (×1, or the last speed), pause it, rebuild all runs to the start day paused (C17) |
 | `POST /sim/speed` `{factor}` | 0 (pause), 1, 4 |
-| `POST /sim/scenario/{n}` | change the scenario on screen (the envelope hotkey) |
+| `POST /sim/scenario/{n}` | change the scenario on screen (the envelope hotkey); the console then calls `/sim/start` |
 | `POST /sim/jump/{day}` | jump to a day |
 | `GET /kpi?run&pathway_id&level&key` | `kpi_daily` rows |
 | `GET /sankey?run&pathway_id` | `sankey_flows` |
 | `GET /map?run&pathway_id` | `map_comuni` + alarms |
 | `GET /worklist?run&day` | `worklist_today` |
-| `GET /patients/{id}?run` | Paziente 360: timeline of events and actions, state per pathway (shape below, C15) |
+| `GET /patients/{id}?run&day` | Paziente 360: timeline of events and actions, state per pathway (shape below, C15). With `day`, a recording from `demo/story/` (C17): only `p_00001`, `s2_baseline`, day 62 exists; anything else is 404 |
 | `GET /actions?run&status` | action queue and feed |
 | `POST /actions/{id}/approve`, `/reject`, `/undo` | decisions |
 | `GET /settings`, `PUT /settings/autonomy` | autonomy per action type |
@@ -496,7 +497,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 |---|---|---|---|
 | Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D. **Closed** (D28): demo values, no clinical confirmation for the PoC | Italian colleague via R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source | R5 | week 2 |
-| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14–C16 proposed with D32–D34 (28 Oct 2026) | all, at the sync | week 1 |
+| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14–C17 proposed with D32–D35 (28 Oct 2026) | all, at the sync | week 1 |
 | Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |
 | Q5 | Daily limit of automatic actions per facility: 50 a sensible default? | R3, R5 | week 2 |
 | Q6 | Do we need calendar dates on screen, or is "Giorno N" enough for the audience? | R5 | week 2 |

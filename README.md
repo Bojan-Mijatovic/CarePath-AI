@@ -75,7 +75,7 @@ Takes about 15 minutes plus model downloads. No admin rights needed.
    uv run carepath-api
    ```
 
-   Open <http://127.0.0.1:8000>: the console opens on Maria's story; "Avvia la simulazione", then an envelope, leads to Panoramica, where "Giorno N" goes up every 2 seconds from day 23 and "connesso" shows in the top bar.
+   Open <http://127.0.0.1:8000>: the console opens on Maria's story; "Avvia la simulazione", then an envelope, leads to Panoramica, where "Giorno N" goes up every 2 seconds from day 23 and "connesso" shows in the top bar. The API needs about 25 s after start-up to prepare the runs; an envelope chosen earlier shows a 503.
 
 ## Commands
 
@@ -92,6 +92,7 @@ Everything runs with `uv run` from the repository root.
 | `uv run carepath-reference-data [--refresh]` | downloads ISTAT and ATS sources, rebuilds `src/sim/data/*.csv` and the map `src/ui/assets/comuni.geojson` | 1.10–1.13 |
 | `uv run carepath-sim s2_baseline [--days 365]` | simulates one run into `runs/` and reports the time per day; the scenario comes from the run id | 1.15–1.17 |
 | `uv run python -m sim.calibration` | refits the two readmission parameters against the PNE target | 1.16 |
+| `uv run python -m engine.story` | rewrites Maria's recorded story `demo/story/p_00001_s2_baseline_day62.json` | 2.1 |
 | `uv run python -m sim.truth` | rewrites `demo/truth/scenario_<n>.json` from the scenario files | 1.18 |
 | `uv run python -m engine.pathway` | regenerates `spec/pathways/pathway.schema.json` from the model | 1.3 |
 | `uv run jupyter lab --notebook-dir testing/notebooks` | population, calibration and pattern-proof notebooks | 1.14, 1.16, 1.21 |
@@ -110,7 +111,7 @@ cd src/ui; fnm exec --using=24 npm run dev   # terminal 2: console on :5173
 
 Open <http://127.0.0.1:5173>. Vite forwards `/api`, including the `/api/stream` WebSocket, to the API. Every API path is under `/api` (spec §10). `npm run lint` runs oxlint.
 
-Until the real tick (step 2.1) the API runs in fixture mode (step 1.25): `GET /api/kpi`, `/api/patients/{id}`, `/api/actions` and `POST /api/sim/scenario/{n}` answer from `testing/fixtures/`, and `/api/stream` replays days 23–62 of scenario 2, whichever envelope is chosen. Restart `carepath-api` after a change to the API or the fixtures; it does not reload. Screens so far: `#storia` (Maria's story), `#buste` (envelopes), `#panoramica` (overview with the agent feed); the switch in the top bar changes between Italian and English (D30).
+The API runs the demo itself (step 2.1): at start-up it replays the six runs (3 scenarios × 2 arms) to day 23 into `runs/`, which takes about 25 s; until then the data endpoints answer 503. An envelope puts its scenario on screen and starts it at ×1; `POST /api/sim/pause`, `/api/sim/speed`, `/api/sim/jump/{day}` and `/api/sim/reset` control it (SPEC §10). Maria's story is served from `demo/story/` (D35). Restart `carepath-api` after a change to the API or the engine; it does not reload. Screens so far: `#storia` (Maria's story), `#buste` (envelopes), `#panoramica` (overview with the agent feed); the switch in the top bar changes between Italian and English (D30).
 
 ## Measuring models on your machine
 

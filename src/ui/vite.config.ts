@@ -6,6 +6,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: '127.0.0.1', // "localhost" binds only ::1 on Windows, so http://127.0.0.1:5173 was refused
     proxy: {
       '/api': { target: 'http://127.0.0.1:8000', ws: true },
     },

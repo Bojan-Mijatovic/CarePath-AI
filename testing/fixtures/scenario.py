@@ -25,6 +25,7 @@ import pandas as pd
 from agents import tools
 from engine import pathway as pathway_model
 from engine.db import create_run, open_run, tool_cursor
+from engine.queries import kpi_headline, patient_360, rows
 from engine.state import StateEngine
 from sim.population import generate_patients, load_reference
 from sim.run import append, load_reference_tables
@@ -37,17 +38,9 @@ RUNS = {"s2_baseline": False, "s2_agents": True}
 MARIA, CALL_DAY, ALARM_DAY = "p_00001", 31, 35
 CALL_ID, RESCHEDULE_ID = "act_s2_agents_1", "act_s2_agents_2"
 INVESTIGATION_ID = "inv_s2_agents_1"
-JSON_COLUMNS = {"scope", "payload", "rationale", "evidence", "details"}
 WAIT_ARGS = {"pathway_id": PATHWAY_ID, "step": "echo", "period_days": 7}
 FREE_ARGS = {"service": "echo"}
 WORKLIST_SIZE = 20
-
-
-def rows(con: duckdb.DuckDBPyConnection, sql: str, params: dict | None = None) -> list[dict]:
-    cur = con.execute(sql, params or {})
-    names = [d[0] for d in cur.description]
-    return [{n: json.loads(v) if n in JSON_COLUMNS and v is not None else v for n, v in zip(names, r)}
-            for r in cur.fetchall()]
 
 
 def source(tool: str, args: dict, day: int) -> dict:
@@ -64,7 +57,7 @@ def facility_ids(con) -> dict[str, str]:
 
 def live_tool(con, sim: Simulator, day: int, name: str, args: dict) -> dict:
     """A tool call on the live run, as the agents will make it (SPEC §6, D29). capacity_slots is refreshed
-    first: the simulator books slots every day, and the tick will keep the table current (step 2.1)."""
+    first: the simulator books slots every day, and the demo's tick keeps the table current (step 2.1)."""
     con.execute("DELETE FROM capacity_slots")
     append(con, "capacity_slots", sim.capacity_slots())
     result = tools.call(tools.Context("s2_agents", tools.Query(tool_cursor(con)), day), name, args)
@@ -160,36 +153,6 @@ def build_runs(runs_dir: Path) -> dict:
     return live
 
 
-def patient_360(con, patient_id: str) -> dict:
-    """GET /api/patients/{id} (SPEC §10, C15)."""
-    patient = rows(con, "SELECT p.*, c.name AS comune_name FROM patients p JOIN comuni c USING (comune_istat) "
-                        "WHERE patient_id = $p", {"p": patient_id})[0]
-    pathways = rows(con, "SELECT * FROM pathway_state WHERE patient_id = $p ORDER BY pathway_id", {"p": patient_id})
-    timeline = rows(con, """
-        SELECT * EXCLUDE (k, n) FROM (
-            SELECT e.day, 'event' AS kind, e.event_id, e.event_type, e.code, e.value, e.facility_id,
-                   f.name AS facility_name, e.source, e.action_id,
-                   NULL AS type, NULL AS agent, NULL AS status, NULL::JSON AS rationale,
-                   1 AS k, CAST(substr(e.event_id, 4) AS BIGINT) AS n
-            FROM events e LEFT JOIN facilities f USING (facility_id) WHERE e.patient_id = $p
-            UNION ALL
-            SELECT created_day, 'action', NULL, NULL, NULL, NULL, NULL, NULL, NULL, action_id,
-                   type, agent, status, rationale, 0, 0
-            FROM actions WHERE patient_id = $p)
-        ORDER BY day, k, n, action_id""", {"p": patient_id})
-    for item in timeline:  # one shape per kind
-        for key in (["type", "agent", "status", "rationale"] if item["kind"] == "event" else
-                    ["event_id", "event_type", "code", "value", "facility_id", "facility_name", "source"]):
-            del item[key]
-    return {"patient": patient, "pathways": pathways, "timeline": timeline}
-
-
-def kpi_headline(con, day: int) -> dict:
-    """The `kpi` of a tick (SPEC §10, C15): the ATS row of kpi_daily for the pathway on screen."""
-    return rows(con, "SELECT * EXCLUDE (day, level, key) FROM kpi_daily WHERE day = $d AND level = 'ats' "
-                     "AND pathway_id = $pw", {"d": day, "pw": PATHWAY_ID})[0]
-
-
 def sankey(con) -> list[dict]:
     """sankey_flows (SPEC §5.2, C15) from pathway_state; step 2.2 makes it a view."""
     return rows(con, """SELECT pathway_id, current_step AS from_step, next_step AS to_step, status, count(*) AS patients
@@ -231,7 +194,7 @@ def stream(con, live: dict) -> dict[str, object]:
     call = rows(con, "SELECT * FROM actions WHERE action_id = $a", {"a": CALL_ID})[0]
     f = maria_facts(con, CALL_DAY)
     return {
-        "tick.json": msg("tick", ALARM_DAY, {"speed": 1, "kpi": kpi_headline(con, ALARM_DAY)}),
+        "tick.json": msg("tick", ALARM_DAY, {"speed": 1, "kpi": kpi_headline(con, ALARM_DAY, PATHWAY_ID)}),
         "alert_patient.json": msg("alert", CALL_DAY, {
             "level": "patient", "facility_id": None, "investigation_id": None,
             "text": {"it": f"{MARIA} ({f['age']} anni, {f['comune']}): scorta di furosemide finita da "

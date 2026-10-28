@@ -7,11 +7,14 @@ export default function Envelopes({ onChosen, langSwitch }: { onChosen: () => vo
   const [error, setError] = useState<string | null>(null)
 
   const choose = (n: number) => {
-    fetch(`/api/sim/scenario/${n}`, { method: 'POST' })
-      .then((r) => {
-        if (!r.ok) throw new Error(`${r.status}`)
-        onChosen()
-      })
+    // The scenario goes on screen, then its two runs start at ×1 from day 23 (D21).
+    const post = async (path: string) => {
+      const r = await fetch(path, { method: 'POST' })
+      if (!r.ok) throw new Error(`${r.status} ${await r.text()}`)
+    }
+    post(`/api/sim/scenario/${n}`)
+      .then(() => post('/api/sim/start'))
+      .then(onChosen)
       .catch((e: unknown) => setError(String(e)))
   }
 
