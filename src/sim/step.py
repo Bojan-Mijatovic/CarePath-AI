@@ -22,6 +22,7 @@ import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
 from engine.pathway import Pathway
+from sim import maria as maria_script
 from sim.rng import component_rng
 
 NO_DAY = -(10**6)
@@ -198,6 +199,24 @@ class Simulator:
         self.telemon_start_p = np.full(n, p.p_telemon_start)
         self.telemon_dropout_p = np.full(n, p.telemon_dropout_daily)
 
+        # Maria is scripted (step 1.19): her state is set so no random process ever touches her.
+        self.fac_index = fac_index
+        self.maria: maria_script.MariaScript | None = None
+        if self.patient_id[0] == maria_script.PATIENT_ID:
+            self.maria = maria_script.MariaScript(self.first_day, days)
+            self.telemon_on[0] = False
+            self.supply_end[0] = self.decomp_admit[0] = maria_script.NOT_SCHEDULED
+            for s in self.periodic_steps:
+                self.next_due[s.id][0] = maria_script.NOT_SCHEDULED
+
+    def receive_call(self, patient_id: str, day: int, action_id: str) -> bool:
+        """A Centro Servizi call to a patient, executed on `day` by the action service. Returns whether it
+        changed the patient's path. Maria's script reacts now; other patients get their effects with the
+        feedback hook of step 1.20."""
+        if self.maria is not None and patient_id == maria_script.PATIENT_ID:
+            return self.maria.receive_call(day, action_id)
+        return False
+
     def apply_scenario(self, scenario: Scenario, mmg: pd.DataFrame) -> None:
         """Inject the three patterns of one envelope (step 1.17). Call before the warm-up."""
         for change in (scenario.echo_bottleneck, scenario.echo_free_capacity):
@@ -254,9 +273,9 @@ class Simulator:
         p, n = self.p, self.n
         chunks: list[tuple] = []
 
-        def emit(idx, event_type, code=None, value=None, fac=None):
+        def emit(idx, event_type, code=None, value=None, fac=None, action_id=None):
             if len(idx):
-                chunks.append((idx, event_type, code, value, fac))
+                chunks.append((idx, event_type, code, value, fac, action_id))
 
         # 1. Discharges, then the post-discharge steps they open.
         out = np.flatnonzero(self.in_hosp & (self.discharge_day == day))
@@ -352,6 +371,13 @@ class Simulator:
         self.supply_end[coll] = day + p.supply_days
         emit(coll, "DISPENSE", self.drug_atc, np.full(len(coll), float(p.supply_days)))
 
+        # 8. Maria's scripted day.
+        if self.maria is not None:
+            maria = np.array([0])
+            for etype, code, value, fac, action_id in self.maria.events(day):
+                emit(maria, etype, code, None if value is None else np.array([value]),
+                     None if fac is None else np.array([self.fac_index[fac]]), action_id)
+
         return self._frame(day, chunks)
 
     def _frame(self, day: int, chunks: list[tuple]) -> pd.DataFrame:
@@ -365,6 +391,7 @@ class Simulator:
         value = np.concatenate([np.full(len(c[0]), np.nan) if c[3] is None else np.asarray(c[3], float)
                                 for c in chunks])
         fac = np.concatenate([np.full(len(c[0]), -1) if c[4] is None else c[4] for c in chunks])
+        action = np.concatenate([np.full(len(c[0]), c[5], object) for c in chunks])
         has_fac = fac >= 0
         ids = np.arange(self.next_event, self.next_event + k)
         self.next_event += k
@@ -379,8 +406,8 @@ class Simulator:
             "asst_id": np.where(has_fac, self.fac_asst[np.maximum(fac, 0)], None),
             "mmg_id": self.mmg_id[idx],
             "comune_istat": self.comune[idx],
-            "source": "sim",
-            "action_id": None,
+            "source": np.where(pd.isna(action), "sim", "agent_action"),
+            "action_id": action,
         })
 
     def warm_up(self) -> list[pd.DataFrame]:

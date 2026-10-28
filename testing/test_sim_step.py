@@ -92,7 +92,8 @@ def test_steps_come_from_the_pathway_not_the_code(world):
     no_telemon = hf.model_copy(update={"steps": [s for s in hf.steps if s.id != "telemon"]})
     sim, ev = simulate(world, days=10, pathway=no_telemon)
     assert not sim.telemon_steps
-    assert "TELEMON_START" not in set(ev.event_type)
+    unscripted = ev[ev.patient_id != "p_00001"]  # Maria follows her fixed story, not the pathway file
+    assert "TELEMON_START" not in set(unscripted.event_type)
 
 
 def test_one_day_runs_well_under_a_second(world):

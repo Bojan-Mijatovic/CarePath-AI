@@ -209,3 +209,22 @@ The start days are set so the bottleneck's echo wait reaches about six weeks aro
 A booking further than 60 days away is refused (`max_wait_days`): the patient stays unbooked and the step becomes overdue, which raises their admission risk. That keeps the queue bounded and makes the bottleneck cost readmissions, which agents can then reduce by rescheduling to the hospital with spare slots (step 1.20).
 
 Pattern 3 hits few patients (39–75) by design: they are a small group of comuni. Step 1.21 checks that the tools still see them.
+
+## 11. Maria (step 1.19)
+
+`sim/maria.py` scripts `p_00001`. Her state is set so no random process touches her and the script emits all of her events, so her path is the same in every scenario and seed (AC14, `testing/test_ac14_maria.py`: 10 runs, 5 seeds across the 3 scenarios × 2 arms). Her slots do not use facility capacity, so a scenario bottleneck cannot move her days.
+
+| Day | Without agents | With agents (call on day 31) |
+|---|---|---|
+| −8 → 0 | HF admission at `osp_A`, discharged on day 0 | same |
+| −120 … −30 | collects furosemide every 30 days; the supply runs out on day 0 | same |
+| 3, 24 | cardiology visit booked, done on day 24 | same |
+| 6 | telemonitoring starts, daily readings about 71.5 kg | same |
+| 31 | 30 days without furosemide; HbA1c late | `CALL` "delivery_arranged"; HbA1c booked at `amb_3` |
+| 33 | — | furosemide delivered home, then every 30 days |
+| 40 | decompensation starts, weight +0.7 kg a day | HbA1c done (LOINC 4548-4, 8.4%) |
+| 47 | **readmitted** at `osp_A`, discharged on day 55 | no readmission |
+
+The with-agents branch starts when `Simulator.receive_call("p_00001", day, action_id)` is called on any day from 31 to 46; delivery comes 2 days and HbA1c 9 days after the call, and the call and its effects carry `source = agent_action` and the action id. Before the call both arms are identical (tested). Step 1.20 wires this entry point to the action service; for other patients it does nothing until then.
+
+Maria follows her story, not the pathway file: she is the one place where HF steps are written in code, on purpose. Her comune is Poggio Rusco (§3), while the prototype header says Sermide e Felonica; the console shows the data.
