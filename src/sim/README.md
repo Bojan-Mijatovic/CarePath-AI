@@ -53,15 +53,15 @@ Each scenario puts the bottleneck at a different hospital (Solution Plan §11).
 
 | Facility | ASST | Comune | Echo | Cardio visit | Lab |
 |---|---|---|---|---|---|
-| `osp_A` Ospedale A | Mantova | Mantova | 6 | 3 | 38 |
-| `osp_B` Ospedale B | Cremona | Cremona | 3 | 1 | 19 |
-| `osp_C` Ospedale C | Crema | Crema | 3 | 2 | 15 |
-| `amb_1` Poliambulatorio 1 | Mantova | Castiglione delle Stiviere | — | 1 | 12 |
-| `amb_2` Poliambulatorio 2 | Mantova | Viadana | — | 1 | 12 |
-| `amb_3` Poliambulatorio 3 | Mantova | Suzzara | — | 1 | 12 |
-| `amb_4` Poliambulatorio 4 | Cremona | Casalmaggiore | — | 1 | 9 |
-| `amb_5` Poliambulatorio 5 | Cremona | Soresina | — | 1 | 9 |
-| `amb_6` Poliambulatorio 6 | Crema | Rivolta d'Adda | — | 1 | 14 |
+| `osp_A` Ospedale A | Mantova | Mantova | 6 | 3 | 37 |
+| `osp_B` Ospedale B | Cremona | Cremona | 3 | 2 | 24 |
+| `osp_C` Ospedale C | Crema | Crema | 3 | 2 | 22 |
+| `amb_1` Poliambulatorio 1 | Mantova | Castiglione delle Stiviere | — | 2 | 15 |
+| `amb_2` Poliambulatorio 2 | Mantova | Viadana | — | 1 | 10 |
+| `amb_3` Poliambulatorio 3 | Mantova | Suzzara | — | 1 | 13 |
+| `amb_4` Poliambulatorio 4 | Cremona | Casalmaggiore | — | 1 | 7 |
+| `amb_5` Poliambulatorio 5 | Cremona | Soresina | — | 1 | 7 |
+| `amb_6` Poliambulatorio 6 | Crema | Rivolta d'Adda | — | 1 | 8 |
 
 Slots per simulated day; the PoC has no weekly cycle. Only hospitals do echo, so pattern 1 is a hospital-to-hospital comparison. No facility is in the Oltrepò, which keeps Maria's area far from services (pattern 3).
 
@@ -70,7 +70,7 @@ How the slots were sized. All of these are assumptions, which `testing/test_sim_
 - Patients per ASST in proportion to the population aged 65+: 52.7% Mantova, 26.5% Cremona, 20.9% Crema.
 - 0.33 HF discharges per patient per year, including readmissions. Each discharge needs one echo (due in 90 days) and one cardiology visit (due in 30 days), as in the pathway of SPEC §4. That gives 4.76, 2.39 and 1.89 per day.
 - A BNP test every 90 days for every patient: 58.5, 29.4 and 23.2 per day.
-- Capacity is at least 1.25 × demand for every ASST and service. The base table has no bottleneck; each scenario creates one (step 1.17), for example by cutting `osp_B` echo from 3 to 1 slot a day while `osp_C` keeps spare slots.
+- Capacity is at least 1.25 × demand **at every facility**, with demand routed the way the simulator routes it: each patient uses the nearest facility of their own ASST that offers the service. Step 1.15 showed that ASST totals are not enough: with the first table all of Cremona city queued at `osp_B` for cardiology visits, 53 days on average, before any scenario. The base table has no bottleneck; each scenario creates one (step 1.17), for example by cutting `osp_B` echo from 3 to 1 slot a day while `osp_C` keeps spare slots.
 
 **Maria's comune: Poggio Rusco** (020042, 6,535 residents, `asst_mantova`), 44.8 km by road from `osp_A` (step 1.13). The nearest facility of any kind is `amb_3` at 42.8 km. The other candidates did not fit: Ostiglia is 36.3 km from `osp_A` and Sermide e Felonica 55.6 km.
 
@@ -127,3 +127,28 @@ With seed 42: 10,000 patients, mean age 77.3, 57% women, 34% living alone, 853 p
 | Maria | `p_00001`, F, 81, Poggio Rusco, lives alone, 44.8 km from `osp_A`, in every seed | Solution Plan §6 |
 
 Known limit: about 22% of patients live in the comune of their hospital (Mantova, Cremona, Crema) and get 0 km. If the risk model or the outcome model uses distance, step 1.16 should give them a small in-town distance instead.
+
+## 8. Daily step (step 1.15)
+
+`sim.step.Simulator.step(day)` returns the events of one day (SPEC §3.1); `uv run carepath-sim <run_id>` writes a whole run into `runs/<run_id>.duckdb` and reports the time per day.
+
+**Design.** One numpy array per patient attribute, so a day is a few dozen vectorised operations. Every random draw comes from `component_rng(seed, "<component>:<day>")` and is drawn for all patients, so two arms of the same seed share their random numbers: changing one patient changes nobody else's events (tested). Step timing comes from the pathway JSON, capacity from `data/capacity.csv`; nothing in the code names the disease. A booking takes the first free slot at least 2 days ahead, so waits appear by themselves when demand exceeds capacity. A 120-day warm-up before day 0 is kept as history (SPEC C11).
+
+**Measured** on the demo machine, seed 42, 365 days: 3.5–7.7 ms to simulate a day (two runs), 9–18 ms to write its events to DuckDB, about 2,900 events a day. Against the budgets in SPEC §9: AC2 allows 1,000 ms per day; the live tick at ×4 allows 500 ms for both arms; what-if allows 27–55 ms per arm-day. The simulator uses a small share of each.
+
+Baseline behaviour, seed 42, days 0–364:
+
+| Measure | Value | Target or note |
+|---|---|---|
+| HF discharges per patient-year | 0.31 | assumption 0.33 (step 1.12) |
+| 30-day readmission rate | 7.9% | **about 12%: step 1.16 calibrates** |
+| Cardiology visit within 30 days of discharge | 78% | |
+| Echo within 90 days of discharge | 79% | |
+| Mean wait from booking to slot | about 2 days at every facility | no bottleneck in the base table |
+| Patients with at least one BNP in the year | 9,976 of 10,000 | |
+| Patients sending telemonitoring readings | 3,224 in month 0, 2,581 in month 12 | dropout exceeds new starts; step 1.16 decides whether that is wanted |
+| Overbooked slots; events during a hospital stay | 0; 0 | checked |
+
+Behaviour assumptions (`SimParams`, all recalibrated in step 1.16): base admission hazard 0.0008 a day, ×4 for 30 days after a discharge; length of stay 1 + Poisson(7) days; 85% book each post-discharge step, 0–5 days after discharge; 92% attend; a periodic step is booked in the week before it is due, by 85%; 70% start telemonitoring, 1–10 days after discharge; 85% send a reading on a given day, 0.2% drop out a day; a 30-day drug supply, collected after it runs out with a daily chance drawn per patient from Beta(2, 3).
+
+Not yet modelled: deaths, mortality, weight gain before an admission (step 1.16), scenarios (1.17), Maria's script (1.19) and the effect of agents' actions (1.20).

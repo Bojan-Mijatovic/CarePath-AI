@@ -19,6 +19,7 @@ dependencies = [
 carepath-api = "api.main:run"
 carepath-db = "engine.db:main"
 carepath-reference-data = "sim.reference_data:main"
+carepath-sim = "sim.run:main"
 
 [dependency-groups]
 dev = [

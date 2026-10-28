@@ -43,7 +43,7 @@ class Maria:
 
 def load_reference() -> dict[str, pd.DataFrame]:
     read = lambda name: pd.read_csv(DATA_DIR / f"{name}.csv", dtype={"comune_istat": str})
-    return {name: read(name) for name in ("comuni", "population_by_age", "facilities", "distances")}
+    return {name: read(name) for name in ("comuni", "population_by_age", "facilities", "distances", "capacity")}
 
 
 def build_mmg(comuni: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:

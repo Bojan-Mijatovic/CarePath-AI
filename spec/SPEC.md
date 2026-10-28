@@ -37,6 +37,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C7 | Every DOUBLE that a tool, view or API returns is rounded (§2), and a test checks that tools return identical bytes | DuckDB's parallel aggregation is not bit-stable (measured 27 Oct 2026, §2). The cache key hashes tool results (§8), so one changed last bit is a cache miss, and in `cache_only` a missing investigation has no fallback |
 | C8 | `adherence_by_group` gets a `measure` argument; segments and metrics for `compare_segments` and `risk_drivers` are defined (§6) | Pattern 3 (telemonitoring dropout in rural comuni) had no tool that returns telemonitoring by comune or segment; segment and metric were undefined in the Solution Plan |
 | C9 | Only the 2 runs of the scenario on screen advance after the envelope; jump forward continues from the current day; performance budgets beyond AC2 (§9) | Demo pacing and budgets, delivery plan D21 and D22 |
+| C11 | Days before 0 are history: the simulator warms up for 120 days (−120..−1) and keeps those events (§2) | Rules and tools look back 30–180 days; without history, `no_dispense('C03CA01', 30)` would fire for every patient on day 30 |
 | C10 | Cache completeness check (§8) | Any change to the simulator, engine, tools or prompts after the warm-up can change cache keys; the check finds misses before a rehearsal does |
 
 ## 1. Scope
@@ -47,7 +48,7 @@ The PoC monitors heart-failure patients of ATS della Val Padana (ASST Mantova, C
 
 | Item | Convention |
 |---|---|
-| Simulated time | Integer `day`; day 0 = start of simulation; 365 days. No calendar dates in data; the UI shows "Giorno N" |
+| Simulated time | Integer `day`; day 0 = start of simulation; 365 days. Days −120..−1 are warm-up history (C11): they are in `events` for lookbacks, while KPIs, alarms and the UI start at day 0. No calendar dates in data; the UI shows "Giorno N" |
 | IDs | `p_00001`–`p_13000` patients; `osp_A`, `osp_B`, `osp_C`, `amb_<n>` facilities; `asst_mantova`, `asst_cremona`, `asst_crema`; `mmg_<nnn>`; `coop_<n>` MMG groups; `cs_<n>` Centro Servizi; `act_<run>_<n>` actions; `ev_<n>` events |
 | Scenarios | `1`, `2`, `3`. Same pattern types, different locations (Solution Plan §6) |
 | Codes | Diagnoses ICD-9-CM, drugs ATC, labs LOINC. The codes in `spec/pathways/` are demo values, not clinically confirmed (delivery plan D28) |
@@ -72,7 +73,7 @@ One DuckDB file per run: `runs/<run_id>.duckdb` (C2). Static reference tables ar
 | `code` | VARCHAR NULL | ICD-9-CM, ATC or LOINC, depending on type |
 | `value` | DOUBLE NULL | lab value, weight in kg for readings, scheduled day for `BOOKING` |
 | `facility_id` | VARCHAR NULL | |
-| `asst_id` | VARCHAR NULL | |
+| `asst_id` | VARCHAR NULL | ASST of `facility_id`; NULL when there is no facility (pharmacy, telemonitoring) |
 | `mmg_id` | VARCHAR | patient's MMG at that day |
 | `comune_istat` | VARCHAR | patient's comune |
 | `source` | VARCHAR | `sim` or `agent_action` |

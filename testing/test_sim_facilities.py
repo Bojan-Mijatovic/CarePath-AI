@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -61,14 +62,23 @@ def test_each_facility_offers_its_services(facilities, capacity):
     assert (capacity.slots_per_day > 0).all()
 
 
-def daily_demand(share: float) -> dict[str, float]:
-    discharges = HF_PATIENTS * share * DISCHARGES_PER_PATIENT_YEAR / 365
-    return {"echo": discharges, "cardio_visit": discharges, "lab": HF_PATIENTS * share / BNP_EVERY_DAYS}
+PER_PATIENT_DAY = {"echo": DISCHARGES_PER_PATIENT_YEAR / 365, "cardio_visit": DISCHARGES_PER_PATIENT_YEAR / 365,
+                   "lab": 1 / BNP_EVERY_DAYS}
 
 
-def test_base_capacity_covers_demand_with_headroom_in_every_asst(comuni, facilities, capacity):
-    share = comuni.groupby("asst_id").population_65plus.sum() / comuni.population_65plus.sum()
-    slots = capacity.merge(facilities[["facility_id", "asst_id"]]).groupby(["asst_id", "service"]).slots_per_day.sum()
-    for asst, s in share.items():
-        for service, demand in daily_demand(s).items():
-            assert slots[asst, service] >= HEADROOM * demand, (asst, service)
+def test_base_capacity_covers_demand_with_headroom_at_every_facility(comuni, facilities, capacity):
+    # Same routing as sim.step: a patient uses the nearest facility of their own ASST offering the service.
+    # Checking ASST totals is not enough: in step 1.15 all of Cremona city queued at osp_B for visits.
+    dist = pd.read_csv(DATA_DIR / "distances.csv", dtype={"comune_istat": str}).pivot(
+        index="comune_istat", columns="facility_id", values="distance_km")[facilities.facility_id]
+    patients = HF_PATIENTS * comuni.population_65plus / comuni.population_65plus.sum()
+    slots = capacity.set_index(["facility_id", "service"]).slots_per_day
+    for service, rate in PER_PATIENT_DAY.items():
+        offers = facilities.facility_id.isin(capacity[capacity.service == service].facility_id).to_numpy()
+        demand: dict[str, float] = {}
+        for code, c in comuni.iterrows():
+            usable = offers & (facilities.asst_id.to_numpy() == c.asst_id)
+            f = facilities.facility_id.iloc[np.where(usable, dist.loc[code].to_numpy(), np.inf).argmin()]
+            demand[f] = demand.get(f, 0) + patients[code] * rate
+        for f, d in demand.items():
+            assert slots[f, service] >= HEADROOM * d, (f, service, round(d, 2))
