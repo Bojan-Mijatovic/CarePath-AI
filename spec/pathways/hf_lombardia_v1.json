@@ -6,9 +6,9 @@
   "steps": [
     {"id": "discharge", "event": "DISCHARGE", "codes": ["428.*"]},
     {"id": "telemon", "event": "TELEMON_START", "due_days": 7, "after": "discharge"},
-    {"id": "cardio_visit", "event": "VISIT", "specialty": "cardiologia", "due_days": 30, "after": "discharge"},
-    {"id": "echo", "event": "IMAGING", "codes": ["88.72"], "due_days": 90, "after": "discharge"},
-    {"id": "lab_bnp", "event": "LAB", "loinc": ["30934-4"], "every_days": 90}
+    {"id": "cardio_visit", "event": "VISIT", "specialty": "cardiologia", "service": "cardio_visit", "due_days": 30, "after": "discharge"},
+    {"id": "echo", "event": "IMAGING", "codes": ["88.72"], "service": "echo", "due_days": 90, "after": "discharge"},
+    {"id": "lab_bnp", "event": "LAB", "loinc": ["30934-4"], "service": "lab", "every_days": 90}
   ],
   "rules": [
     {"id": "weight_gain", "if": "weight_gain_kg_3d >= 2", "then": {"step": "cardio_visit", "due_days": 7}},

@@ -1,8 +1,9 @@
 """DuckDB layout of a run: one file per run, with the tables from spec/SPEC.md §3, §5.1 and §7.
 
 A run is scenario × arm × levers (SPEC C2), stored as runs/<run_id>.duckdb. `scenario_truth`
-is never in a run database (SPEC §3.3); it lives in demo/truth/. The views of SPEC §5.2
-(kpi_daily, sankey_flows, map_comuni, worklist_today) come with the state engine in Phase 2.
+is never in a run database (SPEC §3.3); it lives in demo/truth/. Of the views of SPEC §5.2, kpi_daily is a
+table that the state engine fills once per tick (step 1.22); sankey_flows, map_comuni and worklist_today
+come in Phase 2 (steps 2.2 and 2.4).
 
     uv run carepath-db s2_agents [--overwrite]
 """
@@ -20,6 +21,7 @@ RUN_ID = re.compile(r"^s[1-3]_(agents|baseline)(_[A-Za-z0-9+\-]+)?$")
 EVENT_TYPES = ("DISCHARGE", "ADMISSION", "VISIT", "IMAGING", "LAB", "DISPENSE", "TELEMON_START",
                "TELEMON_READING", "BOOKING", "CALL", "REMINDER")
 PATHWAY_STATUSES = ("on_track", "due_soon", "overdue", "dropped")
+KPI_LEVELS = ("ats", "asst", "comune")
 ACTION_TYPES = ("reminder", "call_task", "notify_mmg", "reschedule", "enroll_proposal", "rule_proposal",
                 "pathway_proposal", "bed_proposal", "bed_assignment")
 ACTION_STATUSES = ("proposed", "approved", "executed", "rejected", "undone")
@@ -114,6 +116,21 @@ TABLES = {
         flags            VARCHAR[] NOT NULL,
         updated_day      INTEGER NOT NULL,
         PRIMARY KEY (patient_id, pathway_id)""",
+    "kpi_daily": f"""
+        day                       INTEGER NOT NULL,
+        pathway_id                VARCHAR NOT NULL,
+        level                     VARCHAR NOT NULL CHECK (level IN {_one_of(KPI_LEVELS)}),
+        key                       VARCHAR NOT NULL,
+        patients                  INTEGER NOT NULL,
+        on_track_pct              DOUBLE NOT NULL,
+        overdue                   INTEGER NOT NULL,
+        dropped                   INTEGER NOT NULL,
+        readmissions_30d          INTEGER NOT NULL,
+        readmission_rate_30d      DOUBLE,
+        actions_executed          INTEGER NOT NULL,
+        actions_pending           INTEGER NOT NULL,
+        est_readmission_cost_eur  INTEGER,
+        PRIMARY KEY (day, pathway_id, level, key)""",
     "actions": f"""
         action_id       VARCHAR PRIMARY KEY,
         agent           VARCHAR NOT NULL,

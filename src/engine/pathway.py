@@ -63,6 +63,7 @@ class Step(Strict):
     codes: list[str] | None = Field(None, description="ICD-9-CM or procedure codes")
     specialty: str | None = None
     loinc: list[str] | None = None
+    service: str | None = Field(None, pattern=ID, description="capacity service it is booked in: capacity_slots.service and the BOOKING code")
     due_days: int | None = Field(None, gt=0, description="due this many days after the `after` step")
     after: str | None = Field(None, pattern=ID)
     every_days: int | None = Field(None, gt=0, description="repeats with this period")
@@ -129,6 +130,9 @@ class Pathway(Strict):
         ids = [s.id for s in self.steps]
         if len(ids) != len(set(ids)):
             raise ValueError("step ids must be unique")
+        services = [s.service for s in self.steps if s.service]
+        if len(services) != len(set(services)):
+            raise ValueError("a service can belong to one step only, or a BOOKING could not be told apart")
         for i, s in enumerate(self.steps):
             if s.after is not None and s.after not in ids[:i]:
                 raise ValueError(f"step {s.id}: after={s.after!r} must name an earlier step")

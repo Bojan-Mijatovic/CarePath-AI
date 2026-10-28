@@ -74,6 +74,7 @@ def test_rule_language_rejects_everything_else(condition):
     (lambda p: p["rules"][0]["then"].update({"step": "ecg"}), "unknown steps"),
     (lambda p: p["steps"][1].update({"after": "echo"}), "earlier step"),
     (lambda p: p["steps"].append(dict(p["steps"][1])), "step ids must be unique"),
+    (lambda p: p["steps"][3].update({"service": "cardio_visit"}), "one step only"),
     (lambda p: p["steps"][1].pop("after"), "due_days and after go together"),
     (lambda p: p["steps"][4].update({"due_days": 5, "after": "discharge"}), "either due_days/after or every_days"),
     (lambda p: p["steps"][0].update({"event": "PHONE"}), "Input should be"),

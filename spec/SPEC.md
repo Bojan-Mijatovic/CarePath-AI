@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **v1.0, frozen** as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9). Changes from now on follow §0 |
+| Status | **v1.1**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, proposed 28 Oct 2026, step 1.22). Changes follow §0 |
 | Last updated | 28 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (all accepted in `spec-v1`)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14 proposed in v1.1)
 
 | # | Change | Why |
 |---|---|---|
@@ -43,6 +43,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C11 | Days before 0 are history: the simulator warms up for 120 days (−120..−1) and keeps those events (§2) | Rules and tools look back 30–180 days; without history, `no_dispense('C03CA01', 30)` would fire for every patient on day 30 |
 | C12 (D29) | In the process that runs the simulation, tools get a cursor of the run's single connection instead of their own connection (§6) | DuckDB refuses a second connection to a file already open with another configuration, so `connect_for_tools` cannot open while the tick writes (tested 28 Oct 2026) |
 | C13 (D30, D31) | User text fields become language-keyed JSON `{"it": "...", "en": "..."}` and lose the `_it` suffix: `actions.rationale_it` → `rationale`, alert `text_it` → `text`, investigation `result_summary_it` → `result_summary`, `worklist_today.reasons` and `script` likewise | The console is bilingual (D30). Templates fill both keys; for LLM texts the 30B model writes `it` and the 4B model translates it into `en` during the warm-up, both cached (D31) |
+| C14 (D32) | Pathway steps get an optional `service` (§4). §5.1 says how a step is evaluated, §5.2 how `kpi_daily` is computed | `due_soon` ("not booked") and `next_booked_day` need to know which `BOOKING` belongs to which step, and so does `wait_by_hospital(step)` (§6); v1.0 did not say. The mapping lived only in the simulator's config. Without a rule for when a periodic step's clock starts, Maria, who has no BNP in her history, would be "Fuori percorso" from day 1 |
 
 ## 1. Scope
 
@@ -155,9 +156,9 @@ One JSON file per pathway in `spec/pathways/`, validated against `spec/pathways/
   "steps": [
     {"id": "discharge", "event": "DISCHARGE", "codes": ["428.*"]},
     {"id": "telemon", "event": "TELEMON_START", "due_days": 7, "after": "discharge"},
-    {"id": "cardio_visit", "event": "VISIT", "specialty": "cardiologia", "due_days": 30, "after": "discharge"},
-    {"id": "echo", "event": "IMAGING", "codes": ["88.72"], "due_days": 90, "after": "discharge"},
-    {"id": "lab_bnp", "event": "LAB", "loinc": ["30934-4"], "every_days": 90}
+    {"id": "cardio_visit", "event": "VISIT", "specialty": "cardiologia", "service": "cardio_visit", "due_days": 30, "after": "discharge"},
+    {"id": "echo", "event": "IMAGING", "codes": ["88.72"], "service": "echo", "due_days": 90, "after": "discharge"},
+    {"id": "lab_bnp", "event": "LAB", "loinc": ["30934-4"], "service": "lab", "every_days": 90}
   ],
   "rules": [
     {"id": "weight_gain", "if": "weight_gain_kg_3d >= 2", "then": {"step": "cardio_visit", "due_days": 7}},
@@ -177,6 +178,8 @@ One JSON file per pathway in `spec/pathways/`, validated against `spec/pathways/
 - Actions (`then`): `{"step": id, "due_days": n}` (pull a step earlier) or `{"flag": name}`.
 
 Anything outside this grammar fails validation. That is how a generated pathway or rule is checked before activation.
+
+**`service`** (C14, optional) names the capacity service a step is booked in: the `service` of `capacity_slots` and the `code` of its `BOOKING` events. A service belongs to one step of a pathway at most, so every booking maps to one step. The simulator books a step only if it has a service.
 
 **Codes are demo values** (delivery plan D28): ICD-9-CM 428.* for heart failure, procedure 88.72 for echocardiography, ATC C03CA01 for furosemide, LOINC 30934-4 for BNP. They are not clinically confirmed, and the limitations say so. A real deployment would check them, for example BNP against NT-proBNP (LOINC 33762-6), which Italian labs often report.
 
@@ -213,6 +216,17 @@ One row per patient × pathway in which the patient is enrolled.
 | `overdue` | a step is past due and not done | In ritardo |
 | `dropped` | overdue more than `dropped_after_days`, or `dropped_if_overdue_steps` or more steps overdue at once | Fuori percorso |
 
+**How steps are evaluated** (C14; `src/engine/state.py`, the same for every pathway):
+
+- A step is done by an event of its `event` type that matches its `codes`, `specialty` or `loinc`. A `TELEMON_START` step is also done by a `TELEMON_READING`, because a patient already on telemonitoring at discharge does not start it again.
+- A step with `after` falls due `due_days` after the last event of the `after` step, and stays open until it is done on or after that event's day.
+- A periodic step falls due `every_days` after the latest of: its last completion, the last event of a step with neither `after` nor `every_days` (for HF the discharge, so a discharge restarts the clock), and enrolment.
+- A step is booked when its service has a `BOOKING` made after the step was last done, for today or a later day. `next_booked_day` is that booked day for `next_step`.
+- A step is overdue from the day after its due day. `due_soon` covers due days from today to `due_soon_days` ahead.
+- `next_step` is the open step that falls due first. `current_step` is the step whose own event is the most recent; readings do not count.
+- Enrolment is the first event that meets the eligibility (`DISCHARGE` or `ADMISSION` with a listed diagnosis, `DISPENSE` of a listed drug), with `enrolled_by = mmg`. Option B needs its own enrolment signal for pattern 5, where eligible patients are not enrolled.
+- The state engine never writes `risk_score`, `risk_drivers`, `flags` or `escalation_step`; Risk, Monitoring and the action service own them. A new row starts with 0 and empty lists.
+
 ### 5.2 Views
 
 All views are DuckDB views or tables refreshed once per tick and must answer in under 200 ms (AC3).
@@ -226,7 +240,9 @@ All views are DuckDB views or tables refreshed once per tick and must answer in 
 
 **Readmission, PNE-style:** an unplanned `ADMISSION` within 30 days after a `DISCHARGE` with an HF main diagnosis. Rate = such readmissions ÷ HF discharges in the period. Simplified versus the official PNE protocol; the simplification is listed in the limitations.
 
-**Cost:** `est_readmission_cost_eur = readmissions × readmission_cost_eur`, a single configured parameter. Its value and source (e.g. the DRG tariff) are open question Q2.
+**Cost:** `est_readmission_cost_eur = readmissions × readmission_cost_eur`, a single configured parameter. Its value and source (e.g. the DRG tariff) are open question Q2; until then the column is NULL.
+
+**`kpi_daily`** (C14) is a table with one row per day from day 0, pathway, level and key. Keys are `ats` for the ATS, `asst_id` and `comune_istat`, by where the patient lives; a unit without enrolled patients has no row. `patients` counts enrolled patients; `on_track_pct` is a fraction (§2) despite its name; `overdue` does not include `dropped`. Readmissions cover the period from day 0 to the row's day: `readmissions_30d` counts unplanned admissions in the period within 30 days after an index discharge (the discharge may be in the warm-up), and `readmission_rate_30d` divides them by the index discharges in the period, or is NULL without discharges. The rate is noisy in the first days (day 0 of scenario 2: 5 of 8). `actions_executed` counts the pathway's actions executed up to that day and `actions_pending` those still `proposed`; an action counts where its patient lives, or only at ATS level when it has no patient.
 
 ## 6. Tools
 
@@ -446,7 +462,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 |---|---|---|---|
 | Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D. **Closed** (D28): demo values, no clinical confirmation for the PoC | Italian colleague via R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source | R5 | week 2 |
-| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026) | all, at the sync | week 1 |
+| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14 proposed with D32 (28 Oct 2026) | all, at the sync | week 1 |
 | Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |
 | Q5 | Daily limit of automatic actions per facility: 50 a sensible default? | R3, R5 | week 2 |
 | Q6 | Do we need calendar dates on screen, or is "Giorno N" enough for the audience? | R5 | week 2 |

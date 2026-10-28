@@ -1,8 +1,8 @@
 """Run the simulator for one run into its DuckDB file and report the time per simulated day.
 
-Delivery plan steps 1.15 and 1.17. The scenario comes from the run id (s2_baseline → scenarios/2.json).
-Maria's script (1.19) and the agents' feedback (1.20) come later. The engine's real-time tick (2.1) will
-call Simulator.step itself.
+Delivery plan steps 1.15, 1.17 and 1.22. The scenario comes from the run id (s2_baseline → scenarios/2.json).
+From day 0 the state engine fills pathway_state and kpi_daily after each day. The engine's real-time tick
+(2.1) will call Simulator.step and the state engine itself.
 
     uv run carepath-sim s2_baseline [--days 365] [--seed 42] [--overwrite]
 """
@@ -16,6 +16,7 @@ import pandas as pd
 
 from engine import pathway as pathway_model
 from engine.db import RUNS_DIR, create_run
+from engine.state import StateEngine
 from sim.population import generate_patients, load_reference
 from sim.step import Simulator, load_scenario
 
@@ -43,23 +44,28 @@ def run(run_id: str, days: int = 365, seed: int = 42, overwrite: bool = False, r
     path = create_run(run_id, runs_dir=runs_dir, overwrite=overwrite)  # validates the run id first
     sim = Simulator(seed, patients, ref, pathway_model.load(PATHWAY_ID), days=days)
     sim.apply_scenario(load_scenario(int(run_id[1])), mmg)
-    sim_ms, write_ms = [], []
+    sim_ms, write_ms, state_ms = [], [], []
     with duckdb.connect(path) as con:
         load_reference_tables(con, ref, patients, mmg)
+        state = StateEngine(con, sim.pathway)
         for d in range(sim.first_day, days):
             t0 = time.perf_counter()
             events = sim.step(d)
             t1 = time.perf_counter()
             append(con, "events", events)
             t2 = time.perf_counter()
-            if d >= 0:
+            if d >= 0:  # the first update reads the warm-up as history
+                state.update(con, d)
+                state.refresh_kpi(con, d)
                 sim_ms.append((t1 - t0) * 1000)
                 write_ms.append((t2 - t1) * 1000)
+                state_ms.append((time.perf_counter() - t2) * 1000)
         append(con, "capacity_slots", sim.capacity_slots())
         n_events = con.execute("SELECT count(*) FROM events WHERE day >= 0").fetchone()[0]
     return {"sim_ms_mean": float(np.mean(sim_ms)), "sim_ms_p95": float(np.percentile(sim_ms, 95)),
             "write_ms_mean": float(np.mean(write_ms)), "write_ms_p95": float(np.percentile(write_ms, 95)),
-            "events_per_day": n_events / days}
+            "state_ms_mean": float(np.mean(state_ms[1:] or state_ms)), "state_ms_p95": float(np.percentile(state_ms, 95)),
+            "state_ms_first": state_ms[0], "events_per_day": n_events / days}
 
 
 def main() -> None:
@@ -74,6 +80,8 @@ def main() -> None:
     print(f"{args.run_id}: {args.days} days in {time.perf_counter() - t:.1f} s, {stats['events_per_day']:.0f} events/day")
     print(f"  simulate: {stats['sim_ms_mean']:.1f} ms/day (p95 {stats['sim_ms_p95']:.1f})")
     print(f"  write:    {stats['write_ms_mean']:.1f} ms/day (p95 {stats['write_ms_p95']:.1f})")
+    print(f"  state:    {stats['state_ms_mean']:.1f} ms/day (p95 {stats['state_ms_p95']:.1f}; "
+          f"day 0 with history {stats['state_ms_first']:.0f} ms)")
 
 
 if __name__ == "__main__":

@@ -177,6 +177,20 @@
           "default": null,
           "title": "Loinc"
         },
+        "service": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "capacity service it is booked in: capacity_slots.service and the BOOKING code",
+          "title": "Service"
+        },
         "due_days": {
           "anyOf": [
             {

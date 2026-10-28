@@ -3,7 +3,7 @@ import pytest
 
 from engine.db import create_run, run_path
 
-# Column lists copied from spec/SPEC.md §3, §5.1 and §7, so a drift between code and contract fails here.
+# Column lists copied from spec/SPEC.md §3, §5 and §7, so a drift between code and contract fails here.
 SPEC_COLUMNS = {
     "events": ["event_id", "patient_id", "day", "event_type", "code", "value", "facility_id", "asst_id",
                "mmg_id", "comune_istat", "source", "action_id"],
@@ -18,6 +18,9 @@ SPEC_COLUMNS = {
     "pathway_state": ["patient_id", "pathway_id", "enrolled_day", "enrolled_by", "current_step", "next_step",
                       "next_due_day", "next_booked_day", "status", "overdue_steps", "escalation_step",
                       "last_event_day", "risk_score", "risk_drivers", "flags", "updated_day"],
+    "kpi_daily": ["day", "pathway_id", "level", "key", "patients", "on_track_pct", "overdue", "dropped",
+                  "readmissions_30d", "readmission_rate_30d", "actions_executed", "actions_pending",
+                  "est_readmission_cost_eur"],
     "actions": ["action_id", "agent", "type", "patient_id", "scope", "pathway_id", "payload", "rationale",
                 "evidence", "autonomy_level", "status", "created_day", "executed_day", "decided_by"],
     "audit_log": ["ts_day", "action_id", "event", "actor", "details"],

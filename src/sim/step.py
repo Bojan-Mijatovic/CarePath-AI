@@ -61,8 +61,7 @@ class SimParams(Frozen):
     decomp_days_max: int
     decomp_weight_gain_kg_per_day: float
     risk: Risk
-    service_by_step: dict[str, str]   # pathway step id -> service in data/capacity.csv
-    p_book: float                     # books a post-discharge step at all
+    p_book: float                    # books a post-discharge step at all
     booking_delay_max: int            # days between discharge and the booking request
     booking_lead_days: int            # the earliest slot is this many days after the request
     max_wait_days: int                # a patient does not book a slot further away than this
@@ -161,7 +160,7 @@ class Simulator:
         self.post_steps = [s for s in pathway.steps if s.after == anchor.id]
         self.periodic_steps = [s for s in pathway.steps if s.every_days]
         self.drug_atc = pathway.eligibility.any_drug_atc[0]
-        cap_steps = [s for s in self.post_steps + self.periodic_steps if s.id in p.service_by_step]
+        cap_steps = [s for s in self.post_steps + self.periodic_steps if s.service]  # booked in data/capacity.csv
         self.telemon_steps = [s for s in self.post_steps if s.event == "TELEMON_START"]
 
         # Each patient uses the nearest facility of their own ASST that offers the service.
@@ -170,9 +169,8 @@ class Simulator:
         same_asst = self.fac_asst[None, :] == patients.asst_id.to_numpy(object)[:, None]
         self.step_res: dict[str, np.ndarray] = {}
         for s in cap_steps:
-            service = p.service_by_step[s.id]
             res_of_fac = np.full(len(self.fac_id), -1)
-            for r in np.flatnonzero(self.res_service == service):
+            for r in np.flatnonzero(self.res_service == s.service):
                 res_of_fac[self.res_fac[r]] = r
             masked = np.where(same_asst & (res_of_fac >= 0)[None, :], d, np.inf)
             self.step_res[s.id] = res_of_fac[masked.argmin(axis=1)]

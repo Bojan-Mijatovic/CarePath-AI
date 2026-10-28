@@ -19,7 +19,6 @@
     "telemonitoring": -0.3,
     "per_10_years_over_75": 0.2
   },
-  "service_by_step": {"cardio_visit": "cardio_visit", "echo": "echo", "lab_bnp": "lab"},
   "p_book": 0.85,
   "booking_delay_max": 5,
   "booking_lead_days": 2,
