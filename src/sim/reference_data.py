@@ -6,6 +6,7 @@ assigns every comune to an ASST, checks the result against ISTAT's own province 
     src/sim/data/comuni.csv             one row per comune: SPEC §3.2 `comuni`; lat/lon is the area centroid
     src/sim/data/population_by_age.csv  comune × sex × 5-year age band; age_to is empty for 100 and over
     src/sim/data/sources.csv            URL, licence and SHA-256 of every input
+    src/sim/data/distances.csv          comune × facility road distance (step 1.13), from data/facilities.csv
     src/ui/assets/comuni.geojson        comune boundaries for the console map (WGS84, RFC 7946 winding)
 
     uv run carepath-reference-data [--refresh]
@@ -21,6 +22,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import shapefile
 from pyproj import Transformer
@@ -38,6 +40,8 @@ SOURCES = {
 BOUNDARIES_LAYER = "Com01012026_g/Com01012026_g_WGS84"  # ISTAT names it WGS84, but it is UTM 32N
 UTM32N_TO_WGS84 = Transformer.from_crs("EPSG:32632", "EPSG:4326", always_xy=True)
 COORD_DECIMALS = 5  # about 1 m
+EARTH_RADIUS_KM = 6371.0088  # mean radius
+ROAD_FACTOR = 1.3  # straight line to road distance (delivery plan, step 1.13); OSRM only if challenged
 ATS_CREMONA_URL = "https://ats-valpadana.it/system/files/news/files/711/1166/Elenco%20Comuni%20ASST%20Cremona.pdf"
 ATS_CREMONA_LIST = DATA_DIR / "asst_cremona_comuni.csv"  # transcribed from the ATS PDF of 27 Mar 2022
 
@@ -175,6 +179,22 @@ def geometry(rings: list[list[tuple[float, float]]]) -> dict:
     return {"type": "MultiPolygon", "coordinates": polygons}
 
 
+def haversine_km(lat1, lon1, lat2, lon2):
+    """Great-circle distance; works elementwise on numpy arrays."""
+    p1, p2 = np.radians(lat1), np.radians(lat2)
+    a = np.sin((p2 - p1) / 2) ** 2 + np.cos(p1) * np.cos(p2) * np.sin(np.radians(lon2 - lon1) / 2) ** 2
+    return 2 * EARTH_RADIUS_KM * np.arcsin(np.sqrt(a))
+
+
+def distances(comuni: pd.DataFrame, facilities: pd.DataFrame) -> pd.DataFrame:
+    """Road distance from every comune centroid to every facility, in km to 1 decimal (SPEC §2)."""
+    pairs = comuni[["comune_istat", "lat", "lon"]].merge(
+        facilities[["facility_id", "lat", "lon"]], how="cross", suffixes=("", "_f"))
+    km = ROAD_FACTOR * haversine_km(pairs.lat, pairs.lon, pairs.lat_f, pairs.lon_f)
+    return pairs[["comune_istat", "facility_id"]].assign(distance_km=km.round(1)).sort_values(
+        ["comune_istat", "facility_id"])
+
+
 def build(refresh: bool = False) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict]:
     paths = {key: download(url, refresh) for key, url in SOURCES.items()}
     comuni = read_comuni(paths["comuni"])
@@ -211,7 +231,9 @@ def main() -> None:
     parser.add_argument("--refresh", action="store_true", help="download the sources again")
     args = parser.parse_args()
     comuni, population, sources, geojson = build(args.refresh)
-    for name, df in [("comuni", comuni), ("population_by_age", population), ("sources", sources)]:
+    facilities = pd.read_csv(DATA_DIR / "facilities.csv", dtype={"comune_istat": str})
+    for name, df in [("comuni", comuni), ("population_by_age", population), ("sources", sources),
+                     ("distances", distances(comuni, facilities))]:
         df.to_csv(DATA_DIR / f"{name}.csv", index=False, lineterminator="\n")
     GEOJSON_PATH.parent.mkdir(parents=True, exist_ok=True)
     GEOJSON_PATH.write_text(json.dumps(geojson, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8",

@@ -72,7 +72,9 @@ How the slots were sized. All of these are assumptions, which `testing/test_sim_
 - A BNP test every 90 days for every patient: 58.5, 29.4 and 23.2 per day.
 - Capacity is at least 1.25 × demand for every ASST and service. The base table has no bottleneck; each scenario creates one (step 1.17), for example by cutting `osp_B` echo from 3 to 1 slot a day while `osp_C` keeps spare slots.
 
-**Maria's comune:** a rural comune in the Oltrepò Mantovano, about 45 km by road from `osp_A`. Candidates, all in `asst_mantova`: Poggio Rusco (020042, 6,535 residents), Ostiglia (020038, 6,739), Sermide e Felonica (020061, 7,018). Step 1.13 picks the one whose computed distance is closest to 45 km.
+**Maria's comune: Poggio Rusco** (020042, 6,535 residents, `asst_mantova`), 44.8 km by road from `osp_A` (step 1.13). The nearest facility of any kind is `amb_3` at 42.8 km. The other candidates did not fit: Ostiglia is 36.3 km from `osp_A` and Sermide e Felonica 55.6 km.
+
+**Distances (step 1.13):** `data/distances.csv` gives comune centroid → facility for all 177 × 9 pairs: great-circle distance × 1.3 road factor, in km to 1 decimal. It is computed once and never queried live; OSRM only if the accuracy is challenged. A facility is 0 km from its own comune, a limit of comune-level resolution.
 
 ## 4. Calibration target: PNE 30-day HF readmissions
 
