@@ -3,7 +3,8 @@
 Scenario 2, seed 42, 10,000 patients, days 0–62 (the demo runs to about day 62, D21), both arms. In the
 agents arm two actions are written the way the action service will write them (step 2.12): the Centro
 Servizi call to Maria on day 31, executed, and an echo reschedule at the bottleneck hospital on day 35,
-waiting for approval. Rationales are templates filled by code (D17).
+waiting for approval. Rationales are templates filled by code (D17); the reschedule's numbers, the alarm,
+the investigation steps and the tool fixtures come from agents.tools called on the live run (step 1.24).
 
 `build_runs` writes runs/s2_baseline.duckdb and runs/s2_agents.duckdb into a directory, for tests of
 tools and the engine; they are rebuilt, not committed. `export` turns them into the JSON files next to
@@ -21,10 +22,10 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
+from agents import tools
 from engine import pathway as pathway_model
-from engine.db import create_run
+from engine.db import create_run, open_run, tool_cursor
 from engine.state import StateEngine
-from sim import pattern_proof
 from sim.population import generate_patients, load_reference
 from sim.run import append, load_reference_tables
 from sim.step import Simulator, load_scenario
@@ -38,7 +39,7 @@ CALL_ID, RESCHEDULE_ID = "act_s2_agents_1", "act_s2_agents_2"
 INVESTIGATION_ID = "inv_s2_agents_1"
 JSON_COLUMNS = {"scope", "payload", "rationale", "evidence", "details"}
 WAIT_ARGS = {"pathway_id": PATHWAY_ID, "step": "echo", "period_days": 7}
-FREE_ARGS = {"service": "echo", "horizon_days": 21}
+FREE_ARGS = {"service": "echo"}
 WORKLIST_SIZE = 20
 
 
@@ -57,15 +58,18 @@ def it_number(x: float) -> str:
     return f"{x:.1f}".replace(".", ",")
 
 
-def facility_names(con) -> dict[str, str]:
-    return dict(con.execute("SELECT facility_id, name FROM facilities").fetchall())
+def facility_ids(con) -> dict[str, str]:
+    return {name: fid for fid, name in con.execute("SELECT facility_id, name FROM facilities").fetchall()}
 
 
-def free_echo_slots(sim: Simulator, day: int, horizon: int = 21) -> pd.Series:
-    """Free echo slots from day + 1 to day + horizon, by facility_id (the free_slots tool of SPEC §6)."""
-    cap = sim.capacity_slots()
-    cap = cap[(cap.service == "echo") & cap.day.between(day + 1, day + horizon)]
-    return (cap.slots_total - cap.slots_booked).groupby(cap.facility_id).sum().sort_index()
+def live_tool(con, sim: Simulator, day: int, name: str, args: dict) -> dict:
+    """A tool call on the live run, as the agents will make it (SPEC §6, D29). capacity_slots is refreshed
+    first: the simulator books slots every day, and the tick will keep the table current (step 2.1)."""
+    con.execute("DELETE FROM capacity_slots")
+    append(con, "capacity_slots", sim.capacity_slots())
+    result = tools.call(tools.Context("s2_agents", tools.Query(tool_cursor(con)), day), name, args)
+    assert "data" in result, result
+    return result
 
 
 def maria_facts(con, day: int) -> dict:
@@ -93,29 +97,28 @@ def call_maria(con, sim: Simulator, day: int) -> None:
 
 
 def propose_reschedule(con, sim: Simulator, day: int) -> dict:
-    """Echo reschedule at the slowest hospital, level 2: waits in the approval queue (SPEC §7.2). Returns
-    the waits and free slots of that day, which the alarm and the investigation fixtures show."""
-    wait = pattern_proof.echo_wait(con, day - 6, day)  # bookings of the last week, by facility_id
-    slow = wait.idxmax()
-    free = free_echo_slots(sim, day)
-    names = facility_names(con)
-    to = free.drop(slow).idxmax()
+    """Echo reschedule at the slowest hospital, level 2: waits in the approval queue (SPEC §7.2). Its
+    numbers come from the tools. Returns the two tool results, which the alarm, the investigation and the
+    tool fixtures show."""
+    wait = live_tool(con, sim, day, "wait_by_hospital", WAIT_ARGS)
+    free = live_tool(con, sim, day, "free_slots", FREE_ARGS)
+    w, f, ids = wait["data"], free["data"], facility_ids(con)
+    slow = max(w, key=w.get)
+    to = max((n for n in f if n != slow), key=f.get)
+    others = sum(v for n, v in w.items() if n != slow) / (len(w) - 1)
     waiting = con.execute("""
         SELECT count(DISTINCT patient_id) FROM events
         WHERE event_type = 'BOOKING' AND code = 'echo' AND facility_id = $f AND day <= $d AND value > $d""",
-                          {"d": day, "f": slow}).fetchall()[0][0]
-    others = wait.drop(slow).mean()
-    rationale = {"it": f"{names[slow]}: attesa media per l'ecocardiogramma {it_number(wait[slow])} giorni, negli altri "
-                       f"ospedali {it_number(others)}. {waiting} pazienti in attesa a {names[slow]}; "
-                       f"{names[to]} ha {free[to]} posti liberi nei prossimi 21 giorni.",
-                 "en": f"{names[slow]}: mean wait for an echo {wait[slow]:.1f} days, {others:.1f} at the other hospitals. "
-                       f"{waiting} patients waiting at {names[slow]}; {names[to]} has {free[to]} free slots "
-                       "in the next 21 days."}
-    evidence = [source("wait_by_hospital", {"pathway_id": PATHWAY_ID, "step": "echo", "period_days": 7}, day),
-                source("free_slots", {"service": "echo", "horizon_days": 21}, day)]
-    write_action(con, RESCHEDULE_ID, "reschedule", None, {"facility_id": slow, "patients": waiting},
-                 {"from_facility": slow, "to_facility": to, "service": "echo"}, rationale, evidence, 2, "proposed", day)
-    return {"waits": wait, "free": free, "names": names}
+                          {"d": day, "f": ids[slow]}).fetchall()[0][0]
+    rationale = {"it": f"{slow}: attesa media per l'ecocardiogramma {it_number(w[slow])} giorni, negli altri "
+                       f"ospedali {it_number(others)}. {waiting} pazienti in attesa a {slow}; "
+                       f"{to} ha {f[to]} posti liberi nei prossimi 21 giorni.",
+                 "en": f"{slow}: mean wait for an echo {w[slow]:.1f} days, {others:.1f} at the other hospitals. "
+                       f"{waiting} patients waiting at {slow}; {to} has {f[to]} free slots in the next 21 days."}
+    write_action(con, RESCHEDULE_ID, "reschedule", None, {"facility_id": ids[slow], "patients": waiting},
+                 {"from_facility": ids[slow], "to_facility": ids[to], "service": "echo"}, rationale,
+                 [wait["source"], free["source"]], 2, "proposed", day)
+    return {"wait": wait, "free": free, "ids": ids}
 
 
 def write_action(con, action_id, type_, patient, scope, payload, rationale, evidence, level, status, day) -> None:
@@ -138,7 +141,8 @@ def build_runs(runs_dir: Path) -> dict:
     for run_id, agents in RUNS.items():
         sim = Simulator(SEED, patients, ref, hf, days=DAYS)
         sim.apply_scenario(load_scenario(SCENARIO), mmg)
-        with duckdb.connect(create_run(run_id, runs_dir=runs_dir, overwrite=True)) as con:
+        create_run(run_id, runs_dir=runs_dir, overwrite=True)
+        with open_run(run_id, runs_dir) as con:
             load_reference_tables(con, ref, patients, mmg)
             for events in sim.warm_up():
                 append(con, "events", events)
@@ -151,6 +155,7 @@ def build_runs(runs_dir: Path) -> dict:
                     call_maria(con, sim, d)
                 if agents and d == ALARM_DAY:
                     live = propose_reschedule(con, sim, d)
+            con.execute("DELETE FROM capacity_slots")
             append(con, "capacity_slots", sim.capacity_slots())
     return live
 
@@ -218,10 +223,11 @@ def worklist_stand_in(con, day: int) -> list[dict]:
 def stream(con, live: dict) -> dict[str, object]:
     """WebSocket messages (SPEC §10) of the agents arm."""
     msg = lambda type_, day, payload: {"type": type_, "scenario": SCENARIO, "day": day, "payload": payload}
-    waits, free, names = live["waits"], live["free"], live["names"]
-    slow = waits.idxmax()
-    best = free.drop(slow).idxmax()
-    others = waits.drop(slow).mean()
+    wait, free = live["wait"], live["free"]
+    waits, slots = wait["data"], free["data"]
+    slow = max(waits, key=waits.get)
+    best = max((n for n in slots if n != slow), key=slots.get)
+    others = sum(v for n, v in waits.items() if n != slow) / (len(waits) - 1)
     call = rows(con, "SELECT * FROM actions WHERE action_id = $a", {"a": CALL_ID})[0]
     f = maria_facts(con, CALL_DAY)
     return {
@@ -233,21 +239,22 @@ def stream(con, live: dict) -> dict[str, object]:
                      "en": f"{MARIA} ({f['age']}, {f['comune']}): furosemide supply ran out {f['days_without_drug']} "
                            "days ago"}}),
         "alert_regional.json": msg("alert", ALARM_DAY, {
-            "level": "regional", "facility_id": slow, "investigation_id": INVESTIGATION_ID,
-            "text": {"it": f"{names[slow]}: attesa per l'ecocardiogramma {it_number(waits[slow])} giorni, negli altri "
+            "level": "regional", "facility_id": live["ids"][slow], "investigation_id": INVESTIGATION_ID,
+            "text": {"it": f"{slow}: attesa per l'ecocardiogramma {it_number(waits[slow])} giorni, negli altri "
                            f"ospedali {it_number(others)}",
-                     "en": f"{names[slow]}: echo wait {waits[slow]:.1f} days, {others:.1f} at the other hospitals"}}),
+                     "en": f"{slow}: echo wait {waits[slow]:.1f} days, {others:.1f} at the other hospitals"}}),
         "action.json": msg("action", CALL_DAY, call),
         "investigation.json": [
             msg("investigation", ALARM_DAY, {
-                "investigation_id": INVESTIGATION_ID, "step": 1, "tool": "wait_by_hospital", "args": WAIT_ARGS,
-                "result_summary": {"it": f"Attesa media più alta a {names[slow]}: {it_number(waits[slow])} giorni",
-                                   "en": f"Longest mean wait at {names[slow]}: {waits[slow]:.1f} days"},
+                "investigation_id": INVESTIGATION_ID, "step": 1, "tool": "wait_by_hospital",
+                "args": wait["source"]["args"],
+                "result_summary": {"it": f"Attesa media più alta a {slow}: {it_number(waits[slow])} giorni",
+                                   "en": f"Longest mean wait at {slow}: {waits[slow]:.1f} days"},
                 "verified": None, "final": False}),
             msg("investigation", ALARM_DAY, {
-                "investigation_id": INVESTIGATION_ID, "step": 2, "tool": "free_slots", "args": FREE_ARGS,
-                "result_summary": {"it": f"{names[best]} ha {free[best]} posti liberi nei prossimi 21 giorni",
-                                   "en": f"{names[best]} has {free[best]} free slots in the next 21 days"},
+                "investigation_id": INVESTIGATION_ID, "step": 2, "tool": "free_slots", "args": free["source"]["args"],
+                "result_summary": {"it": f"{best} ha {slots[best]} posti liberi nei prossimi 21 giorni",
+                                   "en": f"{best} has {slots[best]} free slots in the next 21 days"},
                 "verified": None, "final": True}),
         ],
     }
@@ -270,14 +277,10 @@ def export(runs_dir: Path, live: dict) -> dict[str, object]:
         out["api/map_s2_agents.json"] = map_stand_in(con, last)
         out["api/worklist_s2_agents.json"] = worklist_stand_in(con, last)
         out |= {f"stream/{name}": m for name, m in stream(con, live).items()}
-        names = live["names"]
-        out["tools/wait_by_hospital.json"] = {
-            "data": {names[f]: float(w) for f, w in live["waits"].items()},
-            "source": source("wait_by_hospital", WAIT_ARGS, ALARM_DAY)}
-        out["tools/free_slots.json"] = {
-            "data": {names[f]: int(n) for f, n in live["free"].items()},
-            "source": source("free_slots", FREE_ARGS, ALARM_DAY)}
-        out["tools/error.json"] = {"error": {"code": "unknown_step", "message": "step 'ecg' is not in hf_lombardia_v1"}}
+        out["tools/wait_by_hospital.json"] = live["wait"]
+        out["tools/free_slots.json"] = live["free"]
+        out["tools/error.json"] = tools.call(tools.Context("s2_agents", tools.Query(con), last), "wait_by_hospital",
+                                             {"pathway_id": PATHWAY_ID, "step": "ecg"})
     return out
 
 

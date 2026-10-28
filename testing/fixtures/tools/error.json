@@ -1,6 +1,6 @@
 {
   "error": {
     "code": "unknown_step",
-    "message": "step 'ecg' is not in hf_lombardia_v1"
+    "message": "step 'ecg' is not in hf_lombardia_v1; steps: ['discharge', 'telemon', 'cardio_visit', 'echo', 'lab_bnp']"
   }
 }

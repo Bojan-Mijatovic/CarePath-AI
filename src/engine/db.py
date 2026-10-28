@@ -179,6 +179,21 @@ def create_run(run_id: str, runs_dir: Path = RUNS_DIR, overwrite: bool = False) 
     return path
 
 
+def open_run(run_id: str, runs_dir: Path = RUNS_DIR) -> duckdb.DuckDBPyConnection:
+    """The one connection the simulation process keeps to a run while it advances (SPEC §6, C12, D29):
+    writable for the simulator, the state engine and the action service, but with access to every other
+    file disabled and the configuration locked, so neither it nor a cursor of it can read demo/truth/."""
+    con = duckdb.connect(run_path(run_id, runs_dir), config={"enable_external_access": False})
+    con.execute("SET lock_configuration = true")
+    return con
+
+
+def tool_cursor(con: duckdb.DuckDBPyConnection) -> duckdb.DuckDBPyConnection:
+    """What tools get in the simulation process: a cursor of the run's open_run connection. It can write,
+    so the tools' own SELECT-only guard (agents.tools.Query) is what keeps them read-only (D29)."""
+    return con.cursor()
+
+
 def connect_for_tools(run_id: str, runs_dir: Path = RUNS_DIR) -> duckdb.DuckDBPyConnection:
     """The only connection agent tools get (SPEC §6, step 1.18): read-only, no access to any file outside
     the run database (so not demo/truth/ either), and the configuration locked so a tool cannot undo it."""

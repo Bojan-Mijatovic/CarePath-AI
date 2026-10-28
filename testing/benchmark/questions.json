@@ -1,0 +1,883 @@
+{
+  "day": 35,
+  "pathway_id": "hf_lombardia_v1",
+  "arm": "baseline",
+  "scenarios": {
+    "1": [
+      {
+        "id": "q01_echo_wait",
+        "question": {
+          "it": "Quale ospedale ha l'attesa più lunga per l'ecocardiogramma nell'ultima settimana?",
+          "en": "Which hospital has the longest wait for an echocardiogram in the last week?"
+        },
+        "expected": {
+          "type": "facility",
+          "value": "Ospedale A"
+        },
+        "answer": {
+          "it": "Ospedale A: 40,4 giorni in media dalla prenotazione all'esame.",
+          "en": "Ospedale A: 40.4 days on average from booking to exam."
+        },
+        "calls": [
+          {
+            "tool": "wait_by_hospital",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "step": "echo",
+              "period_days": 7
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q02_echo_free",
+        "question": {
+          "it": "Dove ci sono più posti liberi per l'ecocardiogramma nelle prossime tre settimane?",
+          "en": "Where are the most free echocardiogram slots in the next three weeks?"
+        },
+        "expected": {
+          "type": "facility",
+          "value": "Ospedale B"
+        },
+        "answer": {
+          "it": "Ospedale B: 96 posti liberi.",
+          "en": "Ospedale B: 96 free slots."
+        },
+        "calls": [
+          {
+            "tool": "free_slots",
+            "args": {
+              "service": "echo",
+              "horizon_days": 21
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q03_low_dispensing_group",
+        "question": {
+          "it": "Quale gruppo di MMG ha la quota più bassa di pazienti che ritirano il furosemide?",
+          "en": "Which MMG group has the lowest share of patients collecting furosemide?"
+        },
+        "expected": {
+          "type": "group",
+          "value": "coop_6"
+        },
+        "answer": {
+          "it": "coop_6: 88,3% contro 99,9% nel resto dell'ATS.",
+          "en": "coop_6: 88.3% against 99.9% in the rest of the ATS."
+        },
+        "calls": [
+          {
+            "tool": "adherence_by_group",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "grouping": "mmg_group",
+              "measure": "dispensing",
+              "period_days": 60
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q04_telemonitoring_comuni",
+        "question": {
+          "it": "In quali comuni i pazienti smettono più spesso di inviare le letture del telemonitoraggio?",
+          "en": "In which comuni do patients most often stop sending telemonitoring readings?"
+        },
+        "expected": {
+          "type": "comuni",
+          "value": [
+            "Redondesco",
+            "Pomponesco",
+            "Vailate",
+            "Casalmaggiore",
+            "Borgo Mantovano"
+          ],
+          "top_k": 5
+        },
+        "answer": {
+          "it": "Redondesco, Pomponesco, Vailate, Casalmaggiore, Borgo Mantovano; nel resto dell'ATS invia letture il 78,5%.",
+          "en": "Redondesco, Pomponesco, Vailate, Casalmaggiore, Borgo Mantovano; in the rest of the ATS 78.5% send readings."
+        },
+        "calls": [
+          {
+            "tool": "adherence_by_group",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "grouping": "comune",
+              "measure": "telemonitoring",
+              "period_days": 60
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q05_readmission_rate",
+        "question": {
+          "it": "Qual è il tasso di riammissione a 30 giorni negli ultimi sei mesi in tutta l'ATS?",
+          "en": "What is the 30-day readmission rate over the last six months across the ATS?"
+        },
+        "expected": {
+          "type": "number",
+          "value": 0.116,
+          "tolerance": 0.005
+        },
+        "answer": {
+          "it": "11,6%.",
+          "en": "11.6%."
+        },
+        "calls": [
+          {
+            "tool": "compare_segments",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "a": {},
+              "b": {},
+              "metric": "readmission_rate_30d"
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q06_echo_overdue",
+        "question": {
+          "it": "Quanti pazienti hanno l'ecocardiogramma in ritardo?",
+          "en": "How many patients are overdue for their echocardiogram?"
+        },
+        "expected": {
+          "type": "number",
+          "value": 70,
+          "tolerance": 0
+        },
+        "answer": {
+          "it": "70 pazienti.",
+          "en": "70 patients."
+        },
+        "calls": [
+          {
+            "tool": "patients_overdue",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "step": "echo",
+              "limit": 20
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q07_worst_step",
+        "question": {
+          "it": "Quale step del percorso viene rispettato in tempo meno spesso?",
+          "en": "Which pathway step is least often done on time?"
+        },
+        "expected": {
+          "type": "step",
+          "value": "telemon"
+        },
+        "answer": {
+          "it": "telemon: 61,4% delle scadenze rispettate negli ultimi 90 giorni.",
+          "en": "telemon: 61.4% of deadlines met in the last 90 days."
+        },
+        "calls": [
+          {
+            "tool": "compliance_by_step",
+            "args": {
+              "pathway_id": "hf_lombardia_v1"
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q08_no_echo_problem",
+        "question": {
+          "it": "L'Ospedale C ha un problema di attese per l'ecocardiogramma rispetto agli altri ospedali?",
+          "en": "Does Ospedale C have an echocardiogram waiting problem compared with the other hospitals?"
+        },
+        "expected": {
+          "type": "yes_no",
+          "value": false,
+          "rule": "yes when the wait is more than 2.0 times the median of all hospitals"
+        },
+        "answer": {
+          "it": "No: 2,1 giorni; la mediana degli ospedali è 2,1.",
+          "en": "No: 2.1 days; the median across hospitals is 2.1."
+        },
+        "calls": [
+          {
+            "tool": "wait_by_hospital",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "step": "echo",
+              "period_days": 7
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q09_no_dispensing_problem",
+        "question": {
+          "it": "I pazienti del gruppo di MMG coop_11 ritirano il furosemide meno degli altri?",
+          "en": "Do the patients of MMG group coop_11 collect furosemide less than the others?"
+        },
+        "expected": {
+          "type": "yes_no",
+          "value": false,
+          "rule": "yes when the difference is below -0.05"
+        },
+        "answer": {
+          "it": "No: 100,0% contro 99,0% in tutta l'ATS.",
+          "en": "No: 100.0% against 99.0% across the ATS."
+        },
+        "calls": [
+          {
+            "tool": "compare_segments",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "a": {
+                "coop_id": "coop_11"
+              },
+              "b": {},
+              "metric": "dispensing"
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q10_no_telemonitoring_problem",
+        "question": {
+          "it": "A Cremona i pazienti smettono il telemonitoraggio più che nel resto dell'ATS?",
+          "en": "Do patients in Cremona stop telemonitoring more than in the rest of the ATS?"
+        },
+        "expected": {
+          "type": "yes_no",
+          "value": false,
+          "rule": "yes when the difference is below -0.1"
+        },
+        "answer": {
+          "it": "No: invia letture il 77,9%, contro il 77,5% in tutta l'ATS.",
+          "en": "No: 77.9% send readings, against 77.5% across the ATS."
+        },
+        "calls": [
+          {
+            "tool": "compare_segments",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "a": {
+                "comune_istat": [
+                  "019036"
+                ]
+              },
+              "b": {},
+              "metric": "telemonitoring"
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      }
+    ],
+    "2": [
+      {
+        "id": "q01_echo_wait",
+        "question": {
+          "it": "Quale ospedale ha l'attesa più lunga per l'ecocardiogramma nell'ultima settimana?",
+          "en": "Which hospital has the longest wait for an echocardiogram in the last week?"
+        },
+        "expected": {
+          "type": "facility",
+          "value": "Ospedale B"
+        },
+        "answer": {
+          "it": "Ospedale B: 35,1 giorni in media dalla prenotazione all'esame.",
+          "en": "Ospedale B: 35.1 days on average from booking to exam."
+        },
+        "calls": [
+          {
+            "tool": "wait_by_hospital",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "step": "echo",
+              "period_days": 7
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q02_echo_free",
+        "question": {
+          "it": "Dove ci sono più posti liberi per l'ecocardiogramma nelle prossime tre settimane?",
+          "en": "Where are the most free echocardiogram slots in the next three weeks?"
+        },
+        "expected": {
+          "type": "facility",
+          "value": "Ospedale A"
+        },
+        "answer": {
+          "it": "Ospedale A: 116 posti liberi.",
+          "en": "Ospedale A: 116 free slots."
+        },
+        "calls": [
+          {
+            "tool": "free_slots",
+            "args": {
+              "service": "echo",
+              "horizon_days": 21
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q03_low_dispensing_group",
+        "question": {
+          "it": "Quale gruppo di MMG ha la quota più bassa di pazienti che ritirano il furosemide?",
+          "en": "Which MMG group has the lowest share of patients collecting furosemide?"
+        },
+        "expected": {
+          "type": "group",
+          "value": "coop_3"
+        },
+        "answer": {
+          "it": "coop_3: 87,4% contro 99,8% nel resto dell'ATS.",
+          "en": "coop_3: 87.4% against 99.8% in the rest of the ATS."
+        },
+        "calls": [
+          {
+            "tool": "adherence_by_group",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "grouping": "mmg_group",
+              "measure": "dispensing",
+              "period_days": 60
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q04_telemonitoring_comuni",
+        "question": {
+          "it": "In quali comuni i pazienti smettono più spesso di inviare le letture del telemonitoraggio?",
+          "en": "In which comuni do patients most often stop sending telemonitoring readings?"
+        },
+        "expected": {
+          "type": "comuni",
+          "value": [
+            "Poggio Rusco",
+            "Redondesco",
+            "Borgocarbonara",
+            "Pomponesco",
+            "Vailate"
+          ],
+          "top_k": 5
+        },
+        "answer": {
+          "it": "Poggio Rusco, Redondesco, Borgocarbonara, Pomponesco, Vailate; nel resto dell'ATS invia letture il 78,8%.",
+          "en": "Poggio Rusco, Redondesco, Borgocarbonara, Pomponesco, Vailate; in the rest of the ATS 78.8% send readings."
+        },
+        "calls": [
+          {
+            "tool": "adherence_by_group",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "grouping": "comune",
+              "measure": "telemonitoring",
+              "period_days": 60
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q05_readmission_rate",
+        "question": {
+          "it": "Qual è il tasso di riammissione a 30 giorni negli ultimi sei mesi in tutta l'ATS?",
+          "en": "What is the 30-day readmission rate over the last six months across the ATS?"
+        },
+        "expected": {
+          "type": "number",
+          "value": 0.1186,
+          "tolerance": 0.005
+        },
+        "answer": {
+          "it": "11,9%.",
+          "en": "11.9%."
+        },
+        "calls": [
+          {
+            "tool": "compare_segments",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "a": {},
+              "b": {},
+              "metric": "readmission_rate_30d"
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q06_echo_overdue",
+        "question": {
+          "it": "Quanti pazienti hanno l'ecocardiogramma in ritardo?",
+          "en": "How many patients are overdue for their echocardiogram?"
+        },
+        "expected": {
+          "type": "number",
+          "value": 73,
+          "tolerance": 0
+        },
+        "answer": {
+          "it": "73 pazienti.",
+          "en": "73 patients."
+        },
+        "calls": [
+          {
+            "tool": "patients_overdue",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "step": "echo",
+              "limit": 20
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q07_worst_step",
+        "question": {
+          "it": "Quale step del percorso viene rispettato in tempo meno spesso?",
+          "en": "Which pathway step is least often done on time?"
+        },
+        "expected": {
+          "type": "step",
+          "value": "telemon"
+        },
+        "answer": {
+          "it": "telemon: 61,4% delle scadenze rispettate negli ultimi 90 giorni.",
+          "en": "telemon: 61.4% of deadlines met in the last 90 days."
+        },
+        "calls": [
+          {
+            "tool": "compliance_by_step",
+            "args": {
+              "pathway_id": "hf_lombardia_v1"
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q08_no_echo_problem",
+        "question": {
+          "it": "L'Ospedale A ha un problema di attese per l'ecocardiogramma rispetto agli altri ospedali?",
+          "en": "Does Ospedale A have an echocardiogram waiting problem compared with the other hospitals?"
+        },
+        "expected": {
+          "type": "yes_no",
+          "value": false,
+          "rule": "yes when the wait is more than 2.0 times the median of all hospitals"
+        },
+        "answer": {
+          "it": "No: 2,1 giorni; la mediana degli ospedali è 2,1.",
+          "en": "No: 2.1 days; the median across hospitals is 2.1."
+        },
+        "calls": [
+          {
+            "tool": "wait_by_hospital",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "step": "echo",
+              "period_days": 7
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q09_no_dispensing_problem",
+        "question": {
+          "it": "I pazienti del gruppo di MMG coop_12 ritirano il furosemide meno degli altri?",
+          "en": "Do the patients of MMG group coop_12 collect furosemide less than the others?"
+        },
+        "expected": {
+          "type": "yes_no",
+          "value": false,
+          "rule": "yes when the difference is below -0.05"
+        },
+        "answer": {
+          "it": "No: 100,0% contro 98,7% in tutta l'ATS.",
+          "en": "No: 100.0% against 98.7% across the ATS."
+        },
+        "calls": [
+          {
+            "tool": "compare_segments",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "a": {
+                "coop_id": "coop_12"
+              },
+              "b": {},
+              "metric": "dispensing"
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q10_no_telemonitoring_problem",
+        "question": {
+          "it": "A Cremona i pazienti smettono il telemonitoraggio più che nel resto dell'ATS?",
+          "en": "Do patients in Cremona stop telemonitoring more than in the rest of the ATS?"
+        },
+        "expected": {
+          "type": "yes_no",
+          "value": false,
+          "rule": "yes when the difference is below -0.1"
+        },
+        "answer": {
+          "it": "No: invia letture il 77,9%, contro il 77,7% in tutta l'ATS.",
+          "en": "No: 77.9% send readings, against 77.7% across the ATS."
+        },
+        "calls": [
+          {
+            "tool": "compare_segments",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "a": {
+                "comune_istat": [
+                  "019036"
+                ]
+              },
+              "b": {},
+              "metric": "telemonitoring"
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      }
+    ],
+    "3": [
+      {
+        "id": "q01_echo_wait",
+        "question": {
+          "it": "Quale ospedale ha l'attesa più lunga per l'ecocardiogramma nell'ultima settimana?",
+          "en": "Which hospital has the longest wait for an echocardiogram in the last week?"
+        },
+        "expected": {
+          "type": "facility",
+          "value": "Ospedale C"
+        },
+        "answer": {
+          "it": "Ospedale C: 33,9 giorni in media dalla prenotazione all'esame.",
+          "en": "Ospedale C: 33.9 days on average from booking to exam."
+        },
+        "calls": [
+          {
+            "tool": "wait_by_hospital",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "step": "echo",
+              "period_days": 7
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q02_echo_free",
+        "question": {
+          "it": "Dove ci sono più posti liberi per l'ecocardiogramma nelle prossime tre settimane?",
+          "en": "Where are the most free echocardiogram slots in the next three weeks?"
+        },
+        "expected": {
+          "type": "facility",
+          "value": "Ospedale A"
+        },
+        "answer": {
+          "it": "Ospedale A: 113 posti liberi.",
+          "en": "Ospedale A: 113 free slots."
+        },
+        "calls": [
+          {
+            "tool": "free_slots",
+            "args": {
+              "service": "echo",
+              "horizon_days": 21
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q03_low_dispensing_group",
+        "question": {
+          "it": "Quale gruppo di MMG ha la quota più bassa di pazienti che ritirano il furosemide?",
+          "en": "Which MMG group has the lowest share of patients collecting furosemide?"
+        },
+        "expected": {
+          "type": "group",
+          "value": "coop_11"
+        },
+        "answer": {
+          "it": "coop_11: 88,7% contro 99,8% nel resto dell'ATS.",
+          "en": "coop_11: 88.7% against 99.8% in the rest of the ATS."
+        },
+        "calls": [
+          {
+            "tool": "adherence_by_group",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "grouping": "mmg_group",
+              "measure": "dispensing",
+              "period_days": 60
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q04_telemonitoring_comuni",
+        "question": {
+          "it": "In quali comuni i pazienti smettono più spesso di inviare le letture del telemonitoraggio?",
+          "en": "In which comuni do patients most often stop sending telemonitoring readings?"
+        },
+        "expected": {
+          "type": "comuni",
+          "value": [
+            "Solferino",
+            "Redondesco",
+            "Pomponesco",
+            "Vailate",
+            "Canneto sull'Oglio"
+          ],
+          "top_k": 5
+        },
+        "answer": {
+          "it": "Solferino, Redondesco, Pomponesco, Vailate, Canneto sull'Oglio; nel resto dell'ATS invia letture il 78,7%.",
+          "en": "Solferino, Redondesco, Pomponesco, Vailate, Canneto sull'Oglio; in the rest of the ATS 78.7% send readings."
+        },
+        "calls": [
+          {
+            "tool": "adherence_by_group",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "grouping": "comune",
+              "measure": "telemonitoring",
+              "period_days": 60
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q05_readmission_rate",
+        "question": {
+          "it": "Qual è il tasso di riammissione a 30 giorni negli ultimi sei mesi in tutta l'ATS?",
+          "en": "What is the 30-day readmission rate over the last six months across the ATS?"
+        },
+        "expected": {
+          "type": "number",
+          "value": 0.1197,
+          "tolerance": 0.005
+        },
+        "answer": {
+          "it": "12,0%.",
+          "en": "12.0%."
+        },
+        "calls": [
+          {
+            "tool": "compare_segments",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "a": {},
+              "b": {},
+              "metric": "readmission_rate_30d"
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q06_echo_overdue",
+        "question": {
+          "it": "Quanti pazienti hanno l'ecocardiogramma in ritardo?",
+          "en": "How many patients are overdue for their echocardiogram?"
+        },
+        "expected": {
+          "type": "number",
+          "value": 71,
+          "tolerance": 0
+        },
+        "answer": {
+          "it": "71 pazienti.",
+          "en": "71 patients."
+        },
+        "calls": [
+          {
+            "tool": "patients_overdue",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "step": "echo",
+              "limit": 20
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q07_worst_step",
+        "question": {
+          "it": "Quale step del percorso viene rispettato in tempo meno spesso?",
+          "en": "Which pathway step is least often done on time?"
+        },
+        "expected": {
+          "type": "step",
+          "value": "telemon"
+        },
+        "answer": {
+          "it": "telemon: 62,0% delle scadenze rispettate negli ultimi 90 giorni.",
+          "en": "telemon: 62.0% of deadlines met in the last 90 days."
+        },
+        "calls": [
+          {
+            "tool": "compliance_by_step",
+            "args": {
+              "pathway_id": "hf_lombardia_v1"
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q08_no_echo_problem",
+        "question": {
+          "it": "L'Ospedale A ha un problema di attese per l'ecocardiogramma rispetto agli altri ospedali?",
+          "en": "Does Ospedale A have an echocardiogram waiting problem compared with the other hospitals?"
+        },
+        "expected": {
+          "type": "yes_no",
+          "value": false,
+          "rule": "yes when the wait is more than 2.0 times the median of all hospitals"
+        },
+        "answer": {
+          "it": "No: 2,4 giorni; la mediana degli ospedali è 2,4.",
+          "en": "No: 2.4 days; the median across hospitals is 2.4."
+        },
+        "calls": [
+          {
+            "tool": "wait_by_hospital",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "step": "echo",
+              "period_days": 7
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q09_no_dispensing_problem",
+        "question": {
+          "it": "I pazienti del gruppo di MMG coop_12 ritirano il furosemide meno degli altri?",
+          "en": "Do the patients of MMG group coop_12 collect furosemide less than the others?"
+        },
+        "expected": {
+          "type": "yes_no",
+          "value": false,
+          "rule": "yes when the difference is below -0.05"
+        },
+        "answer": {
+          "it": "No: 100,0% contro 98,9% in tutta l'ATS.",
+          "en": "No: 100.0% against 98.9% across the ATS."
+        },
+        "calls": [
+          {
+            "tool": "compare_segments",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "a": {
+                "coop_id": "coop_12"
+              },
+              "b": {},
+              "metric": "dispensing"
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      },
+      {
+        "id": "q10_no_telemonitoring_problem",
+        "question": {
+          "it": "A Cremona i pazienti smettono il telemonitoraggio più che nel resto dell'ATS?",
+          "en": "Do patients in Cremona stop telemonitoring more than in the rest of the ATS?"
+        },
+        "expected": {
+          "type": "yes_no",
+          "value": false,
+          "rule": "yes when the difference is below -0.1"
+        },
+        "answer": {
+          "it": "No: invia letture il 77,9%, contro il 77,8% in tutta l'ATS.",
+          "en": "No: 77.9% send readings, against 77.8% across the ATS."
+        },
+        "calls": [
+          {
+            "tool": "compare_segments",
+            "args": {
+              "pathway_id": "hf_lombardia_v1",
+              "a": {
+                "comune_istat": [
+                  "019036"
+                ]
+              },
+              "b": {},
+              "metric": "telemonitoring"
+            },
+            "run_id": null,
+            "day": null
+          }
+        ]
+      }
+    ]
+  }
+}

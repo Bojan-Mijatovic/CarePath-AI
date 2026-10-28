@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 
 from engine import pathway as pathway_model
-from engine.db import RUNS_DIR, create_run
+from engine.db import RUNS_DIR, create_run, open_run
 from engine.state import StateEngine
 from sim.population import generate_patients, load_reference
 from sim.step import Simulator, load_scenario
@@ -41,11 +41,11 @@ def append(con: duckdb.DuckDBPyConnection, table: str, df: pd.DataFrame) -> None
 def run(run_id: str, days: int = 365, seed: int = 42, overwrite: bool = False, runs_dir=RUNS_DIR) -> dict[str, float]:
     ref = load_reference()
     patients, mmg = generate_patients(seed, ref)
-    path = create_run(run_id, runs_dir=runs_dir, overwrite=overwrite)  # validates the run id first
+    create_run(run_id, runs_dir=runs_dir, overwrite=overwrite)  # validates the run id first
     sim = Simulator(seed, patients, ref, pathway_model.load(PATHWAY_ID), days=days)
     sim.apply_scenario(load_scenario(int(run_id[1])), mmg)
     sim_ms, write_ms, state_ms = [], [], []
-    with duckdb.connect(path) as con:
+    with open_run(run_id, runs_dir) as con:
         load_reference_tables(con, ref, patients, mmg)
         state = StateEngine(con, sim.pathway)
         for d in range(sim.first_day, days):
