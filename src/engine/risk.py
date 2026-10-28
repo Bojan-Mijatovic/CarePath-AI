@@ -39,6 +39,7 @@ MODEL_VERSION = 1
 TRAIN_SEED = 7  # the demo runs on seed 42
 HORIZON_DAYS = 30
 HIGH_RISK = 0.10  # about 115 of 10,000 patients; 21% of the top 1% are admitted within 30 days (D37)
+RISK_STEP = 0.001  # risk_score is rewritten when it moves this much (0.1 percentage points)
 SNAPSHOT_EVERY_DAYS = 7
 CAP_DAYS = 365
 TOP_DRIVERS = 3
@@ -96,15 +97,18 @@ class RiskModel:
         return [[self.names[j] for j in row if j >= 0] for row in top]
 
     def update(self, con: duckdb.DuckDBPyConnection, state: StateEngine, day: int) -> int:
-        """Score everyone and write risk_score, and risk_drivers only where they changed (a list column
-        costs a whole-row rewrite, as for overdue_steps). Returns how many rows changed."""
+        """Score everyone and write risk_score where it moved by RISK_STEP or crossed HIGH_RISK, and
+        risk_drivers where they changed (a list column costs a whole-row rewrite, as for overdue_steps).
+        Every score shifts a little each day as days since an event grow: writing all of them took 6,000
+        updates a day and broke the tick budget with both arms in parallel. The written score is the
+        patient's score (`self.risk`), so the map, the worklist and the tools agree. Returns rows changed."""
         risk, top = self.score(state, day)
-        self.risk, self.top = risk, top
         old_risk, old_top = self.written or (np.full_like(risk, -1.0), np.full_like(top, -2))
         enrolled = state.enrolled_day <= day
-        new_risk = enrolled & (risk != old_risk)
+        new_risk = enrolled & ((np.abs(risk - old_risk) >= RISK_STEP) | ((risk >= HIGH_RISK) != (old_risk >= HIGH_RISK)))
         new_top = enrolled & (top != old_top).any(axis=1)
-        self.written = (np.where(enrolled, risk, old_risk), np.where(enrolled[:, None], top, old_top))
+        self.written = (np.where(new_risk, risk, old_risk), np.where(enrolled[:, None], top, old_top))
+        self.risk, self.top = np.where(enrolled, self.written[0], risk), top
         for rows, column in [(new_risk, "risk_score"), (new_top, "risk_drivers")]:
             idx = np.flatnonzero(rows)
             if len(idx):

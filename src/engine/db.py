@@ -16,6 +16,7 @@ from pathlib import Path
 import duckdb
 
 RUNS_DIR = Path(__file__).resolve().parents[2] / "runs"
+CHECKPOINT_THRESHOLD = "1GB"  # open_run: no checkpoint in the middle of a demo
 RUN_ID = re.compile(r"^s[1-3]_(agents|baseline)(_[A-Za-z0-9+\-]+)?$")
 
 EVENT_TYPES = ("DISCHARGE", "ADMISSION", "VISIT", "IMAGING", "LAB", "DISPENSE", "TELEMON_START",
@@ -211,8 +212,11 @@ def create_run(run_id: str, runs_dir: Path = RUNS_DIR, overwrite: bool = False) 
 def open_run(run_id: str, runs_dir: Path = RUNS_DIR) -> duckdb.DuckDBPyConnection:
     """The one connection the simulation process keeps to a run while it advances (SPEC §6, C12, D29):
     writable for the simulator, the state engine and the action service, but with access to every other
-    file disabled and the configuration locked, so neither it nor a cursor of it can read demo/truth/."""
-    con = duckdb.connect(run_path(run_id, runs_dir), config={"enable_external_access": False})
+    file disabled and the configuration locked, so neither it nor a cursor of it can read demo/truth/.
+    A checkpoint every 16 MB of WAL (the default) stalled ticks: with both arms in parallel the p95 went
+    from about 490 to 690–760 ms; with CHECKPOINT_THRESHOLD it is written when the run is closed."""
+    con = duckdb.connect(run_path(run_id, runs_dir),
+                         config={"enable_external_access": False, "checkpoint_threshold": CHECKPOINT_THRESHOLD})
     con.execute("SET lock_configuration = true")
     return con
 
