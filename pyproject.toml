@@ -17,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 carepath-api = "api.main:run"
+carepath-db = "engine.db:main"
 
 [dependency-groups]
 dev = [
