@@ -1,0 +1,21 @@
+{
+  "scenario": 1,
+  "echo_bottleneck": {
+    "facility_id": "osp_A",
+    "asst_id": "asst_mantova"
+  },
+  "echo_free_capacity": {
+    "facility_id": "osp_B"
+  },
+  "rural_dropout_comuni": [
+    "Martignana di Po",
+    "Tornata",
+    "Calvatone",
+    "Casalmaggiore",
+    "Rivarolo del Re ed Uniti",
+    "Spineda"
+  ],
+  "low_adherence_group": {
+    "coop_id": "coop_6"
+  }
+}

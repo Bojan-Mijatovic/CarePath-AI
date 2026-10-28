@@ -27,7 +27,7 @@ These come from the design principles and guardrails. Code that breaks one needs
 2. **No diagnosis and no therapy change**, in any code path, prompt or text.
 3. **One writer.** Agents only read, through the tools in SPEC §6. Only the action service changes state, after the autonomy and guardrail checks. Every action has a rationale and evidence, goes to the audit log and can be undone.
 4. **No free SQL from agents.** The Investigator uses tools only.
-5. **`scenario_truth` is unreachable for agents.** Only tests (AC13) and the Rivelazione screen read it. Tools get a connection without it, and a test enforces that.
+5. **`scenario_truth` is unreachable for agents.** Only tests (AC13) and the Rivelazione screen read it. Tools get their connection only from `engine.db.connect_for_tools` (read-only, no file access, locked), agent code never imports `sim`, and `testing/test_truth_isolation.py` enforces both.
 6. **Disease is configuration.** No `if pathway == "hf"` in code. Every tool, view and screen takes `pathway_id` (AC17).
 7. **Local and zero cost.** Models, data and the cache run on the laptop; no patient data goes to an external API; no telemetry, no paid tier. The network may be used for downloads and during the demo (D25). A new dependency needs a free licence, and I name it in the commit message.
 8. **Synthetic data only.** Hospital names are invented, the geography is real. Prompts carry aggregates and the top N patients, never the whole database. Logs contain nothing that could not leave the system if the data were real.

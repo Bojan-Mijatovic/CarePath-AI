@@ -125,7 +125,7 @@ One DuckDB file per run: `runs/<run_id>.duckdb` (C2). Static reference tables ar
 
 ### 3.3 `scenario_truth`
 
-Stored **outside** the run databases, in `demo/truth/scenario_<n>.json`. Only acceptance tests (AC1, AC13) and the Rivelazione screen read it; agent tools have no path to it (step 1.18, enforced by a test).
+Stored **outside** the run databases, in `demo/truth/scenario_<n>.json`, generated from `src/sim/scenarios/<n>.json` by `uv run python -m sim.truth`. Only acceptance tests (AC1, AC13) and the Rivelazione screen read it; agent tools have no path to it (step 1.18, enforced by `testing/test_truth_isolation.py`). The `option_b` block is added with option B. Scenario 2:
 
 ```json
 {
@@ -227,6 +227,8 @@ All views are DuckDB views or tables refreshed once per tick and must answer in 
 ## 6. Tools
 
 All tools are **read-only**, take typed arguments and return JSON. The Investigator uses only these tools and never writes SQL (Solution Plan §8 guardrails). Tool descriptions shown to the model are in Italian; names and arguments are in English.
+
+Every tool gets its database from `engine.db.connect_for_tools(run_id)` and from nothing else: the run database read-only, with DuckDB's access to files disabled and the configuration locked. A tool therefore cannot read `demo/truth/` or the scenario files, attach another database, or write. Agent code does not import the simulator (step 1.18, tested).
 
 Every result has the same envelope (C5):
 

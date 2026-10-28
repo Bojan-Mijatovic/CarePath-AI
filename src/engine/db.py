@@ -162,6 +162,14 @@ def create_run(run_id: str, runs_dir: Path = RUNS_DIR, overwrite: bool = False) 
     return path
 
 
+def connect_for_tools(run_id: str, runs_dir: Path = RUNS_DIR) -> duckdb.DuckDBPyConnection:
+    """The only connection agent tools get (SPEC §6, step 1.18): read-only, no access to any file outside
+    the run database (so not demo/truth/ either), and the configuration locked so a tool cannot undo it."""
+    con = duckdb.connect(run_path(run_id, runs_dir), read_only=True, config={"enable_external_access": False})
+    con.execute("SET lock_configuration = true")
+    return con
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Create an empty run database (delivery plan, step 0.9).")
     parser.add_argument("run_id", help="for example s2_agents")
