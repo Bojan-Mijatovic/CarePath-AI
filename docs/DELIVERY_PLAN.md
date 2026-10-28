@@ -134,7 +134,7 @@ The critical path is R1 and R5 in week 2.
 | 1.4 | Tool signatures (Solution Plan §7): all take `pathway_id`, read-only, typed return JSON; the error contract | R5, R3 | SPEC §Tools | R3 signs off |
 | 1.5 | Action contract: types (`notify_mmg`, `reschedule`, `call_task`, `enroll_proposal`, `rule_proposal`, `pathway_proposal`, `bed_proposal`, `bed_assignment`), autonomy levels 0–3, status lifecycle, evidence list | R5, R3 | SPEC §Actions | R3 signs off |
 | 1.6 | API and WebSocket contract: REST endpoints from Solution Plan §7; WS envelope `{type: tick\|alert\|action\|investigation, scenario, day, payload}` | R5, R4 | SPEC §API | R4 signs off |
-| 1.7 | Acceptance criteria AC1–AC19 copied into SPEC with owner, measurement method and test file name | R5 | SPEC §Acceptance | Each AC has a test stub in `testing/` |
+| 1.7 | Acceptance criteria AC1–AC19 copied into SPEC with owner, measurement method and test file name. **Done** (reviewed 28 Oct 2026): 18 stubs generated from the SPEC table, each skipped with the step that replaces it; AC14 is already real; `test_spec_acceptance_files.py` fails if an AC loses its file | R5 | SPEC §Acceptance | Each AC has a test stub in `testing/` |
 | 1.8 | PDTA texts in Italian: heart failure (final), type 2 diabetes (draft) | R5 | `spec/pdta/` | Reviewed by the Italian colleague |
 | 1.9 | **Contract freeze** at the end of day 2; later changes only via the sync and the decision register | R5 | Tag `spec-v1` | Tag pushed |
 
@@ -330,6 +330,7 @@ The only real cost is hardware. Without a GPU machine, the plan still works beca
 | D27 | The mentor approved the tools and models of the plan: Ollama, `qwen3:30b-instruct`, `qwen3:4b-instruct` and every tool in §10 (step 0.2) | Decided 28 Oct 2026 |
 | D28 | Medical codes (ICD-9-CM, ATC, LOINC) in the pathway files are demo values, not clinically confirmed; the PoC does not wait for the Italian reviewer on codes. HF uses LOINC 30934-4 (BNP). The limitations state it. Replaces "codes confirmed by the Italian colleague" in step 1.3 | Decided 28 Oct 2026 |
 | D29 | Tools in the simulation process read through a cursor of the run's single connection (SPEC C12, §6). Reason: DuckDB refuses a second connection to a file open with another configuration, so `connect_for_tools` cannot open while the tick writes (tested 28 Oct 2026). The tick's connection has file access disabled and locked, so the truth stays unreachable (tested); a SELECT-only guard in the tools replaces the database's read-only flag. Alternatives considered: tools in a separate process (DuckDB allows no reader while a writer holds the file); a snapshot copy of each run per tick (a file copy every simulated day) | Proposed |
+| D30 | The console is in Italian and English, with a language switch; the demo runs in Italian (Solution Plan §10–§11 allow a bilingual UI; key messages stay Italian). Labels and every text that code fills from a template exist in both languages. Open, see §13: whether cached LLM texts are generated in both languages | Decided 28 Oct 2026 |
 
 ## 12. Acceptance criteria map
 
@@ -359,3 +360,4 @@ The only real cost is hardware. Without a GPU machine, the plan still works beca
 
 1. Italian colleague: closed in step 0.12 (28 Oct 2026). They review the codes (step 1.3, needed by week 2, day 1), the PDTA texts (step 1.8) and the on-screen terms (step 4.6). Still open: whether they attend the demo.
 2. Scope: an external review (27 Oct 2026) suggested cutting option B, Bed Finder and Rule Advisor to a slide now instead of at the gates. Not decided; the gates in §6 and §8 stay until the team agrees otherwise at a sync.
+3. Bilingual LLM texts (D30): the console is Italian and English, but generating every cached LLM text (investigations, report, rule and pathway proposals) in both languages doubles the CPU warm-up (an investigation takes about 4 minutes, §3.1). Options: both languages in the cache; Italian only, since the demo runs in Italian; or English produced by the 4B model from the Italian text. To decide before step 2.11; the contract side is SPEC C13.

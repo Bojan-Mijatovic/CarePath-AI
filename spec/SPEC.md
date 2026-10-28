@@ -40,6 +40,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C10 | Cache completeness check (§8) | Any change to the simulator, engine, tools or prompts after the warm-up can change cache keys; the check finds misses before a rehearsal does |
 | C11 | Days before 0 are history: the simulator warms up for 120 days (−120..−1) and keeps those events (§2) | Rules and tools look back 30–180 days; without history, `no_dispense('C03CA01', 30)` would fire for every patient on day 30 |
 | C12 (proposed, D29) | In the process that runs the simulation, tools get a cursor of the run's single connection instead of their own connection (§6) | DuckDB refuses a second connection to a file already open with another configuration, so `connect_for_tools` cannot open while the tick writes (tested 28 Oct 2026) |
+| C13 (proposed, D30) | User text fields become language-keyed JSON `{"it": "...", "en": "..."}` and lose the `_it` suffix: `actions.rationale_it` → `rationale`, alert `text_it` → `text`, investigation `result_summary_it` → `result_summary`, `worklist_today.reasons` and `script` likewise | The console is bilingual (D30). Whether LLM texts fill both keys is open (delivery plan §13, item 3); templates always fill both |
 
 ## 1. Scope
 
@@ -54,7 +55,7 @@ The PoC monitors heart-failure patients of ATS della Val Padana (ASST Mantova, C
 | Scenarios | `1`, `2`, `3`. Same pattern types, different locations (Solution Plan §6) |
 | Codes | Diagnoses ICD-9-CM, drugs ATC, labs LOINC. The codes in `spec/pathways/` are demo values, not clinically confirmed (delivery plan D28) |
 | Units | Days, km, EUR. Rates are fractions 0–1 in data, percentages only in the UI |
-| Language | Data and code in English; every user-facing string in Italian (UI, reports, call scripts, rationales) |
+| Language | Data and code in English. Every user-facing string (UI, reports, call scripts, rationales) in Italian and English, Italian by default (delivery plan D30). Fields that carry user text become language-keyed (C13, proposed) |
 | Determinism | Every random draw comes from a generator seeded by `(run seed, component)`; same seed, same run, byte for byte (AC14) |
 | Numeric precision (C7) | Every DOUBLE that a tool, view or API returns is rounded in SQL after aggregation: fractions and rates to 4 decimals; days, km and kg to 1 decimal; EUR to whole euros. Counts stay integers. Reason: with 8 threads, DuckDB 2.0 returned 12 different `avg(DOUBLE)` results in 12 runs over 2,000,000 rows (differences in the last bits); `round(avg, 4)`, `avg(INTEGER)` and `threads = 1` each gave one result. Below one row group (about 122,000 rows) the results were stable, so small fixtures do not show the problem |
 | Missing values | `NULL`, never sentinel numbers |
@@ -425,7 +426,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 | AC6 | Ask correct on at least 8 of 10 benchmark questions | expected answers | `test_ac06_benchmark.py` | core | R3 |
 | AC7 | No action above its autonomy level without approval | test + audit log | `test_ac07_autonomy.py` | core | R3 |
 | AC8 | Fewer readmissions with agents than without, same seed | simulation report | `test_ac08_effect.py` | core | R1 |
-| AC9 | 10 consecutive full demo runs without a stop | rehearsal and cache log | manual, `demo/rehearsals.md` | core | R5 |
+| AC9 | 10 consecutive full demo runs without a stop | rehearsal and cache log, kept by hand in `demo/rehearsals.md` | `test_ac09_rehearsals.py` | core | R5 |
 | AC10 | Verifier catches all injected wrong numbers in 5 answers, no false alarms | injected errors | `test_ac10_verifier.py` | optional | R3 |
 | AC11 | Rule Advisor proposes a rule for pattern 2; once approved it raises alarms the next day | rule and alarm log | `test_ac11_rule_advisor.py` | optional | R3 |
 | AC12 | Daily list under 30 s; at least 15 of the top 20 high-risk or overdue | timer + truth | `test_ac12_worklist.py` | optional | R2 |
@@ -443,7 +444,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 |---|---|---|---|
 | Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D. **Closed** (D28): demo values, no clinical confirmation for the PoC | Italian colleague via R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source | R5 | week 2 |
-| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 is proposed (delivery plan D29) | all, at the sync | week 1 |
+| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 are proposed (delivery plan D29, D30) and must be settled before `spec-v1` | all, at the sync | week 1 |
 | Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |
 | Q5 | Daily limit of automatic actions per facility: 50 a sensible default? | R3, R5 | week 2 |
 | Q6 | Do we need calendar dates on screen, or is "Giorno N" enough for the audience? | R5 | week 2 |

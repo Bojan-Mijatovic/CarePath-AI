@@ -5,7 +5,7 @@ Rules for the AI assistant in this repo. They come from the [Solution Plan](docs
 ## 1. Sources and precedence
 
 1. **Solution Plan** (22 Oct 2026): what we build and why. It is the source of truth.
-2. **Decision register** (Delivery Plan §11, D11 onward): a decision marked *Decided* overrides the Solution Plan on that point. Current overrides: models are `qwen3:30b-instruct` and `qwen3:4b-instruct`, not 7–8B and 14B (D11); the console is React, not Angular or Streamlit (D13); demo LLM output is cache-only (D14); all work goes directly to `main` (D20); Pathway Builder is in option B (D23); the demo may be online (D25). *Proposed* decisions are the working assumption, but not yet binding (none open on 28 Oct 2026).
+2. **Decision register** (Delivery Plan §11, D11 onward): a decision marked *Decided* overrides the Solution Plan on that point. Current overrides: models are `qwen3:30b-instruct` and `qwen3:4b-instruct`, not 7–8B and 14B (D11); the console is React, not Angular or Streamlit (D13); demo LLM output is cache-only (D14); all work goes directly to `main` (D20); Pathway Builder is in option B (D23); the demo may be online (D25); the console is Italian and English (D30). *Proposed* decisions are the working assumption, but not yet binding (none open on 28 Oct 2026).
 3. **Delivery Plan**: how and when, step by step, with owners and gates.
 4. **SPEC.md**: the contracts. Nothing is built against an interface that is not in it.
 5. **UI prototype** ([CarePath-AI-UI-demo-srpski.html](docs/CarePath-AI-UI-demo-srpski.html)): screen layout and demo steps 1–10.
@@ -32,7 +32,7 @@ These come from the design principles and guardrails. Code that breaks one needs
 7. **Local and zero cost.** Models, data and the cache run on the laptop; no patient data goes to an external API; no telemetry, no paid tier. The network may be used for downloads and during the demo (D25). A new dependency needs a free licence, and I name it in the commit message.
 8. **Synthetic data only.** Hospital names are invented, the geography is real. Prompts carry aggregates and the top N patients, never the whole database. Logs contain nothing that could not leave the system if the data were real.
 9. **Determinism.** Every random draw comes from a generator seeded by `(run seed, component)`. Same seed, same run, byte for byte (AC14). No wall-clock time or unseeded randomness in the simulator or the engine. Tools, views and the API round every DOUBLE as in SPEC §2, because DuckDB's parallel aggregation of DOUBLE is not bit-stable.
-10. **Language.** Code, data, identifiers and docs are in English. Every string a user sees (UI, reports, call scripts, rationales) is in Italian, and the Italian colleague reviews it before rehearsals.
+10. **Language.** Code, data, identifiers and docs are in English. Every string a user sees (UI, reports, call scripts, rationales) exists in Italian and English, Italian by default; the demo runs in Italian (D30). The Italian colleague reviews the Italian before rehearsals.
 
 ## 4. LLM work
 
