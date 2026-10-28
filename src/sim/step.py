@@ -6,59 +6,88 @@ dozen vectorised operations and no per-patient Python loop (AC2). Every random d
 see the same random numbers and differ only where their state differs (common random numbers, AC8).
 
 Step timing and capacity come from the pathway JSON and data/capacity.csv; nothing here names a disease
-(AC17). The behaviour probabilities in SimParams are assumptions that step 1.16 calibrates.
+(AC17). Every behaviour probability is in src/sim/config/baseline.json (step 1.16).
 Days before 0 are a warm-up whose events are kept as history (SPEC C11).
+
+Outcome model (step 1.16): each day a patient out of hospital may start to decompensate, with a hazard
+that rises with days without the drug, overdue pathway steps, distance, living alone and age, and falls
+with telemonitoring. Decompensation lasts a few days, during which telemonitored weight rises, and ends in
+an admission. That window is where agents can act (step 1.20).
 """
 
-from dataclasses import dataclass, field
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from pydantic import BaseModel, ConfigDict
 
 from engine.pathway import Pathway
 from sim.rng import component_rng
 
 NO_DAY = -(10**6)
+CONFIG_DIR = Path(__file__).resolve().parent / "config"
 EVENT_COLUMNS = ["event_id", "patient_id", "day", "event_type", "code", "value", "facility_id", "asst_id",
                  "mmg_id", "comune_istat", "source", "action_id"]
 
 
-@dataclass(frozen=True)
-class SimParams:
-    """Behaviour of synthetic patients. Every value is an assumption (src/sim/README.md §8)."""
-    warmup_days: int = 120
-    # Admissions: a base daily hazard, raised for 30 days after a discharge (readmissions).
-    admission_daily: float = 0.0008
-    post_discharge_multiplier: float = 4.0
-    post_discharge_days: int = 30
-    los_mean: float = 8.0
-    discharge_code: str = "428.0"
-    # Pathway steps with capacity: pathway step id -> service in data/capacity.csv.
-    service_by_step: dict[str, str] = field(default_factory=lambda: {
-        "cardio_visit": "cardio_visit", "echo": "echo", "lab_bnp": "lab"})
-    p_book: float = 0.85          # books a post-discharge step at all
-    booking_delay_max: int = 5    # days between discharge and the booking request
-    booking_lead_days: int = 2    # the earliest slot is this many days after the request
-    p_attend: float = 0.92
-    periodic_window_days: int = 7  # a periodic step is booked in the week before it is due
-    p_book_periodic: float = 0.85
-    p_telemon_start: float = 0.70
-    telemon_start_delay_max: int = 10  # some start after the 7-day deadline
-    p_telemon_initial: float = 0.35    # already on telemonitoring when the warm-up starts
-    p_reading: float = 0.85
-    telemon_dropout_daily: float = 0.002
-    supply_days: int = 30
-    collect_beta: tuple[float, float] = (2.0, 3.0)  # daily chance to collect once the supply ran out
-    weight_mean_kg: float = 78.0
-    weight_sd_kg: float = 12.0
-    reading_noise_kg: float = 0.4
-    lab_log_mean: float = 6.0  # lognormal lab value, median about 400
-    lab_log_sd: float = 0.6
+class Frozen(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+
+class Risk(Frozen):
+    """Log-hazard coefficients of the decompensation hazard."""
+    no_drug: float
+    drug_grace_days: int
+    overdue_step: float
+    overdue_window_days: int
+    per_10_km: float
+    distance_cap_km: float
+    lives_alone: float
+    telemonitoring: float
+    per_10_years_over_75: float
+
+
+class SimParams(Frozen):
+    """Behaviour of synthetic patients; values in src/sim/config/*.json, documented in src/sim/README.md §9."""
+    warmup_days: int
+    admission_daily: float            # base daily decompensation hazard
+    post_discharge_multiplier: float  # hazard multiplier in the days after a discharge
+    post_discharge_days: int
+    los_mean: float
+    discharge_code: str
+    decomp_days_min: int
+    decomp_days_max: int
+    decomp_weight_gain_kg_per_day: float
+    risk: Risk
+    service_by_step: dict[str, str]   # pathway step id -> service in data/capacity.csv
+    p_book: float                     # books a post-discharge step at all
+    booking_delay_max: int            # days between discharge and the booking request
+    booking_lead_days: int            # the earliest slot is this many days after the request
+    p_attend: float
+    periodic_window_days: int         # a periodic step is booked in the week before it is due
+    p_book_periodic: float
+    p_telemon_start: float
+    telemon_start_delay_max: int      # some start after the 7-day deadline
+    p_telemon_initial: float          # already on telemonitoring when the warm-up starts
+    p_reading: float
+    telemon_dropout_daily: float
+    supply_days: int
+    collect_beta: tuple[float, float]  # daily chance to collect once the supply ran out
+    weight_mean_kg: float
+    weight_sd_kg: float
+    reading_noise_kg: float
+    lab_log_mean: float               # lognormal lab value, median about 400
+    lab_log_sd: float
+
+
+def load_params(name: str = "baseline") -> SimParams:
+    return SimParams.model_validate_json((CONFIG_DIR / f"{name}.json").read_text(encoding="utf-8"))
 
 
 class Simulator:
     def __init__(self, seed: int, patients: pd.DataFrame, ref: dict[str, pd.DataFrame], pathway: Pathway,
-                 params: SimParams = SimParams(), days: int = 365):
+                 params: SimParams | None = None, days: int = 365):
+        params = params or load_params()
         p, n = params, len(patients)
         self.seed, self.p, self.n, self.pathway = seed, params, n, pathway
         self.first_day = -p.warmup_days
@@ -68,6 +97,10 @@ class Simulator:
         self.patient_id = patients.patient_id.to_numpy(object)
         self.mmg_id = patients.mmg_id.to_numpy(object)
         self.comune = patients.comune_istat.to_numpy(object)
+        r = p.risk  # static part of the log hazard
+        self.static_risk = (r.per_10_km * np.minimum(patients.distance_km.to_numpy(), r.distance_cap_km) / 10
+                            + r.lives_alone * patients.lives_alone.to_numpy()
+                            + r.per_10_years_over_75 * np.maximum(patients.age.to_numpy() - 75, 0) / 10)
 
         # Facilities and capacity resources (facility × service).
         fac = ref["facilities"].reset_index(drop=True)
@@ -111,6 +144,9 @@ class Simulator:
         self.last_discharge = np.full(n, NO_DAY)
         self.book_on = {s.id: np.full(n, NO_DAY) for s in cap_steps}
         self.appt_day = {s.id: np.full(n, NO_DAY) for s in cap_steps}
+        self.last_done = {s.id: np.full(n, NO_DAY) for s in self.post_steps}  # for overdue post-discharge steps
+        self.decomp_start = np.full(n, NO_DAY)
+        self.decomp_admit = np.full(n, NO_DAY)
         self.next_due = {s.id: self.first_day + p.periodic_window_days + (rng.random(n) * s.every_days).astype(int)
                          for s in self.periodic_steps}
         self.telemon_on = np.zeros(n, bool)
@@ -122,6 +158,21 @@ class Simulator:
 
     def _u(self, component: str, day: int) -> np.ndarray:
         return component_rng(self.seed, f"{component}:{day}").random(self.n)
+
+    def hazard(self, day: int) -> np.ndarray:
+        """Daily decompensation hazard of every patient (outcome model, step 1.16)."""
+        p, r = self.p, self.p.risk
+        since = day - self.last_discharge
+        overdue = np.zeros(self.n, bool)
+        for s in self.post_steps:
+            overdue |= ((since > s.due_days) & (since <= r.overdue_window_days)
+                        & (self.last_done[s.id] < self.last_discharge))
+        log_risk = (self.static_risk
+                    + r.no_drug * (day > self.supply_end + r.drug_grace_days)
+                    + r.overdue_step * overdue
+                    + r.telemonitoring * self.telemon_on)
+        recent = since <= p.post_discharge_days
+        return p.admission_daily * np.where(recent, p.post_discharge_multiplier, 1.0) * np.exp(log_risk)
 
     def _book(self, day: int, res: np.ndarray) -> np.ndarray:
         """First free slot from day + lead for each request, in patient order. Updates `booked`."""
@@ -153,6 +204,7 @@ class Simulator:
         emit(out, "DISCHARGE", p.discharge_code, None, self.ref_fac[out])
         if len(out):
             for s in self.telemon_steps:
+                self.last_done[s.id][out[self.telemon_on[out]]] = day  # already on telemonitoring
                 go = out[(self._u(f"tel_start:{s.id}", day)[out] < p.p_telemon_start) & ~self.telemon_on[out]]
                 delay = self._u(f"tel_delay:{s.id}", day)[go]
                 self.telemon_start_on[go] = day + 1 + (delay * p.telemon_start_delay_max).astype(int)
@@ -162,14 +214,18 @@ class Simulator:
                 go = out[self._u(f"book:{s.id}", day)[out] < p.p_book]
                 self.book_on[s.id][go] = day + (self._u(f"book_delay:{s.id}", day)[go] * (p.booking_delay_max + 1)).astype(int)
 
-        # 2. Admissions: base hazard, higher in the 30 days after a discharge.
-        recent = (day - self.last_discharge) <= p.post_discharge_days
-        hazard = p.admission_daily * np.where(recent, p.post_discharge_multiplier, 1.0)
-        adm = np.flatnonzero(~self.in_hosp & (self.last_discharge != day) & (self._u("admission", day) < hazard))
+        # 2. Admissions: decompensations that reach hospital today, then new decompensations.
+        adm = np.flatnonzero((self.decomp_admit == day) & ~self.in_hosp)
         los = 1 + component_rng(self.seed, f"los:{day}").poisson(p.los_mean - 1, n)
         self.in_hosp[adm] = True
         self.discharge_day[adm] = day + los[adm]
+        self.decomp_start[adm] = self.decomp_admit[adm] = NO_DAY
         emit(adm, "ADMISSION", p.discharge_code, np.ones(len(adm)), self.ref_fac[adm])
+        free = ~self.in_hosp & (self.decomp_admit == NO_DAY) & (self.last_discharge != day)
+        new = np.flatnonzero(free & (self._u("decomp", day) < self.hazard(day)))
+        span = p.decomp_days_max - p.decomp_days_min + 1
+        self.decomp_start[new] = day
+        self.decomp_admit[new] = day + p.decomp_days_min + (self._u("decomp_days", day)[new] * span).astype(int)
 
         # 3. Periodic steps open their booking window in the week before they are due.
         for s in self.periodic_steps:
@@ -203,6 +259,8 @@ class Simulator:
                 emit(came, "LAB", (s.loinc or [None])[0], np.round(v[came]), fac)
             else:
                 emit(came, s.event, s.specialty or (s.codes or [None])[0], None, fac)
+            if s.id in self.last_done:
+                self.last_done[s.id][came] = day
             if s.every_days:
                 self.next_due[s.id][came] = day + s.every_days
                 missed = np.setdiff1d(today, came, assume_unique=True)
@@ -215,10 +273,14 @@ class Simulator:
         started = np.flatnonzero(start & ~self.in_hosp)
         self.telemon_on[started] = True
         self.telemon_start_on[started] = NO_DAY
+        for s in self.telemon_steps:
+            self.last_done[s.id][started] = day
         emit(started, "TELEMON_START")
         reading = np.flatnonzero(self.telemon_on & ~self.in_hosp & (self._u("reading", day) < p.p_reading))
         noise = component_rng(self.seed, f"weight:{day}").standard_normal(n)
-        emit(reading, "TELEMON_READING", None, np.round(self.base_weight[reading] + p.reading_noise_kg * noise[reading], 1))
+        gain = np.where(self.decomp_start > NO_DAY, (day - self.decomp_start + 1) * p.decomp_weight_gain_kg_per_day, 0.0)
+        weight = self.base_weight + gain + p.reading_noise_kg * noise
+        emit(reading, "TELEMON_READING", None, np.round(weight[reading], 1))
         self.telemon_on &= ~(self._u("dropout", day) < p.telemon_dropout_daily)
 
         # 7. Pharmacy: once the supply has run out, a patient collects with their own daily chance.

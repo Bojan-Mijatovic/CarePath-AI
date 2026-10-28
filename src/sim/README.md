@@ -141,7 +141,7 @@ Baseline behaviour, seed 42, days 0–364:
 | Measure | Value | Target or note |
 |---|---|---|
 | HF discharges per patient-year | 0.31 | assumption 0.33 (step 1.12) |
-| 30-day readmission rate | 7.9% | **about 12%: step 1.16 calibrates** |
+| 30-day readmission rate | 7.9% before step 1.16; **12.0% after it** (§9) | about 12% |
 | Cardiology visit within 30 days of discharge | 78% | |
 | Echo within 90 days of discharge | 79% | |
 | Mean wait from booking to slot | about 2 days at every facility | no bottleneck in the base table |
@@ -149,6 +149,37 @@ Baseline behaviour, seed 42, days 0–364:
 | Patients sending telemonitoring readings | 3,224 in month 0, 2,581 in month 12 | dropout exceeds new starts; step 1.16 decides whether that is wanted |
 | Overbooked slots; events during a hospital stay | 0; 0 | checked |
 
-Behaviour assumptions (`SimParams`, all recalibrated in step 1.16): base admission hazard 0.0008 a day, ×4 for 30 days after a discharge; length of stay 1 + Poisson(7) days; 85% book each post-discharge step, 0–5 days after discharge; 92% attend; a periodic step is booked in the week before it is due, by 85%; 70% start telemonitoring, 1–10 days after discharge; 85% send a reading on a given day, 0.2% drop out a day; a 30-day drug supply, collected after it runs out with a daily chance drawn per patient from Beta(2, 3).
+Behaviour assumptions (now in `config/baseline.json`, see §9): length of stay 1 + Poisson(7) days; 85% book each post-discharge step, 0–5 days after discharge; 92% attend; a periodic step is booked in the week before it is due, by 85%; 70% start telemonitoring, 1–10 days after discharge; 85% send a reading on a given day, 0.2% drop out a day; a 30-day drug supply, collected after it runs out with a daily chance drawn per patient from Beta(2, 3).
 
-Not yet modelled: deaths, mortality, weight gain before an admission (step 1.16), scenarios (1.17), Maria's script (1.19) and the effect of agents' actions (1.20).
+Not yet modelled: deaths, scenarios (1.17), Maria's script (1.19) and the effect of agents' actions (1.20).
+
+## 9. Outcome model and calibration (step 1.16)
+
+Every assumed probability is in `config/baseline.json`, validated by `sim.step.SimParams` (an unknown key is an error). Scenarios (step 1.17) will override single values.
+
+**Decompensation.** Each day, a patient out of hospital starts to decompensate with probability
+
+    h = admission_daily × (post_discharge_multiplier if discharged in the last 30 days) × exp(Σ β·x)
+
+and is admitted 3–7 days later. During those days a telemonitored patient's weight rises by 0.7 kg a day, so the pathway rule `weight_gain_kg_3d >= 2` can see it: mean gain in the 3 days before an admission is 2.8 kg. This window is where agents can act (step 1.20, AC8).
+
+| Risk factor x | β (log hazard) | Effect |
+|---|---|---|
+| No drug: supply ran out more than 3 days ago | 0.9 | ×2.5 (pattern 2) |
+| A post-discharge step overdue, within 180 days of the discharge (includes waiting past the deadline) | 0.6 | ×1.8 (pattern 1) |
+| Distance to hospital, per 10 km, capped at 60 km | 0.05 | ×1.22 at 40 km |
+| Lives alone | 0.3 | ×1.35 |
+| Per 10 years over 75 | 0.2 | ×1.22 at 85 |
+| On telemonitoring | −0.3 | ×0.74 (pattern 3 works through dropout) |
+
+**Calibration.** `uv run python -m sim.calibration` rescales `admission_daily` towards 0.33 discharges per patient-year and `post_discharge_multiplier` towards 12% readmission; it converged in 6 runs to 0.000561 and 5.47. Result (baseline arm, 365 days; plots in `testing/notebooks/calibration.ipynb`):
+
+| Seed | ATS | `osp_A` | `osp_B` | `osp_C` | Discharges per patient-year |
+|---|---|---|---|---|---|
+| 42 | 12.0% | 12.2% | 11.7% | 11.9% | 0.330 |
+| 7 | 11.5% | 12.1% | 10.5% | 10.9% | 0.333 |
+| 2026 | 12.0% | 11.7% | 13.2% | 11.2% | 0.325 |
+
+All inside the 10–16% range. Admissions per patient-year rise with each factor: 0.28 living with others against 0.43 alone; 0.29 within 10 km against 0.37 beyond 30 km; 0.27 under 75 against 0.42 at 85 and over.
+
+Simulation time with the outcome model: 6.2 ms per day.
