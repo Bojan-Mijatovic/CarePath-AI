@@ -57,6 +57,7 @@ def run(run_id: str, days: int = 365, seed: int = 42, overwrite: bool = False, r
             if d >= 0:  # the first update reads the warm-up as history
                 state.update(con, d)
                 state.refresh_kpi(con, d)
+                state.refresh_map(con, d)
                 sim_ms.append((t1 - t0) * 1000)
                 write_ms.append((t2 - t1) * 1000)
                 state_ms.append((time.perf_counter() - t2) * 1000)

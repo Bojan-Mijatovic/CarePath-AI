@@ -4,7 +4,8 @@ Delivery plan step 1.22. A StateEngine follows one pathway in one run. Per patie
 each step was done and the latest booking per service in numpy arrays, so a day costs the same few
 vectorised operations on day 1 and on day 365. `update(con, day)` reads the events it has not seen yet (the
 first call reads the whole history, warm-up included), sweeps every deadline and upserts the pathway_state
-rows that changed. `refresh_kpi(con, day)` writes that day's kpi_daily rows.
+rows that changed. `refresh_kpi(con, day)` writes that day's kpi_daily rows and `refresh_map(con, day)`
+the map_comuni rows (step 2.2).
 
 Steps are evaluated as SPEC §5.1 says; nothing here names a disease (AC17). A patient is enrolled, by the
 MMG, with the first event that meets the pathway's eligibility. Risk (step 2.3), Monitoring (2.8) and the
@@ -27,6 +28,11 @@ DIAGNOSIS_EVENTS = ("DISCHARGE", "ADMISSION")
 ON_TRACK, DUE_SOON, OVERDUE, DROPPED = range(4)  # positions in PATHWAY_STATUSES
 ENGINE_COLUMNS = ("current_step", "next_step", "next_due_day", "next_booked_day", "status", "overdue_steps",
                   "last_event_day", "updated_day")
+# map_comuni (SPEC §5.2, C18): the same windows as the tools' dispensing and telemonitoring measures (§6)
+DRUG_WINDOW_DAYS = 60
+READING_WINDOW_DAYS = 7
+MAP_MIN_PATIENTS = 10  # fewer, and a comune has no adherence and no alarm
+MAP_ALARM_BELOW = 0.5  # the prototype's low band (< 50%)
 
 
 def matches(codes: pd.Series, patterns: list[str]) -> np.ndarray:
@@ -59,6 +65,9 @@ class StateEngine:
         self.done = np.full((k, n), NO_DAY)        # same, plus readings for a telemonitoring step
         self.booked_on = np.full((k, n), NO_DAY)   # latest BOOKING of the step's service ...
         self.booked_for = np.full((k, n), NO_DAY)  # ... and the day it is booked for
+        self.last_drug = np.full((len(pathway.eligibility.any_drug_atc), n), NO_DAY)  # last DISPENSE per drug
+        self.telemon_started = np.zeros(n, bool)  # ever a TELEMON_START or reading, warm-up included
+        self.last_reading = np.full(n, NO_DAY)
         self.last_index_discharge = np.full(n, NO_DAY)
         self.index_discharges = np.zeros(n, np.int64)  # from day 0, for kpi_daily
         self.readmissions = np.zeros(n, np.int64)
@@ -111,6 +120,12 @@ class StateEngine:
         np.minimum.at(self.enrolled_day, i[eligible], day[eligible])
         reading = (etype == "TELEMON_READING").to_numpy(bool)
         booking = (etype == "BOOKING").to_numpy(bool)
+        dispense = (etype == "DISPENSE").to_numpy(bool)
+        for r, atc in enumerate(elig.any_drug_atc):
+            hit = dispense & matches(code, [atc])
+            np.maximum.at(self.last_drug[r], i[hit], day[hit])
+        self.telemon_started[i[reading | (etype == "TELEMON_START").to_numpy(bool)]] = True
+        np.maximum.at(self.last_reading, i[reading], day[reading])
         for j, s in enumerate(self.pathway.steps):
             own = self._is_step(s, etype, code)
             np.maximum.at(self.own[j], i[own], day[own])
@@ -259,9 +274,41 @@ class StateEngine:
                          est_readmission_cost_eur=(pd.array([pd.NA] * len(kpi), dtype="Int64") if READMISSION_COST_EUR is None
                                                    else kpi.readmissions_30d * READMISSION_COST_EUR))
         kpi = kpi.drop(columns=["on_track", "discharges"]).astype({"actions_executed": np.int64, "actions_pending": np.int64})
+        self._replace(con, "kpi_daily", kpi, day)
+
+    def refresh_map(self, con: duckdb.DuckDBPyConnection, day: int) -> None:
+        """map_comuni rows on `day` (SPEC §5.2, C18), after update(day). `adherence_pct` is the share of
+        enrolled patients who are on track, collected every drug of the pathway in the last 60 days and, if
+        they ever started telemonitoring, sent a reading in the last 7 days. A comune with fewer than 10
+        patients has no adherence and no alarm. risk_mean and high_risk_patients come with Risk (step 2.3)."""
+        if day != self.day:
+            raise ValueError(f"refresh_map({day}) needs update({day}) first")
+        e = self.enrolled_day <= day
+        drugs = (self.last_drug > day - DRUG_WINDOW_DAYS).all(axis=0)
+        reading = ~self.telemon_started | (self.last_reading > day - READING_WINDOW_DAYS)
+        code, keys = self.units["comune"]
+        count = lambda v: np.bincount(code, weights=v, minlength=len(keys))
+        patients = count(e)
+        adherence = (count(e & (self.status == ON_TRACK) & drugs & reading) / np.maximum(patients, 1)).round(4)
+        discharges = count(np.where(e, self.index_discharges, 0))
+        rate = (count(np.where(e, self.readmissions, 0)) / np.maximum(discharges, 1)).round(4)
+        enough = patients >= MAP_MIN_PATIENTS
+        none = np.ones(len(keys), bool)
+        rows = pd.DataFrame({
+            "comune_istat": keys, "pathway_id": self.pathway.pathway_id,
+            "adherence_pct": pd.arrays.FloatingArray(adherence, ~enough),
+            "risk_mean": pd.arrays.FloatingArray(np.zeros(len(keys)), none),
+            "high_risk_patients": pd.arrays.IntegerArray(np.zeros(len(keys), np.int32), none),
+            "readmission_rate_30d": pd.arrays.FloatingArray(rate, discharges == 0),
+            "alarm": enough & (adherence < MAP_ALARM_BELOW),
+        })[patients > 0]
+        self._replace(con, "map_comuni", rows)
+
+    def _replace(self, con: duckdb.DuckDBPyConnection, table: str, rows: pd.DataFrame, day: int | None = None) -> None:
+        """This pathway's rows of `table` (of `day`, for a table by day) replaced by `rows`."""
         # Delete, then insert: INSERT OR REPLACE checks the key against every earlier day and costs 4 times more.
-        con.execute("DELETE FROM kpi_daily WHERE day = $d AND pathway_id = $pathway",
-                    {"d": day, "pathway": self.pathway.pathway_id})
-        con.register("kpi_rows", kpi)
-        con.execute("INSERT INTO kpi_daily BY NAME SELECT * FROM kpi_rows")
-        con.unregister("kpi_rows")
+        con.execute(f"DELETE FROM {table} WHERE pathway_id = $pathway" + ("" if day is None else " AND day = $d"),
+                    {"pathway": self.pathway.pathway_id} | ({} if day is None else {"d": day}))
+        con.register("new_rows", rows)
+        con.execute(f"INSERT INTO {table} BY NAME SELECT * FROM new_rows")
+        con.unregister("new_rows")

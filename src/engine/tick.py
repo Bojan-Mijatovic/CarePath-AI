@@ -2,9 +2,9 @@
 
 A Run is one simulator with its run database and state engine, kept open in this process. `Run.tick()`
 does the next day in the order of SPEC §9. Steps 3 to 7 of that order arrive with their own plan steps:
-Risk (2.3), Monitoring (2.8), the views (2.2, 2.4), Intervention through the action service (2.12, 2.13)
-and the Investigator (2.9). Until then a tick is steps 1, 2, 5 (kpi_daily) and 8, and the two arms of a
-scenario do not differ.
+Risk (2.3), Monitoring (2.8), the worklist (2.4), Intervention through the action service (2.12, 2.13)
+and the Investigator (2.9). Until then a tick is steps 1, 2, 5 (kpi_daily, map_comuni, sankey_flows) and
+8, and the two arms of a scenario do not differ.
 
 Demo holds the six runs (3 scenarios × 2 arms): `start()` replays them to the start day and leaves them
 paused (D21); afterwards only the two runs of the scenario on screen advance (C9). A jump forward
@@ -70,7 +70,8 @@ class Run:
         d = self.day + 1
         append(self.con, "events", self.sim.step(d))  # 1
         self.state.update(self.con, d)                  # 2
-        self.state.refresh_kpi(self.con, d)             # 5: kpi_daily
+        self.state.refresh_kpi(self.con, d)             # 5: views (sankey_flows is a DuckDB view)
+        self.state.refresh_map(self.con, d)
         self._write_capacity()
         self.day = d
         self.last_ms = (time.perf_counter() - t) * 1000

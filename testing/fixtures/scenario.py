@@ -25,7 +25,7 @@ import pandas as pd
 from agents import tools
 from engine import pathway as pathway_model
 from engine.db import create_run, open_run, tool_cursor
-from engine.queries import kpi_headline, patient_360, rows
+from engine.queries import kpi_headline, map_comuni, patient_360, rows, sankey
 from engine.state import StateEngine
 from sim.population import generate_patients, load_reference
 from sim.run import append, load_reference_tables
@@ -144,6 +144,7 @@ def build_runs(runs_dir: Path) -> dict:
                 append(con, "events", sim.step(d))
                 state.update(con, d)
                 state.refresh_kpi(con, d)
+                state.refresh_map(con, d)
                 if agents and d == CALL_DAY:  # Intervention runs after the views (SPEC §9, steps 5–6)
                     call_maria(con, sim, d)
                 if agents and d == ALARM_DAY:
@@ -151,20 +152,6 @@ def build_runs(runs_dir: Path) -> dict:
             con.execute("DELETE FROM capacity_slots")
             append(con, "capacity_slots", sim.capacity_slots())
     return live
-
-
-def sankey(con) -> list[dict]:
-    """sankey_flows (SPEC §5.2, C15) from pathway_state; step 2.2 makes it a view."""
-    return rows(con, """SELECT pathway_id, current_step AS from_step, next_step AS to_step, status, count(*) AS patients
-                        FROM pathway_state GROUP BY ALL ORDER BY ALL""")
-
-
-def map_stand_in(con, day: int) -> list[dict]:
-    """map_comuni shape with stand-in values (README.md): its meaning is defined in step 2.2."""
-    return rows(con, """
-        SELECT key AS comune_istat, pathway_id, on_track_pct AS adherence_pct, 0.0::DOUBLE AS risk_mean,
-               0 AS high_risk_patients, readmission_rate_30d, false AS alarm
-        FROM kpi_daily WHERE level = 'comune' AND day = $d ORDER BY key""", {"d": day})
 
 
 def worklist_stand_in(con, day: int) -> list[dict]:
@@ -236,8 +223,8 @@ def export(runs_dir: Path, live: dict) -> dict[str, object]:
         out["api/kpi_s2_agents_day62.json"] = rows(
             con, "SELECT * FROM kpi_daily WHERE day = $d ORDER BY level, key", {"d": last})
         out["api/actions_s2_agents.json"] = rows(con, "SELECT * FROM actions ORDER BY created_day, action_id")
-        out["api/sankey_s2_agents.json"] = sankey(con)
-        out["api/map_s2_agents.json"] = map_stand_in(con, last)
+        out["api/sankey_s2_agents.json"] = sankey(con, None)
+        out["api/map_s2_agents.json"] = map_comuni(con, None)
         out["api/worklist_s2_agents.json"] = worklist_stand_in(con, last)
         out |= {f"stream/{name}": m for name, m in stream(con, live).items()}
         out["tools/wait_by_hospital.json"] = live["wait"]

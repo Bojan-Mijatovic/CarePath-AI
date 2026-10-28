@@ -83,6 +83,18 @@ def test_jump_back_replays_the_same_days(client):
     assert client.post(f"/api/sim/jump/{DAYS}").status_code == 422
 
 
+def test_sankey_and_map(client):
+    sankey = client.get("/api/sankey").json()
+    assert list(sankey[0]) == ["pathway_id", "from_step", "to_step", "status", "patients"]
+    day = client.post("/api/sim/pause").json()["day"]
+    ats = client.get("/api/kpi", params={"level": "ats"}).json()[-1]
+    assert ats["day"] == day
+    assert sum(r["patients"] for r in sankey) == ats["patients"]
+    comuni = client.get("/api/map", params={"pathway_id": "hf_lombardia_v1"}).json()
+    assert {r["comune_istat"] for r in comuni} == {
+        r["key"] for r in client.get("/api/kpi", params={"level": "comune"}).json() if r["day"] == day}
+
+
 def test_patient_actions_and_story(client):
     maria = client.get("/api/patients/p_00001", params={"run": "s2_baseline"}).json()
     assert maria["patient"]["comune_name"] == "Poggio Rusco"

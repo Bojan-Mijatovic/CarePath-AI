@@ -1,9 +1,9 @@
 """DuckDB layout of a run: one file per run, with the tables from spec/SPEC.md §3, §5.1 and §7.
 
 A run is scenario × arm × levers (SPEC C2), stored as runs/<run_id>.duckdb. `scenario_truth`
-is never in a run database (SPEC §3.3); it lives in demo/truth/. Of the views of SPEC §5.2, kpi_daily is a
-table that the state engine fills once per tick (step 1.22); sankey_flows, map_comuni and worklist_today
-come in Phase 2 (steps 2.2 and 2.4).
+is never in a run database (SPEC §3.3); it lives in demo/truth/. Of the views of SPEC §5.2, kpi_daily and
+map_comuni are tables that the state engine fills once per tick (steps 1.22 and 2.2), sankey_flows is a
+DuckDB view over pathway_state (step 2.2), and worklist_today comes with step 2.4.
 
     uv run carepath-db s2_agents [--overwrite]
 """
@@ -131,6 +131,15 @@ TABLES = {
         actions_pending           INTEGER NOT NULL,
         est_readmission_cost_eur  INTEGER,
         PRIMARY KEY (day, pathway_id, level, key)""",
+    "map_comuni": """
+        comune_istat          VARCHAR NOT NULL,
+        pathway_id            VARCHAR NOT NULL,
+        adherence_pct         DOUBLE,
+        risk_mean             DOUBLE,
+        high_risk_patients    INTEGER,
+        readmission_rate_30d  DOUBLE,
+        alarm                 BOOLEAN NOT NULL,
+        PRIMARY KEY (comune_istat, pathway_id)""",
     "actions": f"""
         action_id       VARCHAR PRIMARY KEY,
         agent           VARCHAR NOT NULL,
@@ -155,6 +164,13 @@ TABLES = {
 }
 
 
+VIEWS = {
+    "sankey_flows": """
+        SELECT pathway_id, current_step AS from_step, next_step AS to_step, status, count(*)::INTEGER AS patients
+        FROM pathway_state GROUP BY ALL""",
+}
+
+
 def run_path(run_id: str, runs_dir: Path = RUNS_DIR) -> Path:
     if not RUN_ID.match(run_id):
         raise ValueError(f"run_id {run_id!r} does not match s<scenario>_<arm>[_<lever-hash>] (SPEC §9)")
@@ -164,6 +180,8 @@ def run_path(run_id: str, runs_dir: Path = RUNS_DIR) -> Path:
 def create_tables(con: duckdb.DuckDBPyConnection) -> None:
     for name, columns in TABLES.items():
         con.execute(f"CREATE TABLE {name} ({columns})")
+    for name, sql in VIEWS.items():
+        con.execute(f"CREATE VIEW {name} AS {sql}")
 
 
 def create_run(run_id: str, runs_dir: Path = RUNS_DIR, overwrite: bool = False) -> Path:

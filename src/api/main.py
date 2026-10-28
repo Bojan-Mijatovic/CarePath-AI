@@ -184,6 +184,14 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
             key: str | None = None) -> list[dict]:
         return live.read(run, lambda con: queries.kpi(con, pathway_id, level, key))
 
+    @api.get("/sankey")
+    def sankey(run: str | None = None, pathway_id: str | None = None) -> list[dict]:
+        return live.read(run, lambda con: queries.sankey(con, pathway_id))
+
+    @api.get("/map")
+    def map_comuni(run: str | None = None, pathway_id: str | None = None) -> list[dict]:
+        return live.read(run, lambda con: queries.map_comuni(con, pathway_id))
+
     @api.get("/patients/{patient_id}")
     def patient(patient_id: str, run: str | None = None, day: int | None = None) -> dict:
         if day is None:

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **v1.4**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), all proposed 28 Oct 2026. Changes follow §0 |
+| Status | **v1.5**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), all proposed 28 Oct 2026. Changes follow §0 |
 | Last updated | 28 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C17 proposed in v1.1–v1.4)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C18 proposed in v1.1–v1.5)
 
 | # | Change | Why |
 |---|---|---|
@@ -47,6 +47,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C15 (D33) | Shapes of `GET /patients/{id}` and of the tick's `kpi` (§10), and the steps of `sankey_flows` (§5.2) | The fixtures (step 1.23) and the first screens (step 1.25) need them; v1.1 said only "timeline of events and actions, state per pathway" and `{...}`. The meaning of `map_comuni` `adherence_pct` and `alarm`, and of `worklist_today` `pathways` and `outcome`, waits for steps 2.2 and 2.4 (Q7); their fixtures use stand-in values |
 | C16 (D34) | What each tool computes (§6): booking-to-slot waits, on-time deadlines, the 10 worst groups plus `rest_of_ats`, the `telemonitoring` measure over everyone ever started, `empty_result` for risk until step 2.3 | v1.2 gave names and shapes but not the computations, so two implementations could disagree and the Verifier could not tell which is right. With a 60-day window on the denominator, patients who stopped telemonitoring left the measure and pattern 3 disappeared (measured, scenario 2); hundreds of groups would not fit a prompt |
 | C17 (D35) | `GET /patients/{id}` takes an optional `day`: with it, the API answers from a recording in `demo/story/` instead of the live run (§10). The control endpoints return `{scenario, day, speed}` | The demo opens with every run on day 23 (D21), but Maria's story (demo step 1) tells what happens without CarePath up to her readmission on day 47. Recorded once from the baseline run of scenario 2 to day 62 (`uv run python -m engine.story`); a test checks it against the fixture run. The console needs the day and speed after a control call |
+| C18 (D36) | `map_comuni` defined (§5.2): `adherence_pct` is the share of enrolled patients who are on track, collected every drug of the pathway in the last 60 days and, if ever on telemonitoring, sent a reading in the last 7 days; `alarm` is `adherence_pct` below 50%; fewer than 10 patients give NULL and no alarm; `risk_mean` and `high_risk_patients` are NULL until Risk (step 2.3). `sankey_flows` is a DuckDB view. Answers SPEC Q7 for the map | Q7 left the map's meaning open. Measured on all 3 scenarios, 154 comuni, days 35 and 62: `on_track_pct` alone spreads the hidden rural comuni of pattern 3 from rank 8 to 151 and dispensing alone stays at 69–100%; the combined measure ranges 20–91% (the prototype shows 38–76%) and puts them mostly among the 30 worst. The prototype frames exactly the comuni under 50% |
 
 ## 1. Scope
 
@@ -241,7 +242,9 @@ All views are DuckDB views or tables refreshed once per tick and must answer in 
 | `map_comuni` | comune × pathway | `adherence_pct`, `risk_mean`, `high_risk_patients`, `readmission_rate_30d`, `alarm` |
 | `worklist_today` | patient (all pathways merged) | `rank`, `risk_score`, `reasons` (JSON `{"it", "en"}`, C13), `pathways`, `escalation_step`, `script` (JSON `{"it", "en"}`, filled by Daily Worklist), `outcome` (filled by the operator or the simulation) |
 
-**`sankey_flows`** (C15): `from_step` is `current_step` and `to_step` is `next_step` of `pathway_state`, NULL when the patient has none; `patients` counts the rows with that pathway, both steps and status.
+**`sankey_flows`** (C15): `from_step` is `current_step` and `to_step` is `next_step` of `pathway_state`, NULL when the patient has none; `patients` counts the rows with that pathway, both steps and status. It is a DuckDB view (C18). A periodic step leads to itself (on day 62 of scenario 2, `lab_bnp` → `lab_bnp` for 86% of patients), so the console draws two columns, last step done and next step, where a loop is not a cycle.
+
+**`map_comuni`** (C18) is a table the tick refreshes for the current day, one row per comune with enrolled patients of the pathway, by where they live. `adherence_pct` is the share of those patients who meet all of: `status` is `on_track`; every drug in the pathway's `eligibility.any_drug_atc` dispensed in the last 60 days; if they ever started telemonitoring (warm-up included), a `TELEMON_READING` in the last 7 days. The windows are those of the `dispensing` and `telemonitoring` measures (§6). With fewer than 10 patients `adherence_pct` is NULL and `alarm` false; otherwise `alarm` is `adherence_pct < 0.5`, the prototype's low band. `readmission_rate_30d` equals the comune's `kpi_daily` row of the day. `risk_mean` and `high_risk_patients` are NULL until Risk (step 2.3) defines high risk. Regional alarms from Monitoring (step 2.8) come as `alert` messages, not as map rows.
 
 **Readmission, PNE-style:** an unplanned `ADMISSION` within 30 days after a `DISCHARGE` with an HF main diagnosis. Rate = such readmissions ÷ HF discharges in the period. Simplified versus the official PNE protocol; the simplification is listed in the limitations.
 
@@ -420,7 +423,7 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `POST /sim/jump/{day}` | jump to a day |
 | `GET /kpi?run&pathway_id&level&key` | `kpi_daily` rows |
 | `GET /sankey?run&pathway_id` | `sankey_flows` |
-| `GET /map?run&pathway_id` | `map_comuni` + alarms |
+| `GET /map?run&pathway_id` | `map_comuni` rows; regional alarms arrive on the stream (C18) |
 | `GET /worklist?run&day` | `worklist_today` |
 | `GET /patients/{id}?run&day` | Paziente 360: timeline of events and actions, state per pathway (shape below, C15). With `day`, a recording from `demo/story/` (C17): only `p_00001`, `s2_baseline`, day 62 exists; anything else is 404 |
 | `GET /actions?run&status` | action queue and feed |
@@ -497,8 +500,8 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 |---|---|---|---|
 | Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D. **Closed** (D28): demo values, no clinical confirmation for the PoC | Italian colleague via R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source | R5 | week 2 |
-| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14–C17 proposed with D32–D35 (28 Oct 2026) | all, at the sync | week 1 |
+| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14–C18 proposed with D32–D36 (28 Oct 2026) | all, at the sync | week 1 |
 | Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |
 | Q5 | Daily limit of automatic actions per facility: 50 a sensible default? | R3, R5 | week 2 |
 | Q6 | Do we need calendar dates on screen, or is "Giorno N" enough for the audience? | R5 | week 2 |
-| Q7 | `map_comuni`: what `adherence_pct` measures and when `alarm` is true; `worklist_today`: the type of `pathways` and the values of `outcome` (C15). Fixtures use stand-ins until then | R2, R4 | steps 2.2 and 2.4 |
+| Q7 | `map_comuni`: what `adherence_pct` measures and when `alarm` is true (**answered by C18**, step 2.2); `worklist_today`: the type of `pathways` and the values of `outcome` (C15). The worklist fixture uses stand-ins until then | R2, R4 | step 2.4 |

@@ -33,6 +33,18 @@ def kpi_headline(con: duckdb.DuckDBPyConnection, day: int, pathway_id: str) -> d
     return found[0] if found else None
 
 
+def sankey(con: duckdb.DuckDBPyConnection, pathway_id: str | None) -> list[dict]:
+    """GET /api/sankey: sankey_flows (SPEC §5.2, C15)."""
+    return rows(con, "SELECT * FROM sankey_flows WHERE $pw IS NULL OR pathway_id = $pw ORDER BY ALL",
+                {"pw": pathway_id})
+
+
+def map_comuni(con: duckdb.DuckDBPyConnection, pathway_id: str | None) -> list[dict]:
+    """GET /api/map: map_comuni (SPEC §5.2, C18), one row per comune with enrolled patients."""
+    return rows(con, "SELECT * FROM map_comuni WHERE $pw IS NULL OR pathway_id = $pw ORDER BY comune_istat, pathway_id",
+                {"pw": pathway_id})
+
+
 def actions(con: duckdb.DuckDBPyConnection, status: str | None) -> list[dict]:
     """GET /api/actions: the action queue and feed."""
     return rows(con, "SELECT * FROM actions WHERE $s IS NULL OR status = $s ORDER BY created_day, action_id",
