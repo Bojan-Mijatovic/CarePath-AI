@@ -47,7 +47,30 @@ Facility names are invented (Solution Plan D7); the comuni are real.
 | `osp_B` "Ospedale B" | `asst_cremona` | Cremona (019036) | echo bottleneck in scenario 2 (SPEC §3.3) |
 | `osp_C` "Ospedale C" | `asst_crema` | Crema (019035) | free echo slots in scenario 2 |
 
-Each scenario puts the bottleneck at a different hospital (Solution Plan §11). Clinics (`amb_<n>`) and the capacity per service are step 1.12.
+Each scenario puts the bottleneck at a different hospital (Solution Plan §11).
+
+**Clinics and capacity (step 1.12):** `data/facilities.csv` and `data/capacity.csv`. A facility sits at the centroid of its comune, so the distances of step 1.13 agree with the map.
+
+| Facility | ASST | Comune | Echo | Cardio visit | Lab |
+|---|---|---|---|---|---|
+| `osp_A` Ospedale A | Mantova | Mantova | 6 | 3 | 38 |
+| `osp_B` Ospedale B | Cremona | Cremona | 3 | 1 | 19 |
+| `osp_C` Ospedale C | Crema | Crema | 3 | 2 | 15 |
+| `amb_1` Poliambulatorio 1 | Mantova | Castiglione delle Stiviere | — | 1 | 12 |
+| `amb_2` Poliambulatorio 2 | Mantova | Viadana | — | 1 | 12 |
+| `amb_3` Poliambulatorio 3 | Mantova | Suzzara | — | 1 | 12 |
+| `amb_4` Poliambulatorio 4 | Cremona | Casalmaggiore | — | 1 | 9 |
+| `amb_5` Poliambulatorio 5 | Cremona | Soresina | — | 1 | 9 |
+| `amb_6` Poliambulatorio 6 | Crema | Rivolta d'Adda | — | 1 | 14 |
+
+Slots per simulated day; the PoC has no weekly cycle. Only hospitals do echo, so pattern 1 is a hospital-to-hospital comparison. No facility is in the Oltrepò, which keeps Maria's area far from services (pattern 3).
+
+How the slots were sized. All of these are assumptions, which `testing/test_sim_facilities.py` checks and step 1.16 recalibrates:
+
+- Patients per ASST in proportion to the population aged 65+: 52.7% Mantova, 26.5% Cremona, 20.9% Crema.
+- 0.33 HF discharges per patient per year, including readmissions. Each discharge needs one echo (due in 90 days) and one cardiology visit (due in 30 days), as in the pathway of SPEC §4. That gives 4.76, 2.39 and 1.89 per day.
+- A BNP test every 90 days for every patient: 58.5, 29.4 and 23.2 per day.
+- Capacity is at least 1.25 × demand for every ASST and service. The base table has no bottleneck; each scenario creates one (step 1.17), for example by cutting `osp_B` echo from 3 to 1 slot a day while `osp_C` keeps spare slots.
 
 **Maria's comune:** a rural comune in the Oltrepò Mantovano, about 45 km by road from `osp_A`. Candidates, all in `asst_mantova`: Poggio Rusco (020042, 6,535 residents), Ostiglia (020038, 6,739), Sermide e Felonica (020061, 7,018). Step 1.13 picks the one whose computed distance is closest to 45 km.
 

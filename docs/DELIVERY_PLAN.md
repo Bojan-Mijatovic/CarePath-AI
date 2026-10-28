@@ -144,7 +144,7 @@ The critical path is R1 and R5 in week 2.
 |---|---|---|---|
 | 1.10 | Download ISTAT comune list, population by age band and ISTAT code for the 3 ASSTs; store as CSV with source URL and licence. **Done** (reviewed 28 Oct 2026): `uv run carepath-reference-data`; comuni add up to ISTAT's province totals per age and sex | `src/sim/data/comuni.csv` | Totals match ISTAT for each ASST |
 | 1.11 | Download comune boundaries, clip to the 3 ASSTs, simplify to under 2 MB GeoJSON for the map. **Done** (reviewed 28 Oct 2026): ISTAT boundaries 1 Jan 2026, 0.28 MB without simplification; centroids fill `lat`/`lon` in `comuni.csv`; `src/ui/map-test.html` draws it | `src/ui/assets/comuni.geojson` | Renders in a test page |
-| 1.12 | Facility table: Ospedale A, B, C and clinics, placed in real ASSTs, with capacity per service (echo, cardiology visit, lab) | `facilities.csv` | Reviewed by R5 |
+| 1.12 | Facility table: Ospedale A, B, C and clinics, placed in real ASSTs, with capacity per service (echo, cardiology visit, lab). **Done** (reviewed 28 Oct 2026): 3 hospitals and 6 clinics; base capacity at least 1.25 × demand, so only scenarios create bottlenecks | `facilities.csv` | Reviewed by R5 |
 | 1.13 | Distance matrix comune → facility, precomputed once (haversine × road factor ~1.3; OSRM only if accuracy is challenged); never queried live | `distances.parquet` | Maria's comune shows about 45 km to her hospital |
 
 ### 6.3 Simulator (R1)

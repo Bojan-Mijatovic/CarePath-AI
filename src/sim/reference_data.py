@@ -214,7 +214,8 @@ def main() -> None:
     for name, df in [("comuni", comuni), ("population_by_age", population), ("sources", sources)]:
         df.to_csv(DATA_DIR / f"{name}.csv", index=False, lineterminator="\n")
     GEOJSON_PATH.parent.mkdir(parents=True, exist_ok=True)
-    GEOJSON_PATH.write_text(json.dumps(geojson, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    GEOJSON_PATH.write_text(json.dumps(geojson, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8",
+                            newline="\n")
     print(f"{GEOJSON_PATH.name}: {GEOJSON_PATH.stat().st_size / 1e6:.2f} MB")
     print(comuni.groupby("asst_id").agg(comuni=("comune_istat", "size"), population=("population", "sum"),
                                         population_65plus=("population_65plus", "sum")).to_string())

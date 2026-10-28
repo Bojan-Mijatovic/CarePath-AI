@@ -1,0 +1,10 @@
+facility_id,name,type,asst_id,comune_istat,lat,lon
+osp_A,Ospedale A,hospital,asst_mantova,020030,45.14921,10.80695
+osp_B,Ospedale B,hospital,asst_cremona,019036,45.14092,10.02977
+osp_C,Ospedale C,hospital,asst_crema,019035,45.36608,9.68304
+amb_1,Poliambulatorio 1,clinic,asst_mantova,020017,45.37885,10.49472
+amb_2,Poliambulatorio 2,clinic,asst_mantova,020066,44.97659,10.58222
+amb_3,Poliambulatorio 3,clinic,asst_mantova,020065,45.00415,10.74361
+amb_4,Poliambulatorio 4,clinic,asst_cremona,019021,44.98698,10.4542
+amb_5,Poliambulatorio 5,clinic,asst_cremona,019098,45.29066,9.85122
+amb_6,Poliambulatorio 6,clinic,asst_crema,019084,45.45996,9.5133
