@@ -135,7 +135,7 @@ The critical path is R1 and R5 in week 2.
 | 1.5 | Action contract: types (`notify_mmg`, `reschedule`, `call_task`, `enroll_proposal`, `rule_proposal`, `pathway_proposal`, `bed_proposal`, `bed_assignment`), autonomy levels 0–3, status lifecycle, evidence list | R5, R3 | SPEC §Actions | R3 signs off |
 | 1.6 | API and WebSocket contract: REST endpoints from Solution Plan §7; WS envelope `{type: tick\|alert\|action\|investigation, scenario, day, payload}` | R5, R4 | SPEC §API | R4 signs off |
 | 1.7 | Acceptance criteria AC1–AC19 copied into SPEC with owner, measurement method and test file name. **Done** (reviewed 28 Oct 2026): 18 stubs generated from the SPEC table, each skipped with the step that replaces it; AC14 is already real; `test_spec_acceptance_files.py` fails if an AC loses its file | R5 | SPEC §Acceptance | Each AC has a test stub in `testing/` |
-| 1.8 | PDTA texts in Italian: heart failure (final), type 2 diabetes (draft) | R5 | `spec/pdta/` | Reviewed by the Italian colleague |
+| 1.8 | PDTA texts in Italian: heart failure (final), type 2 diabetes (draft). **Done** (reviewed 28 Oct 2026): Italian sources with English translations (D30); a test keeps the HF text in line with `hf_lombardia_v1.json`; demo values (D28); the Italian wording still goes to the Italian colleague before rehearsals (step 4.6) | R5 | `spec/pdta/` | Reviewed by the Italian colleague |
 | 1.9 | **Contract freeze** at the end of day 2; later changes only via the sync and the decision register | R5 | Tag `spec-v1` | Tag pushed |
 
 ### 6.2 Reference data (R1)
