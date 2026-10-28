@@ -1,6 +1,6 @@
 # CarePath AI
 
-AI agents that check every day whether 10,000 chronic patients in ATS della Val Padana follow their care plan (PAI), explain why they drift and act on it. Workshop PoC on synthetic data; everything runs locally, offline and free.
+AI agents that check every day whether 10,000 chronic patients in ATS della Val Padana follow their care plan (PAI), explain why they drift and act on it. Workshop PoC on synthetic data; models and data run locally and everything is free.
 
 - What we build and why: [docs/CarePath-AI-Solution-Plan.pdf](docs/CarePath-AI-Solution-Plan.pdf)
 - How we deliver it, phase by phase: [docs/DELIVERY_PLAN.md](docs/DELIVERY_PLAN.md)
@@ -86,7 +86,7 @@ uv run carepath-api                      # terminal 1: API on :8000
 cd src/ui; fnm exec --using=24 npm run dev   # terminal 2: console on :5173
 ```
 
-Open <http://127.0.0.1:5173>. Vite forwards `/api`, including the `/api/stream` WebSocket, to the API. Every API path is under `/api` (spec §10). No CDN and no external URLs in the console: it must work offline. `npm run lint` runs oxlint.
+Open <http://127.0.0.1:5173>. Vite forwards `/api`, including the `/api/stream` WebSocket, to the API. Every API path is under `/api` (spec §10). `npm run lint` runs oxlint.
 
 ## Measuring models on your machine
 
@@ -104,5 +104,5 @@ On a laptop without an NVIDIA GPU, models run on the CPU and are too slow for li
 
 - Every task starts from `spec/SPEC.md`. Do not change a contract without agreeing it at the sync.
 - Numbers and facts come from code; the LLM only phrases them.
-- Commit directly to `main`, no feature branches (decision D20). Pull and run `uv run pytest` before every push; another role reviews a step's commits before the step counts as done.
+- Commit directly to `main`, no feature branches (decision D20). Pull and run `uv run pytest` before every push; Bojan approves each step's code before it is committed (D26).
 - Done means: reviewed, tests pass, its acceptance criterion is met, it works in the end-to-end flow.

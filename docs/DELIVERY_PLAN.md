@@ -5,8 +5,8 @@
 | Source of truth | [CarePath-AI-Solution-Plan.pdf](CarePath-AI-Solution-Plan.pdf) (22 Oct 2026). This plan turns it into executable steps; where they differ, the Solution Plan wins until the change is agreed at a sync and logged in the decision register (§11). |
 | UI reference | [CarePath-AI-UI-demo-srpski.html](CarePath-AI-UI-demo-srpski.html), screens for demo steps 1–10 |
 | Horizon | 4 workshop weeks: preparation, spec + simulator, one build week, stabilisation |
-| Constraint | Zero cost and fully offline on the day of the demo |
-| Last updated | 27 Oct 2026 |
+| Constraint | Zero cost; models and data run locally. The demo may use the network (D25) |
+| Last updated | 28 Oct 2026 |
 
 ## 1. Summary
 
@@ -20,7 +20,7 @@ The plan has five phases. Each one ends with a gate, measured against the accept
 | 1. Spec, contracts, simulator | Week 2 | Frozen contracts; simulator with 3 scenarios and Maria that provably contains the injected patterns | **Scope gate:** pattern notebook passes for all 3 scenarios, Maria trajectory stable (AC13 data side, AC14), SPEC approved |
 | 2. Core build | Week 3, days 1–5 | Whole demo flow works end-to-end every day | Core ACs measurable: AC1–AC8, AC13, AC14, AC17 |
 | 3. Gated extensions | Week 3, days 3–5 (parallel) | Optional agents, option B, Bed Finder, added in order and only if the core is healthy | Checkpoint on day 3 and AC10–AC12, AC15, AC16, AC18, AC19 |
-| 4. Stabilisation and demo | Week 4 | 10 consecutive offline runs without a stop | AC9; runbook rehearsed on the main and the backup machine |
+| 4. Stabilisation and demo | Week 4 | 10 consecutive runs without a stop | AC9; runbook rehearsed on the main and the backup machine |
 
 The biggest risk is unchanged from the Solution Plan: the simulator in week 2. The biggest new finding is that local models on our laptops are slow and occasionally wrong about facts (§3). So the design is **cache-first**: every LLM output that appears in the demo is generated before the demo and replayed, and the demo starts in cache-only mode (D14). Live generation is a bonus, not a dependency.
 
@@ -33,7 +33,7 @@ These apply to every phase. A change that breaks one of them needs a decision-re
 3. **Cache-first LLM.** Seeds are fixed, so the inputs at every rehearsal are identical. Every LLM call goes through one gateway (§7.2, step 2.7), keyed by `(agent, model, prompt_version, input_hash)`. The cache is warmed ahead of time on the demo machine (D12). Only outputs the demo shows are cached; every other text comes from its template (D17).
 4. **One writer.** Agents only read, through tools. The action service is the only component that changes state, and only after the autonomy and guardrail checks. Every action is written to the audit log and can be undone.
 5. **Disease is configuration.** Pathway JSON plus data, never `if pathway == "hf"` in code (AC17).
-6. **Offline by default.** No CDN, no public APIs, no telemetry. Fonts, JS, GeoJSON, models and cache all live on disk. We test with the network switched off from week 3.
+6. **Local by default.** Models, data and the cache run on the laptop. No patient data goes to an external API, and there is no telemetry (Solution Plan §14). The network may be used for downloads and during the demo (D25).
 7. **Zero cost.** Only tools with permissive or free licences and no paid tier in the critical path (§10).
 8. **End-to-end every day from week 3.** A feature that does not work in the full flow is not done.
 
@@ -84,7 +84,7 @@ Limits of this evaluation: one run per prompt and 5 prompts per test, on fake to
 | R1 Data & simulator | simulator, 3 scenarios, Maria, calibration, diabetes data (option B) | AC8, AC13, AC14 |
 | R2 Analytics & ML | state engine, views, Risk, what-if, PNE forecast, Enrollment rules, Bed Finder ranking | AC2–AC4, AC12, AC15–AC18 |
 | R3 AI agents | all LLM agents, LLM gateway, cache, action service, autonomy, Verifier, prompt log | AC1, AC5–AC7, AC10, AC11, AC19 |
-| R4 Console | all screens, WebSocket client, demo bar, offline assets | supports AC9 |
+| R4 Console | all screens, WebSocket client, demo bar, assets | supports AC9 |
 | R5 Spec, domain & demo | SPEC.md, contracts, PDTA texts, Italian terminology, demo script, runbook, presentation | AC9, AC ordering |
 
 The critical path is R1 and R5 in week 2.
@@ -107,7 +107,7 @@ The critical path is R1 and R5 in week 2.
 | 0.6 | Repo skeleton exactly as in Solution Plan §15: `brief/ spec/ src/{sim,engine,agents,api,ui}/ testing/ demo/`; `sim`, `engine`, `agents` and `api` are separate Python packages installed by `uv sync`; `carepath-api` entry point. **Done** | R4 | Skeleton PR | `uv run pytest` passes |
 | 0.7 | API skeleton: FastAPI app, `GET /api/health`, WebSocket `/api/stream` that emits a fake tick every 2 s; serves the built console. **Done** | R4 | `src/api/main.py` | Browser shows a ticking counter |
 | 0.8 | Frontend decision. Streamlit is not recommended because it cannot reproduce the prototype layout. **Decided (D13):** React 19 + TypeScript on Vite 8, Node 24 via fnm; console shell in `src/ui` | R4 | Decision D13 | Recorded with reason |
-| 0.9 | DuckDB skeleton: database file layout, empty tables from the draft contracts, state-engine stub | R2 | `src/engine/db.py` | Tables created by one command |
+| 0.9 | DuckDB skeleton: database file layout, empty tables from the draft contracts, state-engine stub. **Done** (reviewed 28 Oct 2026): `uv run carepath-db s2_agents` creates `runs/s2_agents.duckdb` with every table of SPEC §3, §5.1 and §7 | R2 | `src/engine/db.py`, `src/engine/state.py` | Tables created by one command |
 | 0.10 | Simulator sketch: list of comuni in ASST Mantova, Cremona and Crema; ISTAT population by age and sex; published PNE 30-day HF readmission range; Ospedale A/B/C mapped to ASSTs | R1 | `src/sim/README.md` with sources and numbers | Reviewed by R5 |
 | 0.11 | Problem brief and SPEC draft: users, pains, success metrics; draft of every contract in §6 of this plan. SPEC draft v0.2 done; `brief/problem.md` open | R5 | `brief/problem.md`, `spec/SPEC.md` draft | Reviewed at the second sync |
 | 0.12 | Italian reviewer: a named Italian colleague with dates for the code review (step 1.3, needed by week 2, day 1), the PDTA texts (step 1.8) and the on-screen terms (step 4.6). If there is no name by the end of week 1, R5 asks the mentor for another Italian-speaking reviewer, and SPEC marks the codes as unconfirmed | R5 | Name and dates in the charter | Confirmed in writing |
@@ -143,7 +143,7 @@ The critical path is R1 and R5 in week 2.
 | # | Step | Output | Done when |
 |---|---|---|---|
 | 1.10 | Download ISTAT comune list, population by age band and ISTAT code for the 3 ASSTs; store as CSV with source URL and licence | `src/sim/data/comuni.csv` | Totals match ISTAT for each ASST |
-| 1.11 | Download comune boundaries, clip to the 3 ASSTs, simplify to under 2 MB GeoJSON for the offline map | `src/ui/assets/comuni.geojson` | Renders offline in a test page |
+| 1.11 | Download comune boundaries, clip to the 3 ASSTs, simplify to under 2 MB GeoJSON for the map | `src/ui/assets/comuni.geojson` | Renders in a test page |
 | 1.12 | Facility table: Ospedale A, B, C and clinics, placed in real ASSTs, with capacity per service (echo, cardiology visit, lab) | `facilities.csv` | Reviewed by R5 |
 | 1.13 | Distance matrix comune → facility, precomputed once (haversine × road factor ~1.3; OSRM only if accuracy is challenged); never queried live | `distances.parquet` | Maria's comune shows about 45 km to her hospital |
 
@@ -211,7 +211,7 @@ The critical path is R1 and R5 in week 2.
 
 | Day | Step | Done when |
 |---|---|---|
-| 1 | 2.16 WebSocket client; Mappa from local GeoJSON (fallback: comune table, as in the prototype); Percorsi (Sankey) | Map recolours each tick, offline |
+| 1 | 2.16 WebSocket client; Mappa from local GeoJSON (fallback: comune table, as in the prototype); Percorsi (Sankey) | Map recolours each tick |
 | 2 | 2.17 Chiedi (investigation steps appear one by one, "verificato" badge slot); Paziente 360 (timeline, with/without toggle) | Driven by real API data |
 | 3 | 2.18 Impostazioni (autonomy per action type); Approvazioni (queue, approve and reject call the API) | Approve in UI changes the audit log |
 | 4 | 2.19 What-if screen (sliders, run, results); Confronto split screen with counters | Matches §7.1 outputs |
@@ -224,7 +224,7 @@ The critical path is R1 and R5 in week 2.
 | 1 | 2.21 Acceptance tests from AC stubs, run locally with `uv run pytest -m acceptance` |
 | 2 | 2.22 Check AC1–AC3 on real data; file defects |
 | 3 | 2.23 **Checkpoint:** core runs end-to-end? Decide which optional layers enter (Phase 3) |
-| 4 | 2.24 Demo script v1: trigger sentences, operator clicks, timings from Solution Plan §11 with the pacing of D21, checked with a stopwatch. The opening says plainly that rules and XGBoost decide, the LLM only writes the sentences, and those sentences are generated in advance because everything runs offline without a GPU (D24) |
+| 4 | 2.24 Demo script v1: trigger sentences, operator clicks, timings from Solution Plan §11 with the pacing of D21, checked with a stopwatch. The opening says plainly that rules and XGBoost decide, the LLM only writes the sentences, and those sentences are generated in advance because everything runs locally on laptops without a GPU (D24) |
 | 5 | 2.25 Technical review with the mentor |
 
 **Exit gate (end of week 3):** steps 1–7, 9 and 10 of the demo run end-to-end on simulator data with the cache. AC1–AC8, AC13, AC14 and AC17 have passing or measured tests.
@@ -249,19 +249,19 @@ The critical path is R1 and R5 in week 2.
 
 ## 9. Phase 4 — Stabilisation and demo readiness (Week 4)
 
-**Goal:** the demo runs 10 times in a row, offline, on the main and the backup machine.
+**Goal:** the demo runs 10 times in a row on the main and the backup machine.
 
 | Day | Step | Owner | Done when |
 |---|---|---|---|
 | 1 | 4.1 Feature freeze; from now on only bug-fix commits go to `main`, and each names the defect it fixes (D20) | All | R5 checks the `main` log every day |
 | 1 | 4.2 Measure AC2–AC5, AC12, AC16 and the SPEC §9 budgets on the demo machine (AC5 from the cache, D18); profile and fix the slowest path. Measure peak RAM of the full app with the 6 runs and the models the demo loads | R2, R3 | All within target; no swap |
 | 2 | 4.3 Final cache warm-up for all 3 scenarios with `qwen3:30b-instruct`; cache files hashed and copied to the backup laptop | R3 | Hash list matches on both machines; the cache completeness check passes on both |
-| 2 | 4.4 Offline hardening: fonts (IBM Plex, OFL) and all JS in the repo; grep proves no `http` asset URLs; full run with the network adapter disabled | R4 | Offline run passes |
+| 2 | 4.4 Dropped (D25): offline hardening is not needed, the demo may use the network | — | — |
 | 2 | 4.5 Record the backup video of a full run (OBS) | R4 | Video on both machines |
 | 3 | 4.6 Rehearsals with the mentor picking the envelope; timing per step; Italian colleague reviews every on-screen term and the report. Decide whether live 4B text stays on (D14): keep it only if no rehearsal shows a slip or a wait over 10 s | R5 | Under 7 min; terms approved; live-text decision recorded |
 | 4 | 4.7 10 consecutive runs; log every cache fall-back and stop | All | AC9: 10 of 10 without a stop |
 | 4 | 4.8 Final package: SPEC, code, tests, prompt log, decision register, retrospective | R5 | Tagged release `demo-v1` |
-| Show day | 4.9 Runbook from Solution Plan §12: T−24h full rehearsal, T−60 min network off, mains power, cache-only on; `qwen3:30b-instruct` not loaded (the cache replaces it); `qwen3:4b-instruct` warmed with one call only if live text stays on (step 4.6), then `ollama ps` shows only that model, T−30 min projector check, T−5 min reset, run all 6 runs to day 23 and pause (D21) | R4, R5 | — |
+| Show day | 4.9 Runbook from Solution Plan §12: T−24h full rehearsal, T−60 min mains power, cache-only on; `qwen3:30b-instruct` not loaded (the cache replaces it); `qwen3:4b-instruct` warmed with one call only if live text stays on (step 4.6), then `ollama ps` shows only that model, T−30 min projector check, T−5 min reset, run all 6 runs to day 23 and pause (D21) | R4, R5 | — |
 
 **Pacing during the demo (D21):** ×1 = 1 day per 2 s, ×4 = 2 days per s. Steps 1–3 stay paused on day 23. After the envelope, only the two runs of the chosen scenario advance. Step 4 runs at ×1 and the echo alarm appears on day ~35, after about 24 s; the operator pauses. Step 6 runs ×4 for about 14 s, to day ~62. These are the days the prototype shows.
 
@@ -282,7 +282,7 @@ The critical path is R1 and R5 in week 2.
 | Agent orchestration | Plain Python with tool calling | Replaces LangGraph: fewer dependencies |
 | LLM call log | JSON lines in `logs/llm.jsonl` (step 2.7) | Replaces Langfuse, which needs Docker and several services |
 | Prompt log | `docs/PROMPT_LOG.md`: useful development prompts and AI-assisted decisions (Definition of done) | Free |
-| Map | ISTAT boundaries as GeoJSON, drawn without a basemap | No tile server, works offline |
+| Map | ISTAT boundaries as GeoJSON, drawn without a basemap | No tile server needed |
 | Distances | Precomputed once | No live calls to public OSM servers |
 | Fonts | IBM Plex (OFL), bundled | No Google Fonts at runtime |
 | Notebooks | JupyterLab | Free |
@@ -295,9 +295,9 @@ The only real cost is hardware. Without a GPU machine, the plan still works beca
 
 ## 11. Cross-cutting rules
 
-**Definition of done** (Solution Plan §15): code reviewed by one other role, tests pass, its AC is met, it works in the end-to-end flow, and the prompt log is updated if AI was used.
+**Definition of done** (Solution Plan §15): code reviewed (approved by Bojan, D26), tests pass, its AC is met, it works in the end-to-end flow, and the prompt log is updated if AI was used.
 
-**Git (D20):** everyone commits directly to `main`; no feature branches and no pull requests. Pull before you push, and run `uv run pytest` (plus `npm run lint` for console changes) before every push. Another role reviews a step's commits before the step counts as done. Commit messages say what changed, not "refactor" boilerplate. No force-pushes to `main`.
+**Git (D20):** everyone commits directly to `main`; no feature branches and no pull requests. Pull before you push, and run `uv run pytest` (plus `npm run lint` for console changes) before every push. Bojan approves the code of each step before it is committed (D26). Commit messages say what changed, not "refactor" boilerplate. No force-pushes to `main`.
 
 **Testing layers:**
 
@@ -313,18 +313,20 @@ The only real cost is hardware. Without a GPU machine, the plan still works beca
 |---|---|---|
 | D11 | `qwen3:30b-instruct` for every cached LLM output (Investigator, Pathway Builder, Rule Advisor, Reporter, Verifier wording); `qwen3:4b-instruct` only for short live text that code fills from templates (action rationales, call-script wording), and only if step 4.6 keeps live text on. Both Apache 2.0, both fit in RAM together (about 21 GB of 32 GB), but the demo loads at most the 4B model. Plain `qwen3:4b` and `qwen3:30b` tags are thinking models and are not allowed. Backup: `nemotron-3.5-lightning:30b`, not kept on disk; pull it again only if both Qwen models fail. In the demo, every output from these agents is replayed from the 30B cache (D14). Evidence in §3.1 | Decided 27 Oct 2026 |
 | D12 | No GPU in the team: every laptop is the reference laptop (§3). One team laptop is the demo machine and generates the cache unattended (overnight runs if needed); a second identical laptop is the backup, with the same models and a hash-checked copy of the cache. Live LLM is never on the critical path | Decided 26 Oct 2026 |
-| D13 | Console in React 19 + TypeScript on Vite 8, not Angular. Reasons: the prototype's screens port almost one-to-one into components; far less boilerplate for a one-week build; AI assistants generate React most reliably; the build is static files that FastAPI serves offline. Node 24 LTS via fnm (`src/ui/.node-version`), because the laptops' Node 20 is too old for Vite 8. All API paths under `/api` so one proxy rule separates API from console. Charts, Sankey and the GeoJSON map with one library chosen in week 2 (candidate: Apache ECharts, bundled locally) | Decided 26 Oct 2026 |
+| D13 | Console in React 19 + TypeScript on Vite 8, not Angular. Reasons: the prototype's screens port almost one-to-one into components; far less boilerplate for a one-week build; AI assistants generate React most reliably; the build is static files that FastAPI serves. Node 24 LTS via fnm (`src/ui/.node-version`), because the laptops' Node 20 is too old for Vite 8. All API paths under `/api` so one proxy rule separates API from console. Charts, Sankey and the GeoJSON map with one library chosen in week 2 (candidate: Apache ECharts, bundled locally) | Decided 26 Oct 2026 |
 | D14 | Cache-first LLM: every demo LLM output is pre-generated with `qwen3:30b-instruct` and replayed. The demo starts in cache-only mode. Live 4B text for action rationales and call scripts is an optional bonus, kept only if rehearsals are clean (step 4.6). Reason: the best live investigation took 243 s against the 30 s target, and every model made at least one factual slip (§3.1) | Decided 27 Oct 2026 |
-| D15 | Plain Python agents instead of LangGraph; JSON log instead of Langfuse | Proposed |
-| D16 | Offline map from ISTAT GeoJSON, no basemap; distances precomputed | Proposed |
-| D17 | Cache scope: the cache holds only LLM outputs the demo script shows (investigations, Verifier wording, rule proposal, report, Pathway Builder, and the rationales and call scripts on screen), listed in a manifest (step 2.11). Every other rationale and call script is the template filled by code, which the Solution Plan already lists as the fallback. Reason: Intervention creates actions every day for 10,000 patients in 3 scenarios; at about 11.5 s per text (§3.1), caching all of them would take days of CPU time | Proposed |
-| D18 | AC5 is measured from the cache only (under 2 s). The live target of 30 s is not reachable on CPU laptops (best measured 243 s, §3.1) and is stated in the limitations | Proposed |
+| D15 | Plain Python agents instead of LangGraph; JSON log instead of Langfuse | Decided 28 Oct 2026 (TL review) |
+| D16 | Map from local ISTAT GeoJSON, no basemap; distances precomputed once, never queried live | Decided 28 Oct 2026 (TL review) |
+| D17 | Cache scope: the cache holds only LLM outputs the demo script shows (investigations, Verifier wording, rule proposal, report, Pathway Builder, and the rationales and call scripts on screen), listed in a manifest (step 2.11). Every other rationale and call script is the template filled by code, which the Solution Plan already lists as the fallback. Reason: Intervention creates actions every day for 10,000 patients in 3 scenarios; at about 11.5 s per text (§3.1), caching all of them would take days of CPU time | Decided 28 Oct 2026 (TL review) |
+| D18 | AC5 is measured from the cache only (under 2 s). The live target of 30 s is not reachable on CPU laptops (best measured 243 s, §3.1) and is stated in the limitations | Decided 28 Oct 2026 (TL review) |
 | D19 | The TL confirmed that we go ahead with CarePath AI as planned. This closes the Solution Plan §17 risk about ENG's healthcare portfolio having been sold | Decided 27 Oct 2026 |
 | D20 | All work is committed directly to `main`; no feature branches and no pull requests. Review happens on the commits of a step before it counts as done (Definition of done). Replaces the `r<role>/<topic>` branching rule | Decided 27 Oct 2026 |
-| D21 | Demo pacing. At T−5 min all 6 runs replay to day 23 and pause. After the envelope only the 2 runs of the chosen scenario advance; the other 4 stay paused. ×1 = 1 day per 2 s, ×4 = 2 days per s. Step 4 at ×1 until the echo alarm (day ~35), then pause; step 6 at ×4 for about 14 s (day ~62). Reason: the written pace (1 day per 2 s from T−5 min, Solution Plan §11–§12) reaches day ~180 by step 3 and fires the day-35 alarm before the demo starts, while the prototype shows days 23, 35 and 62 | Proposed |
-| D22 | Performance budgets beyond AC2 (SPEC §9): both arms of the scenario on screen under 500 ms per simulated day (×4), and what-if 2 × 182 days in under 10 s, which is about 27 ms per arm-day if the arms run one after the other, or 55 ms if they run in parallel processes. AC2 (1 s per day for one run) alone does not prove the demo works. If what-if misses AC4 at the week-3 checkpoint, the demo lever's results are precomputed per scenario and replayed | Proposed |
-| D23 | Pathway Builder lite moves from the core to option B. The demo shows it only in step 8, which belongs to option B; without option B it has no visible effect. The HF pathway JSON is written by hand in step 1.3, which the Solution Plan already names as the fallback. This frees R3's day 5 in week 3 | Proposed |
-| D24 | The demo opens by saying that rules and XGBoost decide, the LLM only writes the sentences, and the sentences are generated in advance because everything runs offline without a GPU. The intervention effects and the euro figures come from assumed probabilities, stated in the limitations. This replaces "demo uživo, ne snimak" and "LLM uživo uz keš" in Solution Plan §1, which D14 made out of date | Proposed |
+| D21 | Demo pacing. At T−5 min all 6 runs replay to day 23 and pause. After the envelope only the 2 runs of the chosen scenario advance; the other 4 stay paused. ×1 = 1 day per 2 s, ×4 = 2 days per s. Step 4 at ×1 until the echo alarm (day ~35), then pause; step 6 at ×4 for about 14 s (day ~62). Reason: the written pace (1 day per 2 s from T−5 min, Solution Plan §11–§12) reaches day ~180 by step 3 and fires the day-35 alarm before the demo starts, while the prototype shows days 23, 35 and 62 | Decided 28 Oct 2026 (TL review) |
+| D22 | Performance budgets beyond AC2 (SPEC §9): both arms of the scenario on screen under 500 ms per simulated day (×4), and what-if 2 × 182 days in under 10 s, which is about 27 ms per arm-day if the arms run one after the other, or 55 ms if they run in parallel processes. AC2 (1 s per day for one run) alone does not prove the demo works. If what-if misses AC4 at the week-3 checkpoint, the demo lever's results are precomputed per scenario and replayed | Decided 28 Oct 2026 (TL review) |
+| D23 | Pathway Builder lite moves from the core to option B. The demo shows it only in step 8, which belongs to option B; without option B it has no visible effect. The HF pathway JSON is written by hand in step 1.3, which the Solution Plan already names as the fallback. This frees R3's day 5 in week 3 | Decided 28 Oct 2026 (TL review) |
+| D24 | The demo opens by saying that rules and XGBoost decide, the LLM only writes the sentences, and the sentences are generated in advance because everything runs locally on laptops without a GPU. The intervention effects and the euro figures come from assumed probabilities, stated in the limitations. This replaces "demo uživo, ne snimak" and "LLM uživo uz keš" in Solution Plan §1, which D14 made out of date | Decided 28 Oct 2026 (TL review) |
+| D25 | The demo venue has internet, so the demo no longer has to run offline. Offline hardening (step 4.4) and the network-off rehearsals are dropped. Unchanged: models, data and the cache stay local (D5, D14: cost, privacy and CPU speed), no patient data goes to an external API (Solution Plan §14), and zero cost | Decided 28 Oct 2026 |
+| D26 | Bojan approves the code of every step before it is committed to `main`; that approval is the code review of the Definition of done. The TL reviewed all work up to 28 Oct 2026, including D15–D18, D21–D24 and SPEC changes C1–C10 | Decided 28 Oct 2026 |
 
 ## 12. Acceptance criteria map
 

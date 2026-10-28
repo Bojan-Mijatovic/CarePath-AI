@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Status | **DRAFT v0.2**, for review at the week-1 sync. Freezes as tag `spec-v1` at the end of week 2, day 2 (delivery plan, step 1.9) |
-| Last updated | 27 Oct 2026 |
+| Last updated | 28 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
 | Rule | Nobody builds against anything that is not in this file. Whoever waits on another role works with fixtures of the same shape (`testing/fixtures/`) |
@@ -435,7 +435,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 |---|---|---|---|
 | Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D | Italian colleague via R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source | R5 | week 2 |
-| Q3 | Changes C1–C10: accepted as proposed? | all, at the sync | week 1 |
+| Q3 | Changes C1–C10: accepted as proposed? **Accepted** (TL review, 28 Oct 2026) | all, at the sync | week 1 |
 | Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |
 | Q5 | Daily limit of automatic actions per facility: 50 a sensible default? | R3, R5 | week 2 |
 | Q6 | Do we need calendar dates on screen, or is "Giorno N" enough for the audience? | R5 | week 2 |
