@@ -6,6 +6,8 @@ import type { Kpi } from './lib/api'
 import { type Key, type Lang, LangContext, translator } from './lib/i18n'
 import { type StreamMessage, useStream } from './lib/stream'
 import Envelopes from './screens/Envelopes'
+import Flows from './screens/Flows'
+import MapScreen, { type RegionalAlert } from './screens/MapScreen'
 import MariaStory from './screens/MariaStory'
 import Overview from './screens/Overview'
 
@@ -38,6 +40,7 @@ export default function App() {
   const [speed, setSpeed] = useState(1)
   const [kpi, setKpi] = useState<Kpi | null>(null)
   const [feed, setFeed] = useState<FeedMessage[]>([])
+  const [alarm, setAlarm] = useState<RegionalAlert | null>(null)
   const t = translator(lang)
 
   useEffect(() => {
@@ -63,13 +66,18 @@ export default function App() {
   const onMessage = useCallback((msg: StreamMessage) => {
     if (msg.type === 'tick') {
       // A day before the last one means the server started over (reset, jump back, reconnect).
-      if (lastDay.current !== null && msg.day < lastDay.current) setFeed([])
+      if (lastDay.current !== null && msg.day < lastDay.current) {
+        setFeed([])
+        setAlarm(null)
+      }
       lastDay.current = msg.day
       setDay(msg.day)
       if (msg.payload.kpi) setKpi(msg.payload.kpi)
       if (msg.payload.speed !== undefined) setSpeed(msg.payload.speed)
     } else {
       setFeed((items) => [msg, ...items].slice(0, FEED_SIZE))
+      // The Mappa banner keeps the latest regional alarm; patient alerts would push it out of the feed.
+      if (msg.type === 'alert' && msg.payload.level === 'regional') setAlarm({ day: msg.day, payload: msg.payload })
     }
   }, [])
   const connection = useStream(onMessage)
@@ -121,6 +129,10 @@ export default function App() {
             <section className="content">
               {screen === 'panoramica' ? (
                 <Overview day={day} kpi={kpi} />
+              ) : screen === 'mappa' ? (
+                <MapScreen day={day} pathwayId={kpi?.pathway_id ?? null} alert={alarm} />
+              ) : screen === 'percorsi' ? (
+                <Flows day={day} pathwayId={kpi?.pathway_id ?? null} />
               ) : (
                 <p className="placeholder">{t('placeholder.screen', { screen: t(`nav.${screen}` as Key) })}</p>
               )}

@@ -7,7 +7,9 @@ on screen at the chosen speed and pushes each day's messages to every connected 
 """
 
 import asyncio
+import json
 import logging
+import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Literal
@@ -17,6 +19,7 @@ from fastapi import APIRouter, FastAPI, HTTPException, WebSocket, WebSocketDisco
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from engine import pathway as pathway_model
 from engine import queries, story
 from engine.tick import Demo
 
@@ -209,6 +212,14 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
     @api.get("/actions")
     def actions(run: str | None = None, status: str | None = None) -> list[dict]:
         return live.read(run, lambda con: queries.actions(con, status))
+
+    @api.get("/pathways/{pathway_id}")
+    def pathway(pathway_id: str) -> dict:
+        """The pathway file as it is (C22): the console names steps and drugs from it, not from code (AC17)."""
+        path = pathway_model.PATHWAYS_DIR / f"{pathway_id}.json"
+        if not re.fullmatch(pathway_model.ID, pathway_id) or not path.is_file():
+            raise HTTPException(404, f"no pathway {pathway_id}")
+        return json.loads(path.read_text(encoding="utf-8"))
 
     app.include_router(api)
 

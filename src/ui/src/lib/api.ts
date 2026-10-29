@@ -66,10 +66,41 @@ export type Patient360 = {
   timeline: (TimelineEvent | TimelineAction)[]
 }
 
+/** GET /api/map (SPEC §5.2, C18): one row per comune with enrolled patients. */
+export type MapRow = {
+  comune_istat: string
+  pathway_id: string
+  adherence_pct: number | null
+  risk_mean: number | null
+  high_risk_patients: number | null
+  readmission_rate_30d: number | null
+  alarm: boolean
+}
+
+export type PathwayStatus = 'on_track' | 'due_soon' | 'overdue' | 'dropped'
+
+/** GET /api/sankey (SPEC §5.2, C15): last step done → next step, by status. */
+export type SankeyRow = {
+  pathway_id: string
+  from_step: string | null
+  to_step: string | null
+  status: PathwayStatus
+  patients: number
+}
+
+/** GET /api/pathways/{id} (SPEC §4, C22): the parts of the pathway file the console reads. */
+export type Pathway = {
+  pathway_id: string
+  name: string
+  steps: { id: string; label: Bilingual }[]
+  eligibility: { drug_names: Record<string, Bilingual> }
+}
+
 export type Loaded<T> = { data?: T; error?: string }
 
-/** GET a JSON path under /api once; `path` null waits. */
-export function useApi<T>(path: string | null): Loaded<T> {
+/** GET a JSON path under /api; `path` null waits. A new `refresh` value (the day) fetches it again and keeps
+ * the last data on screen until the new data arrives. */
+export function useApi<T>(path: string | null, refresh?: number | null): Loaded<T> {
   const [state, setState] = useState<Loaded<T> & { path?: string }>({})
   useEffect(() => {
     if (path === null) return
@@ -84,6 +115,6 @@ export function useApi<T>(path: string | null): Loaded<T> {
     return () => {
       live = false
     }
-  }, [path])
+  }, [path, refresh])
   return state.path === path ? state : {}
 }

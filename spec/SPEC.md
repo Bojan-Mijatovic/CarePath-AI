@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **v1.8**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026. Changes follow §0 |
+| Status | **v1.9**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), proposed 29 Oct 2026. Changes follow §0 |
 | Last updated | 29 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C21 proposed in v1.1–v1.8)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C22 proposed in v1.1–v1.9)
 
 | # | Change | Why |
 |---|---|---|
@@ -51,6 +51,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C19 (D37) | Risk defined (§5.1): the chance of an unplanned admission in the next 30 days; high risk is 0.10 or more; drivers only for high-risk patients. `map_comuni` gets `risk_mean` and `high_risk_patients`; `risk_drivers` returns `{drivers, patients}` over the segment's high-risk patients; both risk tools give `empty_result` only on a run where Risk never ran (§6) | The Solution Plan names XGBoost and top-3 drivers but no label, threshold or tool computation. Measured on seed 42 (not trained on): AUC 0.62 in all 3 scenarios, equal to the simulator's own hazard (0.62), so the 30-day outcome is mostly chance; a 7-day label scored 0.71 but rested on weight gain, which the pathway rule already catches, and ranked patients who left telemonitoring lower. 0.10 marks 1.2% of patients, 19% of whom are admitted within 30 days (7×). TreeSHAP for all 10,000 patients took 500 ms a tick, for the high-risk ones 12 ms |
 | C20 (D38) | `worklist_today` defined (§5.2): one list per day, agents arm only, everyone out of hospital with an overdue step or a high risk, ranked by risk; reasons filled by code; `pathways` a list of `pathway_id`s; `outcome` the day's `CALL` code. Pathway steps get a `label` and drugs a name in `drug_names`, both `{"it", "en"}` (§4) | Q7 left `pathways` and `outcome` open, and the list needs history: demo step 9a goes back to day 31's list on day 62. Reasons in two languages name steps and drugs; without names in the pathway file the code would have to name the disease (AC17). On day 30 of scenario 2 the list holds about 2,400 patients; the console shows the top 20 per Centro Servizi (step 2.20) |
 | C21 (D39) | Monitoring defined (§4, §5.3): how rules are evaluated and explained, a step's `max_wait_days` for the regional alarm, the tables `deviations` and `alerts`, patient alerts for high-risk patients only, pulls read by `patients_overdue` | The SPEC named Monitoring's outputs but not their rules or storage: "regional alarm when the same deviation exceeds a threshold at one facility" had no threshold, alerts had nowhere to live, and a pulled deadline existed only in memory, so a tool and the engine disagreed on overdue visits (239 against 314, caught by a test). Measured on scenario 2: about 160 new deviations a day, 8 of them of high-risk patients; a 30-day echo threshold alarms on days 29, 33 and 32 in scenarios 1–3 and nowhere else |
+| C22 (D40) | `GET /pathways/{pathway_id}` returns the pathway file (§10) | The Percorsi screen (step 2.16) must name steps, and the labels live in the pathway file (C20); no endpoint served them, and labels written into the console would break AC17. The file is returned unchanged, so it is its own fixture |
 
 ## 1. Scope
 
@@ -458,6 +459,7 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `GET /worklist?run&day` | `worklist_today` of `day`, or of the latest day, without the `day` column, by `rank` (C20) |
 | `GET /patients/{id}?run&day` | Paziente 360: timeline of events and actions, state per pathway (shape below, C15). With `day`, a recording from `demo/story/` (C17): only `p_00001`, `s2_baseline`, day 62 exists; anything else is 404 |
 | `GET /actions?run&status` | action queue and feed |
+| `GET /pathways/{pathway_id}` | the pathway file of §4 as it is, so the console names steps and drugs from data (C22); 404 for an unknown id. Needs no run. `spec/pathways/<pathway_id>.json` is its fixture |
 | `POST /actions/{id}/approve`, `/reject`, `/undo` | decisions |
 | `GET /settings`, `PUT /settings/autonomy` | autonomy per action type |
 | `POST /ask` `{question}` | starts an investigation; steps arrive on the WebSocket |

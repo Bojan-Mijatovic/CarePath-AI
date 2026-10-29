@@ -7,6 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.main import create_app
+from engine import pathway as pathway_model
 from engine import story
 from engine.tick import Demo
 
@@ -42,6 +43,15 @@ def test_built_console_is_served_at_root(tmp_path):
 def test_api_works_without_built_console():
     client = TestClient(create_app(ui_dir=None))
     assert client.get("/api/health").status_code == 200
+
+
+def test_pathway_is_the_spec_file(tmp_path):
+    # C22: no runs needed; the file in spec/pathways/ is the response and its fixture.
+    client = make_client(tmp_path)
+    expected = json.loads((pathway_model.PATHWAYS_DIR / "hf_lombardia_v1.json").read_text(encoding="utf-8"))
+    assert client.get("/api/pathways/hf_lombardia_v1").json() == expected
+    for missing in ("copd_v1", "pathway.schema", "..%2Fpathways%2Fhf_lombardia_v1"):
+        assert client.get(f"/api/pathways/{missing}").status_code == 404
 
 
 def test_data_waits_for_the_runs(tmp_path):

@@ -298,6 +298,165 @@
   margin: 6px 0;
 }
 
+/* Mappa: the prototype's adherence bands and alarm */
+.mapscreen,
+.flows {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mapscreen .panel,
+.flows .panel {
+  flex: none; /* in a column, the panel's flex-basis would be a height */
+}
+
+.alarm {
+  padding: 14px 18px;
+  border: 1px solid #f0b88a;
+  border-radius: 12px;
+  background: #fff1e6;
+  color: #7a2c0d;
+}
+
+.alarm-head {
+  font-weight: 600;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.band-high {
+  background: #d9efe2;
+  fill: #d9efe2;
+}
+
+.band-medium {
+  background: #fbe3b9;
+  fill: #fbe3b9;
+}
+
+.band-low {
+  background: #f2b49a;
+  fill: #f2b49a;
+}
+
+.band-none {
+  background: #eef2f5;
+  fill: #eef2f5;
+}
+
+.swatch.outline {
+  outline: 2px solid #a33b12;
+  outline-offset: -2px;
+}
+
+.map {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.map path {
+  stroke: #fff;
+  stroke-width: 0.6;
+  fill-rule: evenodd;
+}
+
+.map path.alarm-outline {
+  stroke: #a33b12;
+  stroke-width: 2;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.tile.alarm-outline {
+  outline: 2px solid #a33b12;
+}
+
+.tile-name {
+  font-weight: 600;
+}
+
+/* Percorsi: two-column Sankey, links coloured by status */
+.sankey {
+  width: 100%;
+  height: auto;
+  font-size: 13px;
+  fill: var(--ink);
+}
+
+.sankey-head {
+  font-weight: 600;
+  fill: var(--ink-muted);
+}
+
+.sankey .node {
+  fill: var(--ink-soft);
+}
+
+.sankey .link {
+  opacity: 0.6;
+}
+
+.sankey .link:hover {
+  opacity: 0.9;
+}
+
+.status-on_track {
+  background: #2f9e6e;
+  fill: #2f9e6e;
+}
+
+.status-due_soon {
+  background: #e6b868;
+  fill: #e6b868;
+}
+
+.status-overdue {
+  background: #d9825f;
+  fill: #d9825f;
+}
+
+.status-dropped {
+  background: #a33b12;
+  fill: #a33b12;
+}
+
 /* Attività agenti */
 .feed {
   flex: 1 1 280px;
