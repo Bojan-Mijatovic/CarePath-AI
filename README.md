@@ -5,6 +5,7 @@ AI agents that check every day whether 10,000 chronic patients in ATS della Val 
 - What we build and why: [docs/CarePath-AI-Solution-Plan.pdf](docs/CarePath-AI-Solution-Plan.pdf)
 - How we deliver it, phase by phase: [docs/DELIVERY_PLAN.md](docs/DELIVERY_PLAN.md)
 - Demo screens: [docs/CarePath-AI-UI-demo-srpski.html](docs/CarePath-AI-UI-demo-srpski.html)
+- Technologies, tools and AI models: [docs/TECH_STACK.md](docs/TECH_STACK.md)
 
 ## Repository layout
 
