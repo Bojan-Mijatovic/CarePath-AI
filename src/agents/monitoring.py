@@ -146,6 +146,9 @@ class Monitoring:
                     continue
                 result = tools.call(ctx, "wait_by_hospital", {"pathway_id": self.pathway.pathway_id, "step": s.id,
                                                               "period_days": WAIT_WINDOW_DAYS})
+                if result.get("error", {}).get("code", "empty_result") != "empty_result":
+                    # A pathway the tools cannot read must not silence the alarm (found by the AC17 test).
+                    raise RuntimeError(f"wait_by_hospital for {s.id}: {result['error']}")
                 for name, wait in sorted(result.get("data", {}).items()):
                     key = (self.facility_ids[name], s.id)
                     if wait > s.max_wait_days and key not in self.open:

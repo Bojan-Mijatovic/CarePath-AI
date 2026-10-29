@@ -1,7 +1,9 @@
 import type { Patient360, TimelineEvent } from './api'
-import { DRUG_NAMES, formatNumber, isKey, type Key, type Lang, type Translator } from './i18n'
+import { type Bilingual, formatNumber, isKey, type Key, type Lang, type Translator } from './i18n'
 
-/** Maria's story without CarePath (demo step 1), computed from her baseline-arm timeline. */
+/** Maria's story without CarePath (demo step 1), computed from her baseline-arm timeline. A scripted
+ * narrative about one patient, so it is outside the AC17 console check; drug names still come from the
+ * pathway file. */
 
 export type Line = { day: number; key: Key; vars?: Record<string, string | number>; alarm?: boolean }
 
@@ -14,7 +16,7 @@ function isEvent(item: Patient360['timeline'][number]): item is TimelineEvent {
 
 /** The moments the story tells, each computed from her events: discharge, the drug running out, the
  * weight rising, the readmission. */
-export function storyLines(p: Patient360, lang: Lang): Line[] {
+export function storyLines(p: Patient360, lang: Lang, drugNames: Record<string, Bilingual>): Line[] {
   const events = p.timeline.filter(isEvent)
   const discharge = events.find((e) => e.event_type === 'DISCHARGE' && e.day >= 0)
   if (!discharge) return []
@@ -27,7 +29,7 @@ export function storyLines(p: Patient360, lang: Lang): Line[] {
     const day = supplyEnd + DAYS_WITHOUT_DRUG + 1
     const next = dispenses.find((e) => e.day > last.day)
     if (!next || next.day > day) {
-      const drug = DRUG_NAMES[last.code ?? ''] ?? last.code ?? ''
+      const drug = drugNames[last.code ?? '']?.[lang] ?? last.code ?? ''
       lines.push({ day, key: 'maria.noDrug', vars: { days: day - supplyEnd, drug } })
     }
   }

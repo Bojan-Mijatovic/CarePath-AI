@@ -1,11 +1,12 @@
-import { type Action, type Kpi, useApi } from '../lib/api'
-import { agentName, formatNumber, formatPercent, label, PNE_ITALY, useLang } from '../lib/i18n'
+import { type Action, type Kpi, type Pathway, useApi } from '../lib/api'
+import { agentName, formatNumber, formatPercent, label, useLang } from '../lib/i18n'
 
 /** Demo step 3 (prototype "Pregled"): headline numbers of the day, the approval queue, the PNE indicator. */
-export default function Overview({ day, kpi }: { day: number | null; kpi: Kpi | null }) {
+export default function Overview({ day, kpi, pathway }: { day: number | null; kpi: Kpi | null; pathway: Pathway | null }) {
   const { lang, t } = useLang()
   const { data: proposed } = useApi<Action[]>('/api/actions?status=proposed')
-  if (day === null || kpi === null) return <p className="placeholder">{t('overview.waiting')}</p>
+  if (day === null || kpi === null || pathway === null) return <p className="placeholder">{t('overview.waiting')}</p>
+  const reference = pathway.readmission_reference
   const queue = (proposed ?? []).filter((a) => a.created_day <= day)
   const n = (x: number) => formatNumber(lang, x)
 
@@ -16,7 +17,7 @@ export default function Overview({ day, kpi }: { day: number | null; kpi: Kpi | 
         <div className="card">
           <div className="card-label">{t('card.patients')}</div>
           <div className="card-value">{n(kpi.patients)}</div>
-          <div className="card-sub">{t('card.patientsSub')}</div>
+          <div className="card-sub">{t('card.patientsSub', { pathway: pathway.label[lang] })}</div>
         </div>
         <div className="card">
           <div className="card-label">{t('card.onTrack')}</div>
@@ -59,14 +60,18 @@ export default function Overview({ day, kpi }: { day: number | null; kpi: Kpi | 
         </section>
         <section className="panel" aria-labelledby="h-pne">
           <h2 id="h-pne">{t('pne.title')}</h2>
-          <div className="card-sub">{t('pne.sub')}</div>
+          <div className="card-sub">{t('pne.sub', { pathway: pathway.label[lang] })}</div>
           <div className="pne">
             <span className="card-value">
               {kpi.readmission_rate_30d === null ? '–' : formatPercent(lang, kpi.readmission_rate_30d)}
             </span>
             <span className="card-sub">{t('pne.count', { count: n(kpi.readmissions_30d) })}</span>
           </div>
-          <div className="card-sub">{t('pne.reference', { rate: formatPercent(lang, PNE_ITALY, 2) })}</div>
+          {reference && (
+            <div className="card-sub">
+              {t('pne.reference', { source: reference.label[lang], rate: formatPercent(lang, reference.rate, 2) })}
+            </div>
+          )}
         </section>
       </div>
     </div>

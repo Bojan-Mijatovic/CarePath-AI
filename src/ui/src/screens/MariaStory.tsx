@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { type Patient360, useApi } from '../lib/api'
+import { type Pathway, type Patient360, useApi } from '../lib/api'
 import { formatNumber, useLang } from '../lib/i18n'
 import { conditions, storyLines } from '../lib/story'
 
@@ -8,6 +8,8 @@ import { conditions, storyLines } from '../lib/story'
 export default function MariaStory({ onStart, langSwitch }: { onStart: () => void; langSwitch: ReactNode }) {
   const { lang, t } = useLang()
   const { data, error } = useApi<Patient360>('/api/patients/p_00001?run=s2_baseline&day=62')
+  const pathwayId = data?.pathways[0]?.pathway_id
+  const { data: pathway } = useApi<Pathway>(typeof pathwayId === 'string' ? `/api/pathways/${pathwayId}` : null)
   const p = data?.patient
 
   return (
@@ -39,10 +41,11 @@ export default function MariaStory({ onStart, langSwitch }: { onStart: () => voi
           <h2 id="h-without">{t('maria.without')}</h2>
           <div className="story-sub">{t('maria.dayByDay')}</div>
           {error && <p className="intro-error">{t('error.load', { detail: error })}</p>}
-          {!data && !error && <p className="story-sub">{t('loading')}</p>}
+          {!(data && pathway) && !error && <p className="story-sub">{t('loading')}</p>}
           <ol className="story-lines">
             {data &&
-              storyLines(data, lang).map((line) => (
+              pathway &&
+              storyLines(data, lang, pathway.eligibility.drug_names).map((line) => (
                 <li key={line.key} className={line.alarm ? 'alarm' : undefined}>
                   <span className="story-day">{t('top.day', { day: line.day })}</span>
                   <span>{t(line.key, line.vars)}</span>

@@ -92,6 +92,8 @@ export type SankeyRow = {
 export type Pathway = {
   pathway_id: string
   name: string
+  label: Bilingual
+  readmission_reference: { rate: number; label: Bilingual } | null
   steps: { id: string; label: Bilingual }[]
   eligibility: { drug_names: Record<string, Bilingual> }
 }

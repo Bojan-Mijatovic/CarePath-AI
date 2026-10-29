@@ -39,7 +39,7 @@ export default function MapScreen({
   return (
     <div className="mapscreen">
       {alert && (
-        <div className="alarm" role="alert">
+        <div className="alarm-banner" role="alert">
           <div className="alarm-head">{t('map.regional', { day: alert.day })}</div>
           <div>{alert.payload.text[lang]}</div>
         </div>

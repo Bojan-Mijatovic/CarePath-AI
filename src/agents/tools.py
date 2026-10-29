@@ -470,7 +470,7 @@ def compare_segments(ctx: Context, a: CompareArgs) -> dict:
 def _pathway(pathway_id: str) -> Pathway:
     if not (PATHWAYS_DIR / f"{pathway_id}.json").is_file():
         raise ToolError("unknown_pathway", f"no pathway {pathway_id!r}")
-    return load(pathway_id)
+    return load(pathway_id, PATHWAYS_DIR)  # read at call time, so a test can point the tools at other files
 
 
 def _step(p: Pathway, step: str) -> Step:

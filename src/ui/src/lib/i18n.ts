@@ -20,7 +20,6 @@ const STRINGS = {
   'top.day': { it: 'Giorno {day}', en: 'Day {day}' },
   'top.speed': { it: 'Velocità ×{speed}', en: 'Speed ×{speed}' },
   'top.synthetic': { it: 'Dati sintetici', en: 'Synthetic data' },
-  'top.pathway': { it: 'Scompenso cardiaco', en: 'Heart failure' },
   'top.language': { it: 'Lingua', en: 'Language' },
   'conn.connecting': { it: 'connessione…', en: 'connecting…' },
   'conn.open': { it: 'connesso', en: 'connected' },
@@ -80,7 +79,7 @@ const STRINGS = {
   },
   'overview.waiting': { it: 'In attesa del primo giorno della simulazione…', en: 'Waiting for the first simulated day…' },
   'card.patients': { it: 'Pazienti seguiti', en: 'Patients followed' },
-  'card.patientsSub': { it: 'PDTA scompenso cardiaco', en: 'Heart failure pathway (PDTA)' },
+  'card.patientsSub': { it: 'PDTA: {pathway}', en: 'Pathway (PDTA): {pathway}' },
   'card.onTrack': { it: 'In linea con il PAI', en: 'On track with the PAI' },
   'card.onTrackSub': { it: '{overdue} in ritardo · {dropped} fuori percorso', en: '{overdue} overdue · {dropped} off the pathway' },
   'card.actions': { it: 'Azioni degli agenti', en: 'Agent actions' },
@@ -94,9 +93,9 @@ const STRINGS = {
   'approvals.reject': { it: 'Rifiuta', en: 'Reject' },
   'approvals.later': { it: 'Le decisioni arrivano con il passo 2.18', en: 'Decisions come with step 2.18' },
   'pne.title': { it: 'Riammissioni a 30 giorni', en: '30-day readmissions' },
-  'pne.sub': { it: 'Indicatore PNE, scompenso cardiaco, dal giorno 0', en: 'PNE indicator, heart failure, since day 0' },
+  'pne.sub': { it: 'Indicatore PNE · {pathway} · dal giorno 0', en: 'PNE indicator · {pathway} · since day 0' },
   'pne.count': { it: '{count} riammissioni', en: '{count} readmissions' },
-  'pne.reference': { it: 'Italia {rate} (PNE 2025)', en: 'Italy {rate} (PNE 2025)' },
+  'pne.reference': { it: '{source}: {rate}', en: '{source}: {rate}' },
 
   'map.regional': { it: 'Allarme regionale · giorno {day}', en: 'Regional alarm · day {day}' },
   'map.legend': { it: 'Aderenza al PDTA per comune:', en: 'Adherence to the PDTA by comune:' },
@@ -147,11 +146,6 @@ const STRINGS = {
 } satisfies Record<string, Bilingual>
 
 export type Key = keyof typeof STRINGS
-
-/** National 30-day HF readmission rate, 2024 (PNE 2025, Agenas; brief/problem.md). */
-export const PNE_ITALY = 0.1187
-/** Drug names for the ATC codes of the pathways (SPEC §4); the same in both languages. */
-export const DRUG_NAMES: Record<string, string> = { C03CA01: 'furosemide' }
 
 export type Translator = (key: Key, vars?: Record<string, string | number>) => string
 

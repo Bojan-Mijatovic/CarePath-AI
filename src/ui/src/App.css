@@ -311,7 +311,7 @@
   flex: none; /* in a column, the panel's flex-basis would be a height */
 }
 
-.alarm {
+.alarm-banner {
   padding: 14px 18px;
   border: 1px solid #f0b88a;
   border-radius: 12px;

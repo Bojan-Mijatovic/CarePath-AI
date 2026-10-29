@@ -87,6 +87,28 @@
       "title": "Escalation",
       "type": "object"
     },
+    "Reference": {
+      "additionalProperties": false,
+      "properties": {
+        "rate": {
+          "description": "published 30-day readmission rate, a fraction",
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Rate",
+          "type": "number"
+        },
+        "label": {
+          "$ref": "#/$defs/Bilingual",
+          "description": "where the rate comes from, for example Italia, PNE 2025"
+        }
+      },
+      "required": [
+        "rate",
+        "label"
+      ],
+      "title": "Reference",
+      "type": "object"
+    },
     "Rule": {
       "additionalProperties": false,
       "properties": {
@@ -343,9 +365,25 @@
       "type": "string"
     },
     "name": {
-      "description": "Italian, shown in the UI",
+      "description": "Italian name of the PDTA document",
       "title": "Name",
       "type": "string"
+    },
+    "label": {
+      "$ref": "#/$defs/Bilingual",
+      "description": "the pathway as the console names it, for example in the top bar"
+    },
+    "readmission_reference": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Reference"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "a published rate the console shows next to the run's"
     },
     "eligibility": {
       "$ref": "#/$defs/Eligibility"
@@ -386,6 +424,7 @@
   "required": [
     "pathway_id",
     "name",
+    "label",
     "eligibility",
     "status_thresholds",
     "steps",

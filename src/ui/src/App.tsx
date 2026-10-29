@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import ActivityFeed from './components/ActivityFeed'
 import LangSwitch from './components/LangSwitch'
-import type { Kpi } from './lib/api'
+import { type Kpi, type Pathway, useApi } from './lib/api'
 import { type Key, type Lang, LangContext, translator } from './lib/i18n'
 import { type StreamMessage, useStream } from './lib/stream'
 import Envelopes from './screens/Envelopes'
@@ -81,6 +81,9 @@ export default function App() {
     }
   }, [])
   const connection = useStream(onMessage)
+  const pathwayId = kpi?.pathway_id ?? null
+  // Names come from the pathway file, so the console names no disease itself (AC17).
+  const { data: pathway } = useApi<Pathway>(pathwayId ? `/api/pathways/${pathwayId}` : null)
   const go = (next: Screen) => {
     window.history.pushState(null, '', `#${next}`) // pushState fires no hashchange, so set the screen too
     setScreen(next)
@@ -117,7 +120,7 @@ export default function App() {
         <main className="main">
           <header className="topbar">
             <h1>{t(`nav.${screen}` as Key)}</h1>
-            <span className="tag">{t('top.pathway')}</span>
+            {pathway && <span className="tag">{pathway.label[lang]}</span>}
             <span className="spacer" />
             <span className="day">{day === null ? '–' : t('top.day', { day })}</span>
             <span className="speed">{t('top.speed', { speed })}</span>
@@ -128,11 +131,11 @@ export default function App() {
           <div className="body">
             <section className="content">
               {screen === 'panoramica' ? (
-                <Overview day={day} kpi={kpi} />
+                <Overview day={day} kpi={kpi} pathway={pathway ?? null} />
               ) : screen === 'mappa' ? (
-                <MapScreen day={day} pathwayId={kpi?.pathway_id ?? null} alert={alarm} />
+                <MapScreen day={day} pathwayId={pathwayId} alert={alarm} />
               ) : screen === 'percorsi' ? (
-                <Flows day={day} pathwayId={kpi?.pathway_id ?? null} />
+                <Flows day={day} pathwayId={pathwayId} />
               ) : (
                 <p className="placeholder">{t('placeholder.screen', { screen: t(`nav.${screen}` as Key) })}</p>
               )}

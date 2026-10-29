@@ -128,9 +128,16 @@ class Escalation(Strict):
     high_risk_skips_reminder: bool
 
 
+class Reference(Strict):
+    rate: float = Field(gt=0, lt=1, description="published 30-day readmission rate, a fraction")
+    label: Bilingual = Field(description="where the rate comes from, for example Italia, PNE 2025")
+
+
 class Pathway(Strict):
     pathway_id: str = Field(pattern=ID)
-    name: str = Field(description="Italian, shown in the UI")
+    name: str = Field(description="Italian name of the PDTA document")
+    label: Bilingual = Field(description="the pathway as the console names it, for example in the top bar")
+    readmission_reference: Reference | None = Field(None, description="a published rate the console shows next to the run's")
     eligibility: Eligibility
     status_thresholds: StatusThresholds
     steps: list[Step] = Field(min_length=1)
