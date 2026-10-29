@@ -51,7 +51,7 @@ def test_miss_calls_the_model_and_the_next_call_hits_the_cache(tmp_path):
     first = complete(gateway(tmp_path, "cache_first", client))
     assert (first.cache_hit, first.data) == (False, Summary(text="Tutto bene", patients=3))
     call = client.calls[0]
-    assert call["options"] == {"temperature": 0, "seed": llm.SEED}
+    assert call["options"] == {"temperature": 0, "seed": llm.SEED, "num_ctx": llm.NUM_CTX}
     assert call["think"] is False
     assert call["format"] == Summary.model_json_schema()
     second = complete(gateway(tmp_path, "cache_only", FakeClient()))  # no answer left: it must not call

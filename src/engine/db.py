@@ -171,6 +171,16 @@ TABLES = {
         text              JSON NOT NULL,
         investigation_id  VARCHAR,
         closed_day        INTEGER""",
+    "investigations": """
+        investigation_id  VARCHAR PRIMARY KEY,
+        day               INTEGER NOT NULL,
+        pathway_id        VARCHAR NOT NULL,
+        alert_id          VARCHAR,
+        question          JSON NOT NULL,
+        steps             JSON NOT NULL,
+        claims            JSON NOT NULL,
+        conclusion        JSON NOT NULL,
+        prompt_version    VARCHAR NOT NULL""",
     "actions": f"""
         action_id       VARCHAR PRIMARY KEY,
         agent           VARCHAR NOT NULL,

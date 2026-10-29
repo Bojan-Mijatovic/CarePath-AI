@@ -88,6 +88,7 @@ Everything runs with `uv run` from the repository root.
 | `uv run python testing/fixtures/scenario.py` | rewrites the JSON fixtures of every contract (`testing/fixtures/README.md`) | 1.23 |
 | `uv run python testing/benchmark/questions.py` | rewrites the benchmark questions and their expected answers from the tools | 1.24 |
 | `$env:CAREPATH_LIVE_LLM = "1"; uv run pytest testing/test_llm.py` | the LLM gateway tests plus one real call to `qwen3:4b-instruct` (about 10 s) | 2.7 |
+| `uv run python testing/investigation_run.py [1 2 3] [--live]` | the Investigator on each scenario's regional alarm; `--live` calls `qwen3:30b-instruct` and fills `demo/cache/` (about 4 minutes per scenario), without it the answer is replayed from the cache | 2.9 |
 | `uv run pytest -m acceptance` | only the acceptance tests AC1–AC19 | 1.7 |
 | `uv run carepath-api` | API and built console on <http://127.0.0.1:8000> | 0.7 |
 | `uv run carepath-db s2_agents` | empty run database `runs/s2_agents.duckdb` with every SPEC table | 0.9 |

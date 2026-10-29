@@ -33,6 +33,7 @@ MODELS = (LARGE, SMALL)
 SEED = 42
 DEMO_TIMEOUT_S, WARMUP_TIMEOUT_S = 20, 600
 KEEP_ALIVE = "30m"  # the model in use stays loaded between calls
+NUM_CTX = 8192  # Ollama's default of 4096 cut the Investigator's prompt: 8 tool schemas alone are ~3,000 tokens
 Mode = Literal["live", "cache_first", "cache_only"]
 MODES = ("live", "cache_first", "cache_only")
 
@@ -138,7 +139,7 @@ class Gateway:
         for attempt in range(2):  # the answer, then one retry (SPEC §8)
             try:
                 response = self.client().chat(model=model, messages=conversation, tools=tools, format=json_schema,
-                                              options={"temperature": 0, "seed": SEED}, think=False,
+                                              options={"temperature": 0, "seed": SEED, "num_ctx": NUM_CTX}, think=False,
                                               keep_alive=KEEP_ALIVE)
             except (httpx.TimeoutException, TimeoutError) as e:
                 raise LLMTimeout(f"{agent}: {model} gave no answer in {self.timeout():.0f} s") from e

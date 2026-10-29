@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Sul percorso Scompenso cardiaco, l'attesa media per l'ecocardiogramma nell'ultimo periodo di 7 giorni è di 31,0 giorni presso l'Ospedale B, superiore alla soglia PDTA di 30 giorni.\", \"L'Ospedale B ha attualmente 0 slot disponibili per l'esame ecocardiogramma, mentre l'Ospedale A ha 114 slot e l'Ospedale C ne ha 102, indicando un margine significativo di capacità disponibile negli altri ospedali dell'ATS.\", \"Presso l'ASST Cremona (Ospedale B), ci sono 17 pazienti in ritardo per l'ecocardiogramma, con un massimo di 47 giorni di ritardo; i pazienti più in ritardo sono p_02531 (47 giorni), p_01182 e p_08948 (40 giorni), p_07322 (39 giorni), e p_05433 (26 giorni).\", \"La compliance al percorso Scompenso cardiaco nell'ASST Cremona è del 83,65% per l'ecocardiogramma, del 85,39% per il BNP, del 79,8% per la visita cardiologica e del 55,25% per il telemonitoraggio, indicando un'area critica nel telemonitoraggio e un'efficienza relativamente bassa nel completamento del percorso.\"], \"conclusion\": \"L'allarme è causato da un'attesa media di 31,0 giorni per l'ecocardiogramma presso l'Ospedale B, con 0 slot disponibili e 17 pazienti in ritardo, tra cui alcuni con ritardi superiori a 40 giorni. Il margine di intervento è presente negli altri ospedali dell'ATS (A e C), che hanno rispettivamente 114 e 102 slot disponibili. Si suggerisce di redistribuire le prenotazioni verso Ospedale A o Ospedale C per ridurre i tempi di attesa e i ritardi, specialmente per i pazienti più in ritardo, e di monitorare il telemonitoraggio, che presenta la più bassa compliance.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"On the pathway Heart Failure, the average waiting time for an echocardiogram in the last 7-day period is 31.0 days at Hospital B, exceeding the PDTA threshold of 30 days.\",\n    \"Hospital B currently has 0 available slots for the echocardiogram examination, while Hospital A has 114 slots and Hospital C has 102 slots, indicating a significant capacity margin available at the other hospitals within the ATS.\",\n    \"At ASST Cremona (Hospital B), there are 17 patients delayed for the echocardiogram, with a maximum delay of 47 days; the patients with the longest delays are p_02531 (47 days), p_01182 and p_08948 (40 days), p_07322 (39 days), and p_05433 (26 days).\",\n    \"Compliance with the Heart Failure pathway at ASST Cremona is 83.65% for echocardiogram, 85.39% for BNP, 79.8% for cardiology visit, and 55.25% for telemonitoring, indicating a critical area in telemonitoring and relatively low efficiency in completing the pathway.\"\n  ],\n  \"conclusion\": \"The alarm is caused by an average waiting time of 31.0 days for the echocardiogram at Hospital B, with 0 available slots and 17 patients delayed, including some with delays exceeding 40 days. The intervention margin is present at the other hospitals within the ATS (A and C), which have respectively 114 and 102 available slots. It is recommended to redistribute appointments towards Hospital A or Hospital C to reduce waiting times and delays, especially for patients with the longest delays, and to monitor telemonitoring, which shows the lowest compliance.\"\n}"
+  }
+}

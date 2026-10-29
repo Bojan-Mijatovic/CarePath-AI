@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **v1.10**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), proposed 29 Oct 2026. Changes follow §0 |
+| Status | **v1.11**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), proposed 29 Oct 2026. Changes follow §0 |
 | Last updated | 29 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C23 proposed in v1.1–v1.10)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C24 proposed in v1.1–v1.11)
 
 | # | Change | Why |
 |---|---|---|
@@ -53,6 +53,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C21 (D39) | Monitoring defined (§4, §5.3): how rules are evaluated and explained, a step's `max_wait_days` for the regional alarm, the tables `deviations` and `alerts`, patient alerts for high-risk patients only, pulls read by `patients_overdue` | The SPEC named Monitoring's outputs but not their rules or storage: "regional alarm when the same deviation exceeds a threshold at one facility" had no threshold, alerts had nowhere to live, and a pulled deadline existed only in memory, so a tool and the engine disagreed on overdue visits (239 against 314, caught by a test). Measured on scenario 2: about 160 new deviations a day, 8 of them of high-risk patients; a 30-day echo threshold alarms on days 29, 33 and 32 in scenarios 1–3 and nowhere else |
 | C22 (D40) | `GET /pathways/{pathway_id}` returns the pathway file (§10) | The Percorsi screen (step 2.16) must name steps, and the labels live in the pathway file (C20); no endpoint served them, and labels written into the console would break AC17. The file is returned unchanged, so it is its own fixture |
 | C23 (D41) | The pathway file gets `label` `{"it", "en"}` and an optional `readmission_reference` (§4) | The console named the disease itself ("Scompenso cardiaco" in three places) and held the national HF readmission rate (11.87%), so a second pathway would show both wrongly (AC17); `name` is Italian only. The AC17 test now fails if the console contains any name of the pathway file, Maria's story excepted |
+| C24 (D42) | Investigator input, loop and answer, and the `investigations` table (§6) | Step 2.9 needs them; the SPEC had only the stream message of one step. Claims point at a step number so every claim keeps the tool call the Verifier repeats; result summaries come from code so no model-written number reaches the stream |
 
 ## 1. Scope
 
@@ -338,6 +339,14 @@ Every number in `data` follows the precision rule in §2. `testing/test_tools_de
 - `risk_drivers` (C19): over the segment's high-risk patients today, `weight` is the share whose `risk_drivers` include the driver, most frequent first; `patients` is how many high-risk patients that is. No high-risk patient in the segment gives `empty_result`. The `risk_mean` metric is the mean `risk_score` of the segment's enrolled patients, summed as integers (C7). Both give `empty_result` on a run where Risk never ran (no positive score).
 - `eligibility_candidates` and `free_beds` come with option B and Bed Finder.
 
+**Investigator** (C24, `src/agents/investigator.py`, step 2.9). Input: a regional alarm's text and step, the pathway file and the run's facilities (name, type, ASST); the system prompt gives the steps, the facilities and a general method, never where a problem is. Code runs the alarm's own evidence first, for the whole ATS: `wait_by_hospital` for the alarm's step over the alarm's 7-day window and `free_slots` for its service; they are steps 1 and 2 and the model sees them as its own calls. At most 6 tool calls (steps) in all, one gateway call per turn with `qwen3:30b-instruct` (D11); each tool result goes back to the model with its step number (`passo`). The answer is `{"claims": [{"text", "step"}], "conclusion"}` in Italian, validated against a Pydantic schema; a claim must point at a step whose tool returned `data`, others are dropped, and none left is a failure. `qwen3:4b-instruct` translates claims and conclusion into English (D31). Each step's `result_summary` on the stream (§10) is filled by code from the tool's data, not by the model. The Investigator only reads; whoever runs it stores the row:
+
+| Table | Columns |
+|---|---|
+| `investigations` | `investigation_id` (`inv_<run>_<n>`), `day`, `pathway_id`, `alert_id`, `question` `{"it", "en"}`, `steps` `[{"step", "tool", "args", "result_summary"}]`, `claims` `[{"text": {"it", "en"}, "step"}]`, `conclusion` `{"it", "en"}`, `prompt_version` |
+
+Steps keep the tool and its arguments, not the data, because the Verifier repeats the call (C5).
+
 The canonical JSON schemas for these tools live in `src/agents/tools.py` (Pydantic models, Italian descriptions, `$ref`s inlined) and are the single source for the agents. `testing/llm_eval.py` moves to them with the LLM gateway (step 2.7) and is measured again there; its stored results (step 0.4) used its own copy. Benchmark questions are answered with these tools too, not with SQL (Solution Plan §8 allows text-to-SQL for them, but §4 puts text-to-SQL out of scope; C16).
 
 ## 7. Actions and autonomy
@@ -398,7 +407,7 @@ complete(agent: str, prompt_version: str, messages: list, *, tools=None, schema=
 
 | Rule | Value |
 |---|---|
-| Sampling | temperature 0, fixed seed |
+| Sampling | temperature 0, fixed seed, context `num_ctx` 8192 (Ollama's default 4096 cut the Investigator's prompt, C24) |
 | Output | JSON schema enforced through Ollama structured output whenever `schema` is given; validated after the call |
 | Retry | 1 retry on invalid output |
 | Timeout | 20 s, then fall back to the cache; 600 s in warm-up runs that fill the cache |

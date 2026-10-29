@@ -29,6 +29,8 @@ SPEC_COLUMNS = {
     "deviations": ["day", "patient_id", "pathway_id", "kind", "code"],
     "alerts": ["alert_id", "day", "level", "pathway_id", "patient_id", "facility_id", "step", "text", "investigation_id",
                "closed_day"],
+    "investigations": ["investigation_id", "day", "pathway_id", "alert_id", "question", "steps", "claims", "conclusion",
+                       "prompt_version"],
     "actions": ["action_id", "agent", "type", "patient_id", "scope", "pathway_id", "payload", "rationale",
                 "evidence", "autonomy_level", "status", "created_day", "executed_day", "decided_by"],
     "audit_log": ["ts_day", "action_id", "event", "actor", "details"],

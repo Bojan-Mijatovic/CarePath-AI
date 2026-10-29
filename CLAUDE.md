@@ -5,7 +5,7 @@ Rules for the AI assistant in this repo. They come from the [Solution Plan](docs
 ## 1. Sources and precedence
 
 1. **Solution Plan** (22 Oct 2026): what we build and why. It is the source of truth.
-2. **Decision register** (Delivery Plan §11, D11 onward): a decision marked *Decided* overrides the Solution Plan on that point. Current overrides: models are `qwen3:30b-instruct` and `qwen3:4b-instruct`, not 7–8B and 14B (D11); the console is React, not Angular or Streamlit (D13); demo LLM output is cache-only (D14); all work goes directly to `main` (D20); Pathway Builder is in option B (D23); the demo may be online (D25); the console is Italian and English, with cached LLM texts written in Italian and translated by the 4B model during the warm-up (D30, D31). *Proposed* decisions are the working assumption, but not yet binding (open on 29 Oct 2026: D32–D41, SPEC v1.1–v1.10 with C14–C23).
+2. **Decision register** (Delivery Plan §11, D11 onward): a decision marked *Decided* overrides the Solution Plan on that point. Current overrides: models are `qwen3:30b-instruct` and `qwen3:4b-instruct`, not 7–8B and 14B (D11); the console is React, not Angular or Streamlit (D13); demo LLM output is cache-only (D14); all work goes directly to `main` (D20); Pathway Builder is in option B (D23); the demo may be online (D25); the console is Italian and English, with cached LLM texts written in Italian and translated by the 4B model during the warm-up (D30, D31). *Proposed* decisions are the working assumption, but not yet binding (open on 29 Oct 2026: D32–D42, SPEC v1.1–v1.11 with C14–C24).
 3. **Delivery Plan**: how and when, step by step, with owners and gates.
 4. **SPEC.md**: the contracts. Nothing is built against an interface that is not in it.
 5. **UI prototype** ([CarePath-AI-UI-demo-srpski.html](docs/CarePath-AI-UI-demo-srpski.html)): screen layout and demo steps 1–10.
@@ -38,7 +38,7 @@ These come from the design principles and guardrails. Code that breaks one needs
 
 - Every call goes through the gateway (`src/agents/llm.py`, SPEC §8). No direct `ollama` calls in agent code.
 - Models are as in D11: `qwen3:30b-instruct` for every cached output (Investigator, Pathway Builder, Rule Advisor, Reporter, Verifier wording) and `qwen3:4b-instruct` only for short text that code fills from templates. Use the `-instruct` tags and always send `think: false`. Other models only after a new D11 decision. I never pull Nemotron again unless both Qwen models fail.
-- Sampling: temperature 0, fixed seed, JSON schema through structured output, validation, 1 retry.
+- Sampling: temperature 0, fixed seed, `num_ctx` 8192, JSON schema through structured output, validation, 1 retry.
 - A changed prompt means a new `prompt_version`. The old cache stays valid for the old version.
 - The demo starts in `cache_only` (D14). Warm-up runs use `live` with the 600 s timeout. A feature that needs a live LLM call in the demo flow is a design error.
 - The cache holds only what the demo shows, listed in `demo/cache/manifest.json` (D17). Every other rationale or call script is the template filled by code, and every LLM-backed text must have that template. The exception is the Investigator, whose only fallback is the cache (Solution Plan §8); the cache completeness check (SPEC §8) guards it after every change to the simulator, engine, tools or prompts.
@@ -84,6 +84,7 @@ Everything serves the demo running 10 out of 10 times (AC9). In practice:
 
 - A terminal opened before an install does not see the new PATH. Refresh it with `$env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Environment]::GetEnvironmentVariable('Path','Machine')`.
 - Ollama runs from the tray on `127.0.0.1:11434`. Do not start `ollama serve` a second time.
+- After a live LLM run, unload the models (`ollama stop qwen3:30b-instruct`, `ollama stop qwen3:4b-instruct`) before timing tests or the full suite: they stay in RAM 30 min (`keep_alive`), about 22 GB, and the suite then swaps (2 h 9 min instead of 10 min on 29 Oct 2026, AC2 failed at 599 ms; 347–362 ms after unloading).
 - From a non-interactive shell, `fnm exec` finds npm only as `npm.cmd` (`fnm exec --using=24 npm.cmd run dev`).
 - PowerShell is 5.1: no `&&`, no `?:`. Write files with an explicit `-Encoding utf8`.
 - No GPU (D12). The demo machine and the backup laptop have identical models and a hash-checked copy of the cache.

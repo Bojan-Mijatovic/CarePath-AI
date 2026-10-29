@@ -82,7 +82,7 @@ class Args(BaseModel):
 
 PathwayId = Field(pattern=ID, description="ID del percorso, es. hf_lombardia_v1")
 StepId = Field(pattern=ID, description="ID dello step del percorso, es. echo, cardio_visit, telemon, lab_bnp")
-AsstArg = Field(None, description="Limita a una ASST")
+AsstArg = Field(None, description="Limita a una ASST (non a un ospedale); senza, tutta l'ATS")
 
 
 class Segment(Args):
@@ -489,7 +489,9 @@ TOOLS = {
                          "Attesa media in giorni tra prenotazione e appuntamento per uno step del percorso, per ospedale."),
     "patients_overdue": (OverdueArgs, patients_overdue,
                          "Pazienti con la scadenza di uno step superata: quanti sono e i piu' in ritardo."),
-    "free_slots": (FreeSlotsArgs, free_slots, "Posti liberi per un servizio, per ospedale, nei prossimi giorni."),
+    "free_slots": (FreeSlotsArgs, free_slots,
+                   "Posti liberi per un servizio, per ospedale, nei prossimi giorni; senza asst, in tutti gli ospedali "
+                   "dell'ATS."),
     "adherence_by_group": (AdherenceArgs, adherence_by_group,
                            "Aderenza per gruppo di pazienti (ritiro dei farmaci o letture del telemonitoraggio): i 10 "
                            "gruppi peggiori e il resto dell'ATS (rest_of_ats)."),
