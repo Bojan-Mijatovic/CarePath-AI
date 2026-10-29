@@ -2,7 +2,7 @@
   {
     "type": "investigation",
     "scenario": 2,
-    "day": 35,
+    "day": 33,
     "payload": {
       "investigation_id": "inv_s2_agents_1",
       "step": 1,
@@ -13,8 +13,8 @@
         "period_days": 7
       },
       "result_summary": {
-        "it": "Attesa media più alta a Ospedale B: 35,1 giorni",
-        "en": "Longest mean wait at Ospedale B: 35.1 days"
+        "it": "Ospedale A 2,2 · Ospedale B 31 · Ospedale C 2",
+        "en": "Ospedale A 2.2 · Ospedale B 31 · Ospedale C 2"
       },
       "verified": null,
       "final": false
@@ -23,18 +23,59 @@
   {
     "type": "investigation",
     "scenario": 2,
-    "day": 35,
+    "day": 33,
     "payload": {
       "investigation_id": "inv_s2_agents_1",
       "step": 2,
       "tool": "free_slots",
       "args": {
-        "service": "echo",
-        "horizon_days": 21
+        "service": "echo"
       },
       "result_summary": {
-        "it": "Ospedale A ha 116 posti liberi nei prossimi 21 giorni",
-        "en": "Ospedale A has 116 free slots in the next 21 days"
+        "it": "Ospedale A 114 · Ospedale B 0 · Ospedale C 102",
+        "en": "Ospedale A 114 · Ospedale B 0 · Ospedale C 102"
+      },
+      "verified": null,
+      "final": false
+    }
+  },
+  {
+    "type": "investigation",
+    "scenario": 2,
+    "day": 33,
+    "payload": {
+      "investigation_id": "inv_s2_agents_1",
+      "step": 3,
+      "tool": "patients_overdue",
+      "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "step": "echo",
+        "asst": "asst_cremona",
+        "limit": 5
+      },
+      "result_summary": {
+        "it": "count 17 · patients: 5",
+        "en": "count 17 · patients: 5"
+      },
+      "verified": null,
+      "final": false
+    }
+  },
+  {
+    "type": "investigation",
+    "scenario": 2,
+    "day": 33,
+    "payload": {
+      "investigation_id": "inv_s2_agents_1",
+      "step": 4,
+      "tool": "compliance_by_step",
+      "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "asst": "asst_cremona"
+      },
+      "result_summary": {
+        "it": "telemon 0,55 · cardio_visit 0,8 · echo 0,84 · lab_bnp 0,85",
+        "en": "telemon 0.55 · cardio_visit 0.8 · echo 0.84 · lab_bnp 0.85"
       },
       "verified": null,
       "final": true

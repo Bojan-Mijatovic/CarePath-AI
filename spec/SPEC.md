@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **v1.11**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), proposed 29 Oct 2026. Changes follow §0 |
+| Status | **v1.12**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), proposed 29 Oct 2026. Changes follow §0 |
 | Last updated | 29 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C24 proposed in v1.1–v1.11)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C25 proposed in v1.1–v1.12)
 
 | # | Change | Why |
 |---|---|---|
@@ -54,6 +54,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C22 (D40) | `GET /pathways/{pathway_id}` returns the pathway file (§10) | The Percorsi screen (step 2.16) must name steps, and the labels live in the pathway file (C20); no endpoint served them, and labels written into the console would break AC17. The file is returned unchanged, so it is its own fixture |
 | C23 (D41) | The pathway file gets `label` `{"it", "en"}` and an optional `readmission_reference` (§4) | The console named the disease itself ("Scompenso cardiaco" in three places) and held the national HF readmission rate (11.87%), so a second pathway would show both wrongly (AC17); `name` is Italian only. The AC17 test now fails if the console contains any name of the pathway file, Maria's story excepted |
 | C24 (D42) | Investigator input, loop and answer, and the `investigations` table (§6) | Step 2.9 needs them; the SPEC had only the stream message of one step. Claims point at a step number so every claim keeps the tool call the Verifier repeats; result summaries come from code so no model-written number reaches the stream |
+| C25 (D43) | The Investigator runs on the alarm's tick, not asynchronously (§9 step 7); `GET /investigations` (§10) | `free_slots` reads `capacity_slots`, which the tick rewrites every day: an investigation started later would see other numbers, so its cache keys would miss in the demo (SPEC §8). From the cache the alarm's tick takes 0.4–0.7 s, inside AC2; the Chiedi screen (step 2.17) needs the stored investigation |
 
 ## 1. Scope
 
@@ -435,7 +436,7 @@ complete(agent: str, prompt_version: str, messages: list, *, tools=None, schema=
 4. Monitoring applies pathway rules and approved Rule Advisor rules; raises patient deviations and regional alarms.
 5. Views refresh.
 6. Intervention handles new deviations through the action service; Daily Worklist builds the list at the start of the day.
-7. On a regional alarm, the Investigator starts asynchronously; the Verifier checks its answer.
+7. On a regional alarm, the Investigator runs on the same tick, after `capacity_slots` is written, so its tools see the alarm's day and its cache keys match the warm-up (C25); from the cache it takes well under a second. It stores the row, sets the alarm's `investigation_id` and adds its steps to the day's messages; with no answer (a cache miss) the alarm stays without one and the tick goes on. The Verifier checks its answer (phase 3).
 8. The WebSocket pushes the new state, alarms and actions.
 
 The baseline arm skips steps 6 and 7.
@@ -471,6 +472,7 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `GET /worklist?run&day` | `worklist_today` of `day`, or of the latest day, without the `day` column, by `rank` (C20) |
 | `GET /patients/{id}?run&day` | Paziente 360: timeline of events and actions, state per pathway (shape below, C15). With `day`, a recording from `demo/story/` (C17): only `p_00001`, `s2_baseline`, day 62 exists; anything else is 404 |
 | `GET /actions?run&status` | action queue and feed |
+| `GET /investigations?run` | the run's `investigations` rows (§6, C24), the latest first, JSON columns parsed (C25) |
 | `GET /pathways/{pathway_id}` | the pathway file of §4 as it is, so the console names steps and drugs from data (C22); 404 for an unknown id. Needs no run. `spec/pathways/<pathway_id>.json` is its fixture |
 | `POST /actions/{id}/approve`, `/reject`, `/undo` | decisions |
 | `GET /settings`, `PUT /settings/autonomy` | autonomy per action type |

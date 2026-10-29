@@ -32,7 +32,8 @@ IDS = {"hf_lombardia_v1": "other_v1", "discharge": "step_a", "telemon": "step_b"
 DERIVED = ("pathway_state", "kpi_daily", "map_comuni", "deviations", "alerts", "worklist_today")
 UI = Path(__file__).resolve().parents[1] / "src" / "ui" / "src"
 UI_EXEMPT = {"lib/story.ts", "screens/MariaStory.tsx"}  # Maria's story (D41)
-UI_EXEMPT_KEYS = re.compile(r"^\s*'(maria|condition)\.")  # its strings in i18n.ts
+# Its strings in i18n.ts, and the event types of SPEC §3.1 ("Dimissione" for DISCHARGE), which every pathway shares
+UI_EXEMPT_KEYS = re.compile(r"^\s*'(maria|condition|event)\.")
 
 
 def renamed() -> pathway_model.Pathway:

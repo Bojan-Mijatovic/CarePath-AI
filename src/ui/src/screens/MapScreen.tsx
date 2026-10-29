@@ -19,10 +19,12 @@ export default function MapScreen({
   day,
   pathwayId,
   alert,
+  onInvestigation,
 }: {
   day: number | null
   pathwayId: string | null
   alert: RegionalAlert | null
+  onInvestigation: () => void
 }) {
   const { lang, t } = useLang()
   const { geo, error: geoError } = useGeo()
@@ -40,8 +42,15 @@ export default function MapScreen({
     <div className="mapscreen">
       {alert && (
         <div className="alarm-banner" role="alert">
-          <div className="alarm-head">{t('map.regional', { day: alert.day })}</div>
-          <div>{alert.payload.text[lang]}</div>
+          <div className="alarm-text">
+            <div className="alarm-head">{t('map.regional', { day: alert.day })}</div>
+            <div>{alert.payload.text[lang]}</div>
+          </div>
+          {alert.payload.investigation_id && (
+            <button type="button" className="alarm-open" onClick={onInvestigation}>
+              {t('map.open')}
+            </button>
+          )}
         </div>
       )}
       <div className="legend">

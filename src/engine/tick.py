@@ -1,10 +1,11 @@
 """Real-time tick (SPEC §9, delivery plan step 2.1): the six demo runs, advanced one day at a time.
 
 A Run is one simulator with its run database and state engine, kept open in this process. `Run.tick()`
-does the next day in the order of SPEC §9. Intervention through the action service (2.12, 2.13) and the
-Investigator (2.9) arrive with their own plan steps. Until then a tick is steps 1, 2, 3 (Risk), 4
-(Monitoring), 5 (kpi_daily, map_comuni, sankey_flows), 6 (worklist_today, agents arm only) and 8 (the
-agents arm's alerts), and the two arms differ only in the worklist.
+does the next day in the order of SPEC §9. Intervention through the action service (2.12, 2.13) arrives
+with its own plan steps. Until then a tick is steps 1, 2, 3 (Risk), 4 (Monitoring), 5 (kpi_daily,
+map_comuni, sankey_flows), 6 (worklist_today, agents arm only), 7 (the Investigator on a regional alarm,
+agents arm only, engine.investigations) and 8 (the agents arm's alerts and investigation steps), and the
+two arms differ only in the worklist and the investigations.
 
 Demo holds the six runs (3 scenarios × 2 arms): `start()` replays them to the start day and leaves them
 paused (D21); afterwards only the two runs of the scenario on screen advance (C9). A jump forward
@@ -22,7 +23,7 @@ import duckdb
 
 from agents.monitoring import Monitoring
 from engine import pathway as pathway_model
-from engine import queries, worklist
+from engine import investigations, queries, worklist
 from engine.db import RUNS_DIR, create_run, open_run
 from engine.risk import HIGH_RISK, RiskModel
 from engine.state import StateEngine
@@ -71,8 +72,8 @@ class Run:
         self.capacity = None  # slots_total and slots_booked as last written
 
     def tick(self) -> list[dict]:
-        """Day `self.day + 1`, SPEC §9 steps 1–8. Returns the day's alert messages (the agents arm's are
-        pushed)."""
+        """Day `self.day + 1`, SPEC §9 steps 1–8. Returns the day's alert and investigation messages (the
+        agents arm's are pushed)."""
         t = time.perf_counter()
         d = self.day + 1
         append(self.con, "events", self.sim.step(d))  # 1
@@ -84,6 +85,8 @@ class Run:
         if self.agents:                                 # 6: the baseline arm is without CarePath
             worklist.refresh(self.con, self.state, self.risk, d, self.monitoring.fired)
         self._write_capacity()
+        if self.agents:  # 7: after capacity_slots, so the Investigator's tools see the alarm's day (C25)
+            messages += investigations.on_alarms(self.con, self.run_id, self.state.pathway, d, self.scenario, messages)
         self.day = d
         self.last_ms = (time.perf_counter() - t) * 1000
         return messages

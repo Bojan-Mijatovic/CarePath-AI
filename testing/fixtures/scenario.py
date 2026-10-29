@@ -26,7 +26,8 @@ from agents import tools
 from engine import pathway as pathway_model
 from engine.db import create_run, open_run, tool_cursor
 from agents.monitoring import Monitoring
-from engine import worklist
+from engine import investigations, worklist
+from engine.queries import investigations as investigations_rows
 from engine.queries import kpi_headline, map_comuni, patient_360, rows, sankey
 from engine.queries import worklist as worklist_rows
 from engine.risk import HIGH_RISK, RiskModel
@@ -41,7 +42,6 @@ PATHWAY_ID = "hf_lombardia_v1"
 RUNS = {"s2_baseline": False, "s2_agents": True}
 MARIA, CALL_DAY, ALARM_DAY = "p_00001", 31, 35
 CALL_ID, RESCHEDULE_ID = "act_s2_agents_1", "act_s2_agents_2"
-INVESTIGATION_ID = "inv_s2_agents_1"
 WAIT_ARGS = {"pathway_id": PATHWAY_ID, "step": "echo", "period_days": 7}
 FREE_ARGS = {"service": "echo"}
 WORKLIST_SIZE = 20
@@ -134,7 +134,7 @@ def build_runs(runs_dir: Path) -> dict:
     ref = load_reference()
     patients, mmg = generate_patients(SEED, ref)
     hf = pathway_model.load(PATHWAY_ID)
-    live = {}
+    live, investigation = {}, []
     for run_id, agents in RUNS.items():
         sim = Simulator(SEED, patients, ref, hf, days=DAYS)
         sim.apply_scenario(load_scenario(SCENARIO), mmg)
@@ -157,8 +157,13 @@ def build_runs(runs_dir: Path) -> dict:
                     worklist.refresh(con, state, risk, d, monitoring.fired)
                 if agents and d == CALL_DAY:  # Intervention runs after the views (SPEC §9, steps 5–6)
                     call_maria(con, sim, d)
+                if agents and con.execute("SELECT count(*) FROM alerts WHERE level = 'regional' AND day = $d",
+                                          {"d": d}).fetchall()[0][0]:  # step 7, on capacity as the tick has it (C25)
+                    con.execute("DELETE FROM capacity_slots")
+                    append(con, "capacity_slots", sim.capacity_slots())
+                    investigation = investigations.on_alarms(con, run_id, hf, d, SCENARIO, [])
                 if agents and d == ALARM_DAY:
-                    live = propose_reschedule(con, sim, d)
+                    live = propose_reschedule(con, sim, d) | {"investigation": investigation}
             con.execute("DELETE FROM capacity_slots")
             append(con, "capacity_slots", sim.capacity_slots())
     return live
@@ -167,11 +172,6 @@ def build_runs(runs_dir: Path) -> dict:
 def stream(con, live: dict) -> dict[str, object]:
     """WebSocket messages (SPEC §10) of the agents arm."""
     msg = lambda type_, day, payload: {"type": type_, "scenario": SCENARIO, "day": day, "payload": payload}
-    wait, free = live["wait"], live["free"]
-    waits, slots = wait["data"], free["data"]
-    slow = max(waits, key=waits.get)
-    best = max((n for n in slots if n != slow), key=slots.get)
-    others = sum(v for n, v in waits.items() if n != slow) / (len(waits) - 1)
     call = rows(con, "SELECT * FROM actions WHERE action_id = $a", {"a": CALL_ID})[0]
     # The first alerts Monitoring raised from the demo's start day on (step 2.8)
     alert = lambda level: rows(con, """
@@ -183,19 +183,7 @@ def stream(con, live: dict) -> dict[str, object]:
         "alert_patient.json": as_message(alert("patient")),
         "alert_regional.json": as_message(alert("regional")),
         "action.json": msg("action", CALL_DAY, call),
-        "investigation.json": [
-            msg("investigation", ALARM_DAY, {
-                "investigation_id": INVESTIGATION_ID, "step": 1, "tool": "wait_by_hospital",
-                "args": wait["source"]["args"],
-                "result_summary": {"it": f"Attesa media più alta a {slow}: {it_number(waits[slow])} giorni",
-                                   "en": f"Longest mean wait at {slow}: {waits[slow]:.1f} days"},
-                "verified": None, "final": False}),
-            msg("investigation", ALARM_DAY, {
-                "investigation_id": INVESTIGATION_ID, "step": 2, "tool": "free_slots", "args": free["source"]["args"],
-                "result_summary": {"it": f"{best} ha {slots[best]} posti liberi nei prossimi 21 giorni",
-                                   "en": f"{best} has {slots[best]} free slots in the next 21 days"},
-                "verified": None, "final": True}),
-        ],
+        "investigation.json": live["investigation"],  # the Investigator on the alarm's tick, from the cache (C25)
     }
 
 
@@ -215,6 +203,7 @@ def export(runs_dir: Path, live: dict) -> dict[str, object]:
         out["api/sankey_s2_agents.json"] = sankey(con, None)
         out["api/map_s2_agents.json"] = map_comuni(con, None)
         out["api/worklist_s2_agents.json"] = worklist_rows(con, last)[:WORKLIST_SIZE]
+        out["api/investigations_s2_agents.json"] = investigations_rows(con)
         out |= {f"stream/{name}": m for name, m in stream(con, live).items()}
         out["tools/wait_by_hospital.json"] = live["wait"]
         out["tools/free_slots.json"] = live["free"]

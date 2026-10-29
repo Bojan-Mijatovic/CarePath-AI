@@ -213,6 +213,10 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
     def actions(run: str | None = None, status: str | None = None) -> list[dict]:
         return live.read(run, lambda con: queries.actions(con, status))
 
+    @api.get("/investigations")
+    def investigations(run: str | None = None) -> list[dict]:
+        return live.read(run, queries.investigations)
+
     @api.get("/pathways/{pathway_id}")
     def pathway(pathway_id: str) -> dict:
         """The pathway file as it is (C22): the console names steps and drugs from it, not from code (AC17)."""

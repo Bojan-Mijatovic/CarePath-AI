@@ -26,9 +26,10 @@ uv run python testing/fixtures/scenario.py   # rewrite every JSON file here (abo
 | `api/map_s2_agents.json` | `GET /api/map`: `map_comuni` on day 62 (SPEC §5.2, C18) | real, with Risk on every tick (step 2.3) |
 | `api/worklist_s2_agents.json` | `GET /api/worklist`: the top 20 of `worklist_today` on day 62 (SPEC §5.2, C20) | real; `script` and `outcome` are null until the Daily Worklist agent and the action service |
 | `stream/tick.json` | `tick` on day 35, `kpi` as in C15 | real |
-| `stream/alert_patient.json`, `stream/alert_regional.json` | `alert`, Maria on day 31 and Ospedale B on day 35 | numbers real (the regional one from the tools); when Monitoring raises them is step 2.8 |
+| `stream/alert_patient.json`, `stream/alert_regional.json` | `alert`: the first patient alert and the first regional alarm from day 23, raised by Monitoring (step 2.8); the regional one names its investigation | real |
 | `stream/action.json` | `action`: Maria's call | as `actions` |
-| `stream/investigation.json` | `investigation`, two steps | tool calls and numbers real; the wording is a template, not the Investigator (step 2.9) |
+| `stream/investigation.json` | `investigation`, one message per step | real: the Investigator on the alarm's tick (step 2.17, C25), replayed from `demo/cache/`; without the cache the builder makes no investigation and `test_fixtures.py` fails |
+| `api/investigations_s2_agents.json` | `GET /api/investigations` (SPEC §6, C24, C25) | real, as above |
 | `tools/wait_by_hospital.json`, `tools/free_slots.json`, `tools/error.json` | tool result envelope and error (SPEC §6) | real: `agents.tools` called on the live run on day 35 (`free_slots` sees that day's bookings, so a finished run gives other numbers for day 35) |
 
 Patient alerts name `p_00001`, not "Maria R.": the data has no names.

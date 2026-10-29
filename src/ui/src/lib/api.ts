@@ -58,6 +58,7 @@ export type Patient360 = {
     age: number
     comune_istat: string
     comune_name: string
+    mmg_id: string
     lives_alone: boolean
     distance_km: number
     conditions: string[]
@@ -94,8 +95,38 @@ export type Pathway = {
   name: string
   label: Bilingual
   readmission_reference: { rate: number; label: Bilingual } | null
-  steps: { id: string; label: Bilingual }[]
+  steps: {
+    id: string
+    label: Bilingual
+    event: string
+    codes?: string[]
+    specialty?: string
+    loinc?: string[]
+    service?: string
+  }[]
   eligibility: { drug_names: Record<string, Bilingual> }
+}
+
+/** GET /api/investigations (SPEC §6, C24, C25), the latest first. */
+export type Investigation = {
+  investigation_id: string
+  day: number
+  pathway_id: string
+  alert_id: string | null
+  question: Bilingual
+  steps: { step: number; tool: string; args: Record<string, unknown>; result_summary: Bilingual }[]
+  claims: { text: Bilingual; step: number }[]
+  conclusion: Bilingual
+}
+
+/** The step of the pathway an event completes, as engine.state matches it (SPEC §5.1); codes ending in * are
+ * prefixes. */
+export function stepOf(pathway: Pathway, e: TimelineEvent): Pathway['steps'][number] | undefined {
+  const match = (patterns: string[] | undefined) =>
+    !patterns || patterns.some((p) => (p.endsWith('*') ? (e.code ?? '').startsWith(p.slice(0, -1)) : e.code === p))
+  return pathway.steps.find(
+    (s) => s.event === e.event_type && match(s.codes) && match(s.loinc) && (!s.specialty || s.specialty === e.code),
+  )
 }
 
 export type Loaded<T> = { data?: T; error?: string }

@@ -5,11 +5,13 @@ import LangSwitch from './components/LangSwitch'
 import { type Kpi, type Pathway, useApi } from './lib/api'
 import { type Key, type Lang, LangContext, translator } from './lib/i18n'
 import { type StreamMessage, useStream } from './lib/stream'
+import Ask from './screens/Ask'
 import Envelopes from './screens/Envelopes'
 import Flows from './screens/Flows'
 import MapScreen, { type RegionalAlert } from './screens/MapScreen'
 import MariaStory from './screens/MariaStory'
 import Overview from './screens/Overview'
+import Patient from './screens/Patient'
 
 // Menu order follows the prototype; the two intro screens (demo steps 1 and 2) are full screen.
 const SCREENS = ['panoramica', 'mappa', 'chiedi', 'confronto', 'whatif', 'percorsi', 'chiamate', 'letti', 'pazienti'] as const
@@ -37,6 +39,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>(screenFromHash)
   const [lang, setLang] = useState<Lang>(savedLang)
   const [day, setDay] = useState<number | null>(null)
+  const [scenario, setScenario] = useState<number | null>(null)
   const [speed, setSpeed] = useState(1)
   const [kpi, setKpi] = useState<Kpi | null>(null)
   const [feed, setFeed] = useState<FeedMessage[]>([])
@@ -72,6 +75,7 @@ export default function App() {
       }
       lastDay.current = msg.day
       setDay(msg.day)
+      setScenario(msg.scenario)
       if (msg.payload.kpi) setKpi(msg.payload.kpi)
       if (msg.payload.speed !== undefined) setSpeed(msg.payload.speed)
     } else {
@@ -133,9 +137,13 @@ export default function App() {
               {screen === 'panoramica' ? (
                 <Overview day={day} kpi={kpi} pathway={pathway ?? null} />
               ) : screen === 'mappa' ? (
-                <MapScreen day={day} pathwayId={pathwayId} alert={alarm} />
+                <MapScreen day={day} pathwayId={pathwayId} alert={alarm} onInvestigation={() => go('chiedi')} />
               ) : screen === 'percorsi' ? (
                 <Flows day={day} pathwayId={pathwayId} />
+              ) : screen === 'chiedi' ? (
+                <Ask day={day} />
+              ) : screen === 'pazienti' ? (
+                <Patient day={day} scenario={scenario} pathway={pathway ?? null} />
               ) : (
                 <p className="placeholder">{t('placeholder.screen', { screen: t(`nav.${screen}` as Key) })}</p>
               )}

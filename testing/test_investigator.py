@@ -139,15 +139,17 @@ def population():
 
 
 @pytest.mark.parametrize("scenario", [1, 2, 3])
-def test_finds_pattern_1_from_the_cache(scenario, population, tmp_path):
-    # Done-when of step 2.9 (AC1, pattern 1), replayed in cache_only as the demo would (D14, D18).
+def test_the_tick_finds_pattern_1_from_the_cache(scenario, population, tmp_path):
+    # Done-when of step 2.9 (AC1, pattern 1), on the tick as in the demo (step 2.17, C25), in cache_only (D14).
     llm.configure(mode="cache_only", log_path=None)
-    run, alarm = investigation_run.run_to_alarm(scenario, population, tmp_path)
+    run, alarm, seconds = investigation_run.run_to_alarm(scenario, population, tmp_path)
     try:
         names = dict(run.con.execute("SELECT facility_id, name FROM facilities").fetchall())
-        inv = investigation_run.investigate(run, alarm, population.pathway)
+        linked = run.con.execute("SELECT investigation_id FROM alerts WHERE level = 'regional'").fetchall()[0][0]
+        inv = investigation_run.stored(run, alarm)
     finally:
         run.close()
         llm.configure()
-    score = investigation_run.pattern_1(inv, scenario, names)
-    assert score["found"], score
+    assert inv is not None and linked == alarm["payload"]["investigation_id"] == inv["investigation_id"]
+    assert investigation_run.pattern_1(inv, scenario, names)["found"]
+    assert seconds < 2  # the alarm's whole tick, investigation included (AC5 measures it from the cache)

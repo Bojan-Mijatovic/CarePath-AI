@@ -8,7 +8,8 @@ import json
 
 import duckdb
 
-JSON_COLUMNS = {"scope", "payload", "rationale", "evidence", "details", "reasons", "script", "text"}
+JSON_COLUMNS = {"scope", "payload", "rationale", "evidence", "details", "reasons", "script", "text", "question", "steps",
+                "claims", "conclusion"}
 
 
 def rows(con: duckdb.DuckDBPyConnection, sql: str, params: dict | None = None) -> list[dict]:
@@ -56,6 +57,11 @@ def actions(con: duckdb.DuckDBPyConnection, status: str | None) -> list[dict]:
     """GET /api/actions: the action queue and feed."""
     return rows(con, "SELECT * FROM actions WHERE $s IS NULL OR status = $s ORDER BY created_day, action_id",
                 {"s": status})
+
+
+def investigations(con: duckdb.DuckDBPyConnection) -> list[dict]:
+    """GET /api/investigations: every stored investigation, the latest first (SPEC §6, C24, C25)."""
+    return rows(con, "SELECT * FROM investigations ORDER BY day DESC, investigation_id DESC")
 
 
 def patient_360(con: duckdb.DuckDBPyConnection, patient_id: str) -> dict | None:

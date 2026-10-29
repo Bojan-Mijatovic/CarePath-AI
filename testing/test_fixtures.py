@@ -99,9 +99,13 @@ def test_stream_messages(built):
             bilingual(m["payload"]["result_summary"])
     assert list(f["stream/tick.json"]["payload"]["kpi"]) == [c for c in columns(runs, "kpi_daily")
                                                             if c not in ("day", "level", "key")]
-    steps = f["stream/investigation.json"]
-    assert [s["payload"]["step"] for s in steps] == [1, 2]
-    assert [s["payload"]["final"] for s in steps] == [False, True]
+    steps = f["stream/investigation.json"]  # the Investigator on the alarm's tick, from the cache (C25)
+    assert [s["payload"]["step"] for s in steps] == list(range(1, len(steps) + 1))
+    assert [s["payload"]["final"] for s in steps] == [False] * (len(steps) - 1) + [True]
+    assert f["stream/alert_regional.json"]["payload"]["investigation_id"] == steps[0]["payload"]["investigation_id"]
+    stored = f["api/investigations_s2_agents.json"]
+    assert [i["investigation_id"] for i in stored] == [steps[0]["payload"]["investigation_id"]]
+    assert all(c["step"] in {s["step"] for s in stored[0]["steps"]} for c in stored[0]["claims"])
 
 
 def test_tool_envelopes(built):

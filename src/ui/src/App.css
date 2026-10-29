@@ -312,6 +312,10 @@
 }
 
 .alarm-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
   padding: 14px 18px;
   border: 1px solid #f0b88a;
   border-radius: 12px;
@@ -319,8 +323,179 @@
   color: #7a2c0d;
 }
 
+.alarm-text {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
 .alarm-head {
   font-weight: 600;
+}
+
+.alarm-open {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #a33b12;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Chiedi: investigation steps */
+.ask,
+.patient {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ask .panel,
+.patient .panel {
+  flex: none;
+}
+
+.ask-question {
+  margin: 6px 0 0;
+  font-size: 17px;
+}
+
+.ask-steps,
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ask-step {
+  padding: 12px 14px;
+  border: 1px solid #e6ebef;
+  border-radius: 10px;
+}
+
+.ask-step-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.ask-step-n {
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.ask-tool {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #eef2f5;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.ask-badge {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2f5;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.ask-summary {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.ask-claims {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.ask-conclusion {
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* Paziente 360 */
+.patient-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+
+.patient-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.patient-pick input {
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  font-family: var(--mono);
+}
+
+.patient-pick button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font: inherit;
+  cursor: pointer;
+}
+
+.patient-state {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.patient-state .tag {
+  align-self: flex-start;
+}
+
+.patient-overdue {
+  color: var(--warning);
+}
+
+.timeline-item {
+  display: flex;
+  gap: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eef2f5;
+}
+
+.timeline-item.agent {
+  color: #1a3f91;
+}
+
+.timeline-day {
+  flex: 0 0 84px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.timeline-tag {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  font-size: 12px;
 }
 
 .legend {
