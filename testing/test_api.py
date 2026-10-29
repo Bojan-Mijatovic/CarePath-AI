@@ -64,7 +64,11 @@ def test_start_advances_and_pause_stops(client):
     with client.websocket_connect("/api/stream") as ws:
         ws.receive_json()
         assert client.post("/api/sim/start").json()["speed"] == 1
-        days = [ws.receive_json()["day"] for _ in range(3)]
+        days = []
+        while len(days) < 3:  # alerts from Monitoring come between the ticks
+            msg = ws.receive_json()
+            if msg["type"] == "tick":
+                days.append(msg["day"])
         stopped = client.post("/api/sim/pause").json()
     assert days == list(range(days[0], days[0] + 3))
     assert days[0] == START + 1

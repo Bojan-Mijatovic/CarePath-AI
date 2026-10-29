@@ -1,14 +1,14 @@
 {
   "type": "alert",
   "scenario": 2,
-  "day": 35,
+  "day": 33,
   "payload": {
     "level": "regional",
     "facility_id": "osp_B",
-    "investigation_id": "inv_s2_agents_1",
+    "investigation_id": null,
     "text": {
-      "it": "Ospedale B: attesa per l'ecocardiogramma 35,1 giorni, negli altri ospedali 2,0",
-      "en": "Ospedale B: echo wait 35.1 days, 2.0 at the other hospitals"
+      "it": "Ospedale B · Ecocardiogramma: attesa media 31,0 giorni sulle prenotazioni degli ultimi 7 giorni (soglia PDTA 30 giorni)",
+      "en": "Ospedale B · Echocardiogram: mean wait 31.0 days over the bookings of the last 7 days (PDTA threshold 30 days)"
     }
   }
 }

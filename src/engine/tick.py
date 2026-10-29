@@ -1,10 +1,10 @@
 """Real-time tick (SPEC §9, delivery plan step 2.1): the six demo runs, advanced one day at a time.
 
 A Run is one simulator with its run database and state engine, kept open in this process. `Run.tick()`
-does the next day in the order of SPEC §9. Steps 4 to 7 of that order arrive with their own plan steps:
-Monitoring (2.8), Intervention through the action service (2.12, 2.13) and the Investigator (2.9). Until
-then a tick is steps 1, 2, 3 (Risk), 5 (kpi_daily, map_comuni, sankey_flows), 6 (worklist_today, agents
-arm only) and 8, and the two arms differ only in the worklist.
+does the next day in the order of SPEC §9. Intervention through the action service (2.12, 2.13) and the
+Investigator (2.9) arrive with their own plan steps. Until then a tick is steps 1, 2, 3 (Risk), 4
+(Monitoring), 5 (kpi_daily, map_comuni, sankey_flows), 6 (worklist_today, agents arm only) and 8 (the
+agents arm's alerts), and the two arms differ only in the worklist.
 
 Demo holds the six runs (3 scenarios × 2 arms): `start()` replays them to the start day and leaves them
 paused (D21); afterwards only the two runs of the scenario on screen advance (C9). A jump forward
@@ -20,6 +20,7 @@ from pathlib import Path
 
 import duckdb
 
+from agents.monitoring import Monitoring
 from engine import pathway as pathway_model
 from engine import queries, worklist
 from engine.db import RUNS_DIR, create_run, open_run
@@ -63,26 +64,29 @@ class Run:
             append(self.con, "events", events)
         self.state = StateEngine(self.con, p.pathway)
         self.risk = RiskModel(p.pathway)
+        self.monitoring = Monitoring(p.pathway, run_id, dict(self.con.execute("SELECT name, facility_id FROM facilities").fetchall()))
         feedback.register(run_id, self.sim)
         self.day = -1  # the last day done
         self.last_ms = 0.0
         self.capacity = None  # slots_total and slots_booked as last written
 
-    def tick(self) -> int:
-        """Day `self.day + 1`, SPEC §9 steps 1–8. Returns the day."""
+    def tick(self) -> list[dict]:
+        """Day `self.day + 1`, SPEC §9 steps 1–8. Returns the day's alert messages (the agents arm's are
+        pushed)."""
         t = time.perf_counter()
         d = self.day + 1
         append(self.con, "events", self.sim.step(d))  # 1
         self.state.update(self.con, d)                  # 2
         self.risk.update(self.con, self.state, d)       # 3
+        messages = self.monitoring.run(self.con, self.state, self.risk, d, self.scenario)  # 4
         self.state.refresh_kpi(self.con, d)             # 5: views (sankey_flows is a DuckDB view)
         self.state.refresh_map(self.con, d, self.risk.risk, HIGH_RISK)
         if self.agents:                                 # 6: the baseline arm is without CarePath
-            worklist.refresh(self.con, self.state, self.risk, d)
+            worklist.refresh(self.con, self.state, self.risk, d, self.monitoring.fired)
         self._write_capacity()
         self.day = d
         self.last_ms = (time.perf_counter() - t) * 1000
-        return d
+        return messages
 
     def _write_capacity(self) -> None:
         """capacity_slots, which free_slots reads (SPEC §6). Rewriting all 18,585 rows took 70 ms a day and
@@ -125,9 +129,9 @@ class Demo:
     def run_ids(self, scenario: int) -> list[str]:
         return [f"s{scenario}_{arm}" for arm in ARMS]
 
-    def _parallel(self, work: Callable[[str], object], run_ids: list[str]) -> None:
-        for future in [self.pool.submit(work, run_id) for run_id in run_ids]:
-            future.result()  # raises the first failure
+    def _parallel(self, work: Callable[[str], object], run_ids: list[str]) -> dict[str, object]:
+        futures = {run_id: self.pool.submit(work, run_id) for run_id in run_ids}
+        return {run_id: f.result() for run_id, f in futures.items()}  # raises the first failure
 
     def _build(self, run_id: str, day: int) -> None:
         old = self.runs.pop(run_id, None)
@@ -168,8 +172,8 @@ class Demo:
             if self.day + 1 >= self.days:
                 self.speed = 0
                 return []
-            self._parallel(lambda run_id: self.runs[run_id].tick(), self.run_ids(self.scenario))
-            return [self.tick_message()]
+            messages = self._parallel(lambda run_id: self.runs[run_id].tick(), self.run_ids(self.scenario))
+            return [self.tick_message()] + messages[self.default_run()]  # the screen shows the agents arm
 
     def jump(self, day: int) -> list[dict]:
         if not 0 <= day < self.days:

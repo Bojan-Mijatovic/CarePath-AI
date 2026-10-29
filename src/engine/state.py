@@ -51,8 +51,9 @@ def _nullable(values: np.ndarray, present: np.ndarray) -> pd.arrays.IntegerArray
 class StateEngine:
     def __init__(self, con: duckdb.DuckDBPyConnection, pathway: Pathway):
         self.pathway = pathway
-        patients = con.execute("SELECT patient_id, asst_id, comune_istat, age, distance_km, lives_alone, sex "
-                               "FROM patients ORDER BY patient_id").df()
+        patients = con.execute("SELECT p.patient_id, p.asst_id, p.comune_istat, p.age, p.distance_km, p.lives_alone, "
+                               "p.sex, c.name AS comune_name FROM patients p LEFT JOIN comuni c USING (comune_istat) "
+                               "ORDER BY p.patient_id").df()
         self.ids = pd.Index(patients.patient_id)
         self.asst = patients.asst_id.to_numpy(object)
         self.comune = patients.comune_istat.to_numpy(object)
@@ -60,6 +61,7 @@ class StateEngine:
         self.distance_km = patients.distance_km.to_numpy(float)
         self.lives_alone = patients.lives_alone.to_numpy(bool)
         self.female = (patients.sex == "F").to_numpy(bool)  # Italian agreement in the worklist's texts
+        self.comune_name = patients.comune_name.to_numpy(object)  # for alert texts
         n, k = len(patients), len(pathway.steps)
         self.step_ids = np.array([s.id for s in pathway.steps], object)
         self.pos = {s.id: j for j, s in enumerate(pathway.steps)}
@@ -71,6 +73,8 @@ class StateEngine:
         self.done = np.full((k, n), NO_DAY)        # same, plus readings for a telemonitoring step
         self.booked_on = np.full((k, n), NO_DAY)   # latest BOOKING of the step's service ...
         self.booked_for = np.full((k, n), NO_DAY)  # ... and the day it is booked for
+        self.pulled = np.full((k, n), NEVER)       # a rule's earlier deadline for the step (SPEC §4) ...
+        self.pulled_on = np.full((k, n), NO_DAY)   # ... set that day; it holds until done or restarted
         self.last_drug = np.full((len(pathway.eligibility.any_drug_atc), n), NO_DAY)  # last DISPENSE per drug
         self.telemon_started = np.zeros(n, bool)  # ever a TELEMON_START or reading, warm-up included
         self.last_reading = np.full(n, NO_DAY)
@@ -180,6 +184,24 @@ class StateEngine:
         np.add.at(self.index_discharges, i[discharge & (day >= 0)], 1)
         np.maximum.at(self.last_index_discharge, i[discharge], day[discharge])
 
+    def _restarts(self) -> np.ndarray:
+        """Per step and patient, the last day the step's clock started again without the step being done:
+        its anchor for a step with `after`, the last start step (a discharge) for a periodic step (SPEC §5.1)."""
+        k, n = self.own.shape
+        start = self.own[self.starts].max(axis=0) if self.starts else np.full(n, NO_DAY)
+        restart = np.full((k, n), NO_DAY)
+        for j, s in enumerate(self.pathway.steps):
+            if s.after is not None:
+                restart[j] = self.own[self.pos[s.after]]
+            elif s.every_days is not None:
+                restart[j] = start
+        return restart
+
+    def _pulls_holding(self) -> np.ndarray:
+        """A rule's pull holds until the step is done after the pull day or its clock starts again after it,
+        for example a new discharge after a readmission (SPEC §4)."""
+        return (self.pulled_on > self.done) & (self.pulled_on >= self._restarts())
+
     def _sweep(self, day: int) -> tuple:
         """Status of every patient on `day` (SPEC §5.1)."""
         steps, th = self.pathway.steps, self.pathway.status_thresholds
@@ -193,6 +215,7 @@ class StateEngine:
                 due[j] = np.where(pending, anchor + s.due_days, NEVER)
             elif s.every_days is not None:
                 due[j] = np.minimum(np.maximum.reduce([self.done[j], start, self.enrolled_day]) + s.every_days, NEVER)
+        due = np.where(self._pulls_holding(), np.minimum(due, self.pulled), due)
         pending = due < NEVER
         self.due = due  # per step and patient, NEVER when nothing is due; the worklist reads it
         left = due - day
@@ -261,6 +284,18 @@ class StateEngine:
                 con.execute(sql)
                 con.unregister("state_rows")
         return len(c)
+
+    def pull(self, step_id: str, who: np.ndarray, day: int, due_days: int) -> None:
+        """A rule's `{"step", "due_days"}` (SPEC §4), from Monitoring, for the patients in `who` (a mask) on
+        whom the rule started to hold today: the step falls due `due_days` after `day`, or stays at an earlier
+        pull still holding (`_pulls_holding`). The next sweep shows it; the tools read the same deadlines from
+        `deviations` (SPEC §6)."""
+        j = self.pos[step_id]
+        holding = self._pulls_holding()[j]
+        self.pulled[j, who & holding] = np.minimum(self.pulled[j, who & holding], day + due_days)
+        fresh = who & ~holding
+        self.pulled[j, fresh] = day + due_days
+        self.pulled_on[j, fresh] = day
 
     def reading_on(self, day: int, fallback: int) -> np.ndarray:
         """The weight read on `day`, or else on `fallback`; NaN without either."""

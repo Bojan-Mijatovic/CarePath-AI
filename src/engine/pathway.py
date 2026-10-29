@@ -74,6 +74,7 @@ class Step(Strict):
     specialty: str | None = None
     loinc: list[str] | None = None
     service: str | None = Field(None, pattern=ID, description="capacity service it is booked in: capacity_slots.service and the BOOKING code")
+    max_wait_days: int | None = Field(None, gt=0, description="regional alarm when a facility's mean wait for the service is longer")
     due_days: int | None = Field(None, gt=0, description="due this many days after the `after` step")
     after: str | None = Field(None, pattern=ID)
     every_days: int | None = Field(None, gt=0, description="repeats with this period")
@@ -84,6 +85,8 @@ class Step(Strict):
             raise ValueError(f"step {self.id}: due_days and after go together")
         if self.every_days is not None and self.due_days is not None:
             raise ValueError(f"step {self.id}: use either due_days/after or every_days")
+        if self.max_wait_days is not None and self.service is None:
+            raise ValueError(f"step {self.id}: max_wait_days needs a service, or there is no wait to measure")
         return self
 
 

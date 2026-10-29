@@ -224,6 +224,20 @@
           "description": "capacity service it is booked in: capacity_slots.service and the BOOKING code",
           "title": "Service"
         },
+        "max_wait_days": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "regional alarm when a facility's mean wait for the service is longer",
+          "title": "Max Wait Days"
+        },
         "due_days": {
           "anyOf": [
             {

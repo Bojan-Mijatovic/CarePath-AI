@@ -36,6 +36,8 @@ def test_hf_text_has_the_codes_rules_thresholds_and_escalation():
     assert "2 kg o più in 3 giorni" in HF_IT  # weight_gain rule
     assert "entro 7 giorni" in HF_IT
     assert "da 30 giorni" in HF_IT  # no_dispense('C03CA01', 30)
+    echo = next(s for s in p.steps if s.id == "echo")
+    assert f"attesa media per l'ecocardiogramma, sulle prenotazioni degli ultimi 7 giorni, supera {echo.max_wait_days} giorni" in HF_IT
     t, e = p.status_thresholds, p.escalation
     assert f"entro {t.due_soon_days} giorni" in HF_IT
     assert f"supera i {t.dropped_after_days} giorni" in HF_IT

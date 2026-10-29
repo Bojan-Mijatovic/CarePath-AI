@@ -1,9 +1,9 @@
 """worklist_today: who the Centro Servizi calls today, and why (SPEC §5.2, C20; delivery plan step 2.4).
 
-One row per patient who is out of hospital and has an overdue step or a high risk, ranked by risk. The
-reasons are texts filled by code from the pathway's step and drug names (AC17), in Italian and English:
-every overdue step with its days, and for a high-risk patient the chance of admission with the drivers
-Risk found, each with its value. Rows are kept for every day, so the console can go back to the list of
+One row per patient who is out of hospital and has an overdue step, a high risk or a pathway rule that
+holds (Monitoring, step 2.8), ranked by risk. The reasons are texts filled by code from the pathway's step
+and drug names (AC17), in Italian and English: every overdue step with its days, every rule that holds
+with its values, and for a high-risk patient the chance of admission with the drivers Risk found. Rows are kept for every day, so the console can go back to the list of
 day 31 (demo step 9a). The escalation step comes from pathway_state (the action service owns it);
 `script` waits for the Daily Worklist agent (phase 3) and `outcome` for the call (steps 2.12 and 2.20).
 
@@ -16,6 +16,7 @@ import duckdb
 import numpy as np
 import pandas as pd
 
+from engine import rules
 from engine.risk import HIGH_RISK, RiskModel, features
 from engine.state import NEVER, StateEngine
 
@@ -89,17 +90,27 @@ def _joined(columns: list[pd.Series]) -> pd.Series:
     return out
 
 
-def build(state: StateEngine, risk: RiskModel, day: int) -> pd.DataFrame:
-    """The day's list: patient_id, rank, risk_score, reasons_it, reasons_en (state and risk updated to day)."""
+def build(state: StateEngine, risk: RiskModel, day: int, fired: dict[str, np.ndarray] | None = None) -> pd.DataFrame:
+    """The day's list: patient_id, rank, risk_score, reasons_it, reasons_en (state and risk updated to day).
+    `fired` is who meets each pathway rule today, from Monitoring (step 2.8)."""
+    fired = fired or {}
     e = (state.enrolled_day <= day) & ~state.in_hospital()
     late = (state.due < day) & (state.due < NEVER)  # per step, overdue today (SPEC §5.1)
-    on_list = e & (late.any(axis=0) | (risk.risk >= HIGH_RISK))
+    ruled = np.any(list(fired.values()), axis=0) if fired else np.zeros(len(e), bool)
+    on_list = e & (late.any(axis=0) | (risk.risk >= HIGH_RISK) | ruled)
     idx = np.flatnonzero(on_list)
     order = np.lexsort((idx, -risk.risk[idx]))  # highest risk first; patient_id breaks ties
     idx = idx[order]
     if not len(idx):
         return pd.DataFrame(columns=COLUMNS)
     parts = {lang: [s] for lang, s in _risk_reasons(state, risk, day, idx).items()}
+    for rule in state.pathway.rules:  # each rule that holds, with its values
+        hit = np.flatnonzero(fired.get(rule.id, np.zeros(len(e), bool))[idx])
+        texts = rules.texts(rule, state, risk.risk, day, idx[hit])
+        for lang in parts:
+            col = pd.Series(None, index=range(len(idx)), dtype=object)
+            col[hit] = texts[lang]
+            parts[lang].append(col)
     for j, step in enumerate(state.pathway.steps):  # every overdue step with its days, vectorised
         hit = late[j, idx]
         n = pd.Series(day - state.due[j, idx]).astype(str)
@@ -113,9 +124,10 @@ def build(state: StateEngine, risk: RiskModel, day: int) -> pd.DataFrame:
                          "pathway_id": state.pathway.pathway_id})
 
 
-def refresh(con: duckdb.DuckDBPyConnection, state: StateEngine, risk: RiskModel, day: int) -> int:
+def refresh(con: duckdb.DuckDBPyConnection, state: StateEngine, risk: RiskModel, day: int,
+            fired: dict[str, np.ndarray] | None = None) -> int:
     """Writes the day's worklist_today rows. Returns how many patients are on the list."""
-    rows = build(state, risk, day)
+    rows = build(state, risk, day, fired)
     con.execute("DELETE FROM worklist_today WHERE day = $d", {"d": day})
     con.register("worklist_rows", rows)
     con.execute("""

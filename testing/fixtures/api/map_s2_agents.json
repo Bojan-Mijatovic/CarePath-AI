@@ -11,8 +11,8 @@
   {
     "comune_istat": "019002",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6087,
-    "risk_mean": 0.0255,
+    "adherence_pct": 0.587,
+    "risk_mean": 0.0256,
     "high_risk_patients": 1,
     "readmission_rate_30d": 0.25,
     "alarm": false
@@ -74,11 +74,11 @@
   {
     "comune_istat": "019010",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.5455,
-    "risk_mean": 0.0209,
+    "adherence_pct": 0.4545,
+    "risk_mean": 0.0212,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.5,
-    "alarm": false
+    "alarm": true
   },
   {
     "comune_istat": "019011",
@@ -137,8 +137,8 @@
   {
     "comune_istat": "019017",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6667,
-    "risk_mean": 0.0732,
+    "adherence_pct": 0.5556,
+    "risk_mean": 0.0734,
     "high_risk_patients": 1,
     "readmission_rate_30d": 0.0,
     "alarm": false
@@ -164,8 +164,8 @@
   {
     "comune_istat": "019020",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.5882,
-    "risk_mean": 0.0187,
+    "adherence_pct": 0.5294,
+    "risk_mean": 0.0193,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.5,
     "alarm": false
@@ -218,7 +218,7 @@
   {
     "comune_istat": "019026",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.5823,
+    "adherence_pct": 0.5696,
     "risk_mean": 0.0258,
     "high_risk_patients": 2,
     "readmission_rate_30d": 0.1667,
@@ -263,7 +263,7 @@
   {
     "comune_istat": "019031",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.8182,
+    "adherence_pct": 0.7727,
     "risk_mean": 0.0583,
     "high_risk_patients": 1,
     "readmission_rate_30d": 0.25,
@@ -281,8 +281,8 @@
   {
     "comune_istat": "019033",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6923,
-    "risk_mean": 0.0232,
+    "adherence_pct": 0.6538,
+    "risk_mean": 0.0234,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.0,
     "alarm": false
@@ -290,16 +290,16 @@
   {
     "comune_istat": "019034",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.5294,
+    "adherence_pct": 0.4706,
     "risk_mean": 0.026,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.0,
-    "alarm": false
+    "alarm": true
   },
   {
     "comune_istat": "019035",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6305,
+    "adherence_pct": 0.6284,
     "risk_mean": 0.0243,
     "high_risk_patients": 4,
     "readmission_rate_30d": 0.0,
@@ -308,7 +308,7 @@
   {
     "comune_istat": "019036",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6431,
+    "adherence_pct": 0.6373,
     "risk_mean": 0.024,
     "high_risk_patients": 8,
     "readmission_rate_30d": 0.1587,
@@ -363,7 +363,7 @@
     "comune_istat": "019043",
     "pathway_id": "hf_lombardia_v1",
     "adherence_pct": 0.4615,
-    "risk_mean": 0.0373,
+    "risk_mean": 0.0374,
     "high_risk_patients": 0,
     "readmission_rate_30d": null,
     "alarm": true
@@ -470,8 +470,8 @@
   {
     "comune_istat": "019055",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6,
-    "risk_mean": 0.0216,
+    "adherence_pct": 0.575,
+    "risk_mean": 0.0222,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.25,
     "alarm": false
@@ -489,7 +489,7 @@
     "comune_istat": "019057",
     "pathway_id": "hf_lombardia_v1",
     "adherence_pct": null,
-    "risk_mean": 0.0423,
+    "risk_mean": 0.0425,
     "high_risk_patients": 1,
     "readmission_rate_30d": 0.0,
     "alarm": false
@@ -524,11 +524,11 @@
   {
     "comune_istat": "019061",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.5,
+    "adherence_pct": 0.4167,
     "risk_mean": 0.0247,
     "high_risk_patients": 0,
     "readmission_rate_30d": null,
-    "alarm": false
+    "alarm": true
   },
   {
     "comune_istat": "019062",
@@ -569,7 +569,7 @@
   {
     "comune_istat": "019066",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6744,
+    "adherence_pct": 0.6512,
     "risk_mean": 0.0232,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.2,
@@ -633,7 +633,7 @@
     "comune_istat": "019074",
     "pathway_id": "hf_lombardia_v1",
     "adherence_pct": 0.5882,
-    "risk_mean": 0.0183,
+    "risk_mean": 0.0186,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.0,
     "alarm": false
@@ -741,7 +741,7 @@
     "comune_istat": "019086",
     "pathway_id": "hf_lombardia_v1",
     "adherence_pct": 0.4103,
-    "risk_mean": 0.0332,
+    "risk_mean": 0.033,
     "high_risk_patients": 1,
     "readmission_rate_30d": 0.3333,
     "alarm": true
@@ -830,7 +830,7 @@
   {
     "comune_istat": "019096",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.4375,
+    "adherence_pct": 0.375,
     "risk_mean": 0.0284,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.0,
@@ -848,8 +848,8 @@
   {
     "comune_istat": "019098",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6224,
-    "risk_mean": 0.0271,
+    "adherence_pct": 0.6084,
+    "risk_mean": 0.0272,
     "high_risk_patients": 5,
     "readmission_rate_30d": 0.0,
     "alarm": false
@@ -875,11 +875,11 @@
   {
     "comune_istat": "019101",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.5,
-    "risk_mean": 0.0298,
+    "adherence_pct": 0.4,
+    "risk_mean": 0.0297,
     "high_risk_patients": 0,
     "readmission_rate_30d": null,
-    "alarm": false
+    "alarm": true
   },
   {
     "comune_istat": "019102",
@@ -1028,8 +1028,8 @@
   {
     "comune_istat": "020002",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.7302,
-    "risk_mean": 0.0273,
+    "adherence_pct": 0.7143,
+    "risk_mean": 0.0274,
     "high_risk_patients": 2,
     "readmission_rate_30d": 0.1667,
     "alarm": false
@@ -1047,7 +1047,7 @@
     "comune_istat": "020007",
     "pathway_id": "hf_lombardia_v1",
     "adherence_pct": 0.7049,
-    "risk_mean": 0.028,
+    "risk_mean": 0.0282,
     "high_risk_patients": 1,
     "readmission_rate_30d": 0.0,
     "alarm": false
@@ -1065,7 +1065,7 @@
     "comune_istat": "020010",
     "pathway_id": "hf_lombardia_v1",
     "adherence_pct": 0.6957,
-    "risk_mean": 0.0291,
+    "risk_mean": 0.0292,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.6667,
     "alarm": false
@@ -1082,8 +1082,8 @@
   {
     "comune_istat": "020012",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.55,
-    "risk_mean": 0.0279,
+    "adherence_pct": 0.5,
+    "risk_mean": 0.028,
     "high_risk_patients": 0,
     "readmission_rate_30d": null,
     "alarm": false
@@ -1118,7 +1118,7 @@
   {
     "comune_istat": "020016",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.569,
+    "adherence_pct": 0.5517,
     "risk_mean": 0.0267,
     "high_risk_patients": 2,
     "readmission_rate_30d": 0.0,
@@ -1127,8 +1127,8 @@
   {
     "comune_istat": "020017",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.653,
-    "risk_mean": 0.0323,
+    "adherence_pct": 0.6418,
+    "risk_mean": 0.0324,
     "high_risk_patients": 6,
     "readmission_rate_30d": 0.1667,
     "alarm": false
@@ -1163,7 +1163,7 @@
   {
     "comune_istat": "020021",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6757,
+    "adherence_pct": 0.6703,
     "risk_mean": 0.023,
     "high_risk_patients": 1,
     "readmission_rate_30d": 0.0,
@@ -1172,7 +1172,7 @@
   {
     "comune_istat": "020022",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.7234,
+    "adherence_pct": 0.7021,
     "risk_mean": 0.0323,
     "high_risk_patients": 1,
     "readmission_rate_30d": 0.0,
@@ -1182,7 +1182,7 @@
     "comune_istat": "020024",
     "pathway_id": "hf_lombardia_v1",
     "adherence_pct": 0.6,
-    "risk_mean": 0.0289,
+    "risk_mean": 0.0292,
     "high_risk_patients": 0,
     "readmission_rate_30d": 1.0,
     "alarm": false
@@ -1235,7 +1235,7 @@
   {
     "comune_istat": "020030",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6297,
+    "adherence_pct": 0.6255,
     "risk_mean": 0.0233,
     "high_risk_patients": 1,
     "readmission_rate_30d": 0.069,
@@ -1316,7 +1316,7 @@
   {
     "comune_istat": "020039",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.7368,
+    "adherence_pct": 0.7158,
     "risk_mean": 0.0248,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.0,
@@ -1361,7 +1361,7 @@
   {
     "comune_istat": "020045",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6147,
+    "adherence_pct": 0.6104,
     "risk_mean": 0.0209,
     "high_risk_patients": 1,
     "readmission_rate_30d": 0.1538,
@@ -1388,11 +1388,11 @@
   {
     "comune_istat": "020048",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.5,
-    "risk_mean": 0.0229,
+    "adherence_pct": 0.4444,
+    "risk_mean": 0.023,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.0,
-    "alarm": false
+    "alarm": true
   },
   {
     "comune_istat": "020050",
@@ -1406,7 +1406,7 @@
   {
     "comune_istat": "020051",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.5342,
+    "adherence_pct": 0.5205,
     "risk_mean": 0.0231,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.0,
@@ -1416,7 +1416,7 @@
     "comune_istat": "020052",
     "pathway_id": "hf_lombardia_v1",
     "adherence_pct": 0.6129,
-    "risk_mean": 0.0261,
+    "risk_mean": 0.0262,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.0,
     "alarm": false
@@ -1424,8 +1424,8 @@
   {
     "comune_istat": "020053",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.619,
-    "risk_mean": 0.0282,
+    "adherence_pct": 0.5952,
+    "risk_mean": 0.0283,
     "high_risk_patients": 2,
     "readmission_rate_30d": 0.0,
     "alarm": false
@@ -1496,7 +1496,7 @@
   {
     "comune_istat": "020061",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.549,
+    "adherence_pct": 0.5392,
     "risk_mean": 0.0267,
     "high_risk_patients": 1,
     "readmission_rate_30d": 0.0,
@@ -1532,7 +1532,7 @@
   {
     "comune_istat": "020065",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.68,
+    "adherence_pct": 0.676,
     "risk_mean": 0.0253,
     "high_risk_patients": 2,
     "readmission_rate_30d": 0.2222,
@@ -1541,8 +1541,8 @@
   {
     "comune_istat": "020066",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6709,
-    "risk_mean": 0.0294,
+    "adherence_pct": 0.6667,
+    "risk_mean": 0.0295,
     "high_risk_patients": 4,
     "readmission_rate_30d": 0.1429,
     "alarm": false
@@ -1559,7 +1559,7 @@
   {
     "comune_istat": "020070",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6897,
+    "adherence_pct": 0.6782,
     "risk_mean": 0.0239,
     "high_risk_patients": 0,
     "readmission_rate_30d": 0.0,
@@ -1577,7 +1577,7 @@
   {
     "comune_istat": "020072",
     "pathway_id": "hf_lombardia_v1",
-    "adherence_pct": 0.6044,
+    "adherence_pct": 0.5934,
     "risk_mean": 0.0286,
     "high_risk_patients": 2,
     "readmission_rate_30d": 0.2222,

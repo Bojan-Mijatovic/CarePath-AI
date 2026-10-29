@@ -64,7 +64,14 @@ def test_patient_360(built):
         for item in p["timeline"]:
             assert list(item) == (EVENT_ITEM if item["kind"] == "event" else ACTION_ITEM), item
         assert [i["day"] for i in p["timeline"]] == sorted(i["day"] for i in p["timeline"])
-        assert p["pathways"][0]["status"] == "on_track"  # day 62 (test_engine_state covers every day)
+    # Day 62. With the call on day 31 Maria stays on track; without it her weight rises on day 43, the
+    # weight_gain rule pulls the cardiology visit to day 50 (step 2.8), and she is readmitted on day 47
+    # instead. Her discharge on day 55 starts the visit's clock again, which ends the pull: due on day 85.
+    agents_state = f[f"api/patient_{MARIA}_s2_agents.json"]["pathways"][0]
+    baseline_state = f[f"api/patient_{MARIA}_s2_baseline.json"]["pathways"][0]
+    assert agents_state["status"] == "on_track"
+    assert (baseline_state["status"], baseline_state["overdue_steps"], baseline_state["next_due_day"]) == (
+        "on_track", [], 55 + 30)
     days = lambda arm, t: [i["day"] for i in f[f"api/patient_{MARIA}_{arm}.json"]["timeline"] if i.get("event_type") == t]
     assert days("s2_baseline", "ADMISSION") == [-8, 47]
     assert days("s2_agents", "ADMISSION") == [-8]

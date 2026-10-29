@@ -4,8 +4,8 @@
     "patient_id": "p_05556",
     "risk_score": 0.9676,
     "reasons": {
-      "it": "Rischio alto: 97% di ricovero in 30 giorni (+2,2 kg in 3 giorni, dimessa 29 giorni fa, 85 anni)",
-      "en": "High risk: 97% chance of admission in 30 days (+2.2 kg in 3 days, discharged 29 days ago, aged 85)"
+      "it": "Rischio alto: 97% di ricovero in 30 giorni (+2,2 kg in 3 giorni, dimessa 29 giorni fa, 85 anni); Peso +2,2 kg in 3 giorni: Visita cardiologica entro 7 giorni",
+      "en": "High risk: 97% chance of admission in 30 days (+2.2 kg in 3 days, discharged 29 days ago, aged 85); Weight +2.2 kg in 3 days: Cardiology visit within 7 days"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -19,8 +19,8 @@
     "patient_id": "p_06600",
     "risk_score": 0.9662,
     "reasons": {
-      "it": "Rischio alto: 97% di ricovero in 30 giorni (+3,1 kg in 3 giorni, ultimo ritiro di furosemide 11 giorni fa)",
-      "en": "High risk: 97% chance of admission in 30 days (+3.1 kg in 3 days, furosemide last collected 11 days ago)"
+      "it": "Rischio alto: 97% di ricovero in 30 giorni (+3,1 kg in 3 giorni, ultimo ritiro di furosemide 11 giorni fa); Peso +3,1 kg in 3 giorni: Visita cardiologica entro 7 giorni",
+      "en": "High risk: 97% chance of admission in 30 days (+3.1 kg in 3 days, furosemide last collected 11 days ago); Weight +3.1 kg in 3 days: Cardiology visit within 7 days"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -34,8 +34,8 @@
     "patient_id": "p_03527",
     "risk_score": 0.8946,
     "reasons": {
-      "it": "Rischio alto: 89% di ricovero in 30 giorni (+2,3 kg in 3 giorni, dimesso 147 giorni fa, 55,6 km dall'ospedale)",
-      "en": "High risk: 89% chance of admission in 30 days (+2.3 kg in 3 days, discharged 147 days ago, 55.6 km from hospital)"
+      "it": "Rischio alto: 89% di ricovero in 30 giorni (+2,3 kg in 3 giorni, dimesso 147 giorni fa, 55,6 km dall'ospedale); Peso +2,3 kg in 3 giorni: Visita cardiologica entro 7 giorni; Furosemide non ritirato negli ultimi 30 giorni",
+      "en": "High risk: 89% chance of admission in 30 days (+2.3 kg in 3 days, discharged 147 days ago, 55.6 km from hospital); Weight +2.3 kg in 3 days: Cardiology visit within 7 days; Furosemide not collected in the last 30 days"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -64,8 +64,8 @@
     "patient_id": "p_05108",
     "risk_score": 0.4948,
     "reasons": {
-      "it": "Rischio alto: 49% di ricovero in 30 giorni (dimesso 7 giorni fa, ultimo ritiro di furosemide 128 giorni fa, ultima lettura oggi)",
-      "en": "High risk: 49% chance of admission in 30 days (discharged 7 days ago, furosemide last collected 128 days ago, last reading today)"
+      "it": "Rischio alto: 49% di ricovero in 30 giorni (dimesso 7 giorni fa, ultimo ritiro di furosemide 128 giorni fa, ultima lettura oggi); Furosemide non ritirato negli ultimi 30 giorni",
+      "en": "High risk: 49% chance of admission in 30 days (discharged 7 days ago, furosemide last collected 128 days ago, last reading today); Furosemide not collected in the last 30 days"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -94,8 +94,8 @@
     "patient_id": "p_03803",
     "risk_score": 0.363,
     "reasons": {
-      "it": "Rischio alto: 36% di ricovero in 30 giorni (+2,0 kg in 3 giorni, ultimo ritiro di furosemide 10 giorni fa); Esame BNP in ritardo di 80 giorni",
-      "en": "High risk: 36% chance of admission in 30 days (+2.0 kg in 3 days, furosemide last collected 10 days ago); BNP test 80 days overdue"
+      "it": "Rischio alto: 36% di ricovero in 30 giorni (+2,0 kg in 3 giorni, ultimo ritiro di furosemide 10 giorni fa); Peso +2,0 kg in 3 giorni: Visita cardiologica entro 7 giorni; Esame BNP in ritardo di 80 giorni",
+      "en": "High risk: 36% chance of admission in 30 days (+2.0 kg in 3 days, furosemide last collected 10 days ago); Weight +2.0 kg in 3 days: Cardiology visit within 7 days; BNP test 80 days overdue"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -109,8 +109,8 @@
     "patient_id": "p_09199",
     "risk_score": 0.3284,
     "reasons": {
-      "it": "Rischio alto: 33% di ricovero in 30 giorni (ultimo ritiro di furosemide oggi, 96 anni, 48,7 km dall'ospedale)",
-      "en": "High risk: 33% chance of admission in 30 days (furosemide last collected today, aged 96, 48.7 km from hospital)"
+      "it": "Rischio alto: 33% di ricovero in 30 giorni (ultimo ritiro di furosemide oggi, 96 anni, 48,7 km dall'ospedale); Furosemide non ritirato negli ultimi 30 giorni",
+      "en": "High risk: 33% chance of admission in 30 days (furosemide last collected today, aged 96, 48.7 km from hospital); Furosemide not collected in the last 30 days"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -124,8 +124,8 @@
     "patient_id": "p_01239",
     "risk_score": 0.3025,
     "reasons": {
-      "it": "Rischio alto: 30% di ricovero in 30 giorni (ultimo ritiro di furosemide oggi, dimessa 69 giorni fa); Telemonitoraggio in ritardo di 62 giorni; Visita cardiologica in ritardo di 39 giorni",
-      "en": "High risk: 30% chance of admission in 30 days (furosemide last collected today, discharged 69 days ago); Telemonitoring 62 days overdue; Cardiology visit 39 days overdue"
+      "it": "Rischio alto: 30% di ricovero in 30 giorni (ultimo ritiro di furosemide oggi, dimessa 69 giorni fa); Furosemide non ritirato negli ultimi 30 giorni; Telemonitoraggio in ritardo di 62 giorni; Visita cardiologica in ritardo di 39 giorni",
+      "en": "High risk: 30% chance of admission in 30 days (furosemide last collected today, discharged 69 days ago); Furosemide not collected in the last 30 days; Telemonitoring 62 days overdue; Cardiology visit 39 days overdue"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -139,8 +139,8 @@
     "patient_id": "p_08131",
     "risk_score": 0.2993,
     "reasons": {
-      "it": "Rischio alto: 30% di ricovero in 30 giorni (dimesso 6 giorni fa, ultimo ritiro di furosemide 50 giorni fa, vive solo)",
-      "en": "High risk: 30% chance of admission in 30 days (discharged 6 days ago, furosemide last collected 50 days ago, lives alone)"
+      "it": "Rischio alto: 30% di ricovero in 30 giorni (dimesso 6 giorni fa, ultimo ritiro di furosemide 50 giorni fa, vive solo); Furosemide non ritirato negli ultimi 30 giorni",
+      "en": "High risk: 30% chance of admission in 30 days (discharged 6 days ago, furosemide last collected 50 days ago, lives alone); Furosemide not collected in the last 30 days"
     },
     "pathways": [
       "hf_lombardia_v1"
@@ -229,8 +229,8 @@
     "patient_id": "p_02362",
     "risk_score": 0.2283,
     "reasons": {
-      "it": "Rischio alto: 23% di ricovero in 30 giorni (dimessa 10 giorni fa, ultimo ritiro di furosemide 35 giorni fa, ultima lettura oggi); Telemonitoraggio in ritardo di 3 giorni",
-      "en": "High risk: 23% chance of admission in 30 days (discharged 10 days ago, furosemide last collected 35 days ago, last reading today); Telemonitoring 3 days overdue"
+      "it": "Rischio alto: 23% di ricovero in 30 giorni (dimessa 10 giorni fa, ultimo ritiro di furosemide 35 giorni fa, ultima lettura oggi); Furosemide non ritirato negli ultimi 30 giorni; Telemonitoraggio in ritardo di 3 giorni",
+      "en": "High risk: 23% chance of admission in 30 days (discharged 10 days ago, furosemide last collected 35 days ago, last reading today); Furosemide not collected in the last 30 days; Telemonitoring 3 days overdue"
     },
     "pathways": [
       "hf_lombardia_v1"

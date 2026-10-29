@@ -32,12 +32,19 @@ def test_one_ranked_row_per_patient_with_a_reason(con):
                        {"d": DAY}).fetchall()
     assert [r[0] for r in rows] == list(range(1, len(rows) + 1))
     assert [r[1] for r in rows] == sorted((r[1] for r in rows), reverse=True)  # by risk
-    assert all(r[2] > 0 or r[1] >= HIGH_RISK for r in rows)
+    assert all(json.loads(r[3])["it"] for r in rows)  # everyone has a reason
     assert all(r[1] == r[4] for r in rows)  # the score Risk wrote today
     expected = con.execute("""
-        SELECT count(*) FROM pathway_state WHERE len(overdue_steps) > 0 OR risk_score >= $h""", {"h": HIGH_RISK}).fetchone()[0]
-    assert len(rows) <= expected  # minus the patients in hospital
-    assert len(rows) > 1000
+        SELECT count(*) FROM pathway_state WHERE len(overdue_steps) > 0 OR risk_score >= $h OR len(flags) > 0""",
+                           {"h": HIGH_RISK}).fetchone()[0]
+    assert 1000 < len(rows) <= expected + 50  # minus the patients in hospital, plus the few a weight rule adds
+    flagged_missing = con.execute("""
+        SELECT count(*) FROM pathway_state s
+        WHERE len(s.flags) > 0 AND s.patient_id NOT IN (SELECT patient_id FROM worklist_today WHERE day = $d)
+          AND NOT EXISTS (SELECT 1 FROM events e WHERE e.patient_id = s.patient_id AND e.event_type = 'ADMISSION'
+                          AND e.day > coalesce((SELECT max(day) FROM events x WHERE x.patient_id = s.patient_id
+                                                AND x.event_type = 'DISCHARGE'), -1000000))""", {"d": DAY}).fetchone()[0]
+    assert flagged_missing == 0  # a flag (Monitoring, step 2.8) puts a patient out of hospital on the list
 
 
 def test_top_20_are_high_risk_or_overdue(con):

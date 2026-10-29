@@ -208,6 +208,38 @@ def _current_due(p: Pathway, s: Step) -> str:
                USING (patient_id)"""
 
 
+def _pulled_due(p: Pathway, s: Step) -> str | None:
+    """(patient_id, due) where a rule pulled `s` earlier (SPEC §4, step 2.8): Monitoring records the day a
+    rule starts to hold in `deviations`; the pull holds until the step is done after that day or its clock
+    starts again after it (its anchor, or a start step for a periodic step), and the earliest such deadline
+    counts, as in engine.state."""
+    pulls = [r for r in p.rules if r.then.step == s.id]
+    if not pulls:
+        return None
+    if s.after is not None:
+        restart = _own(next(x for x in p.steps if x.id == s.after))
+    else:
+        restart = " OR ".join(_own(x) for x in _starts(p)) if s.every_days is not None and _starts(p) else "false"
+    return " UNION ALL ".join(f"""
+        SELECT v.patient_id, min(v.day) + {r.then.due_days} AS due
+        FROM deviations v
+        LEFT JOIN (SELECT e.patient_id, max(e.day) AS day FROM events e WHERE e.day <= $d AND {_done(s)} GROUP BY 1) dn
+               USING (patient_id)
+        LEFT JOIN (SELECT e.patient_id, max(e.day) AS day FROM events e WHERE e.day <= $d AND ({restart}) GROUP BY 1) rs
+               USING (patient_id)
+        WHERE v.pathway_id = $pw AND v.kind = 'rule' AND v.code = {_lit(r.id)} AND v.day <= $d
+          AND (dn.day IS NULL OR v.day > dn.day) AND (rs.day IS NULL OR v.day >= rs.day)
+        GROUP BY 1""" for r in pulls)
+
+
+def _open_due(p: Pathway, s: Step) -> str:
+    """(patient_id, due): the step's open deadline today, a rule's earlier one included."""
+    pulled = _pulled_due(p, s)
+    if pulled is None:
+        return _current_due(p, s)
+    return f"SELECT patient_id, min(due) AS due FROM ({_current_due(p, s)} UNION ALL {pulled}) GROUP BY 1"
+
+
 def _deadlines(p: Pathway, s: Step) -> str:
     """(patient_id, step, met) for every deadline of `s` that fell due in the last COMPLIANCE_PERIOD_DAYS
     days before $d. A deadline is met by a completion on or before its due day; one that a new anchor or a
@@ -358,7 +390,7 @@ def patients_overdue(ctx: Context, a: OverdueArgs) -> dict:
     asst = "AND p.asst_id = $asst" if a.asst else ""
     rows = ctx.db.rows(f"""
         SELECT x.patient_id, $d - x.due AS days_overdue, round(ps.risk_score, 4)
-        FROM ({_current_due(p, s)}) x JOIN patients p USING (patient_id)
+        FROM ({_open_due(p, s)}) x JOIN patients p USING (patient_id)
         JOIN pathway_state ps ON ps.patient_id = x.patient_id AND ps.pathway_id = $pw
         WHERE x.due < $d {asst} ORDER BY days_overdue DESC, x.patient_id""",
                        {"pw": p.pathway_id, "d": ctx.day} | ({"asst": a.asst} if a.asst else {}))

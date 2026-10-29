@@ -25,6 +25,7 @@ import pandas as pd
 from agents import tools
 from engine import pathway as pathway_model
 from engine.db import create_run, open_run, tool_cursor
+from agents.monitoring import Monitoring
 from engine import worklist
 from engine.queries import kpi_headline, map_comuni, patient_360, rows, sankey
 from engine.queries import worklist as worklist_rows
@@ -144,14 +145,16 @@ def build_runs(runs_dir: Path) -> dict:
                 append(con, "events", events)
             state = StateEngine(con, hf)
             risk = RiskModel(hf)
+            monitoring = Monitoring(hf, run_id, dict(con.execute("SELECT name, facility_id FROM facilities").fetchall()))
             for d in range(DAYS):
                 append(con, "events", sim.step(d))
                 state.update(con, d)
                 risk.update(con, state, d)
+                monitoring.run(con, state, risk, d, SCENARIO)
                 state.refresh_kpi(con, d)
                 state.refresh_map(con, d, risk.risk, HIGH_RISK)
                 if agents:
-                    worklist.refresh(con, state, risk, d)
+                    worklist.refresh(con, state, risk, d, monitoring.fired)
                 if agents and d == CALL_DAY:  # Intervention runs after the views (SPEC §9, steps 5–6)
                     call_maria(con, sim, d)
                 if agents and d == ALARM_DAY:
@@ -170,20 +173,15 @@ def stream(con, live: dict) -> dict[str, object]:
     best = max((n for n in slots if n != slow), key=slots.get)
     others = sum(v for n, v in waits.items() if n != slow) / (len(waits) - 1)
     call = rows(con, "SELECT * FROM actions WHERE action_id = $a", {"a": CALL_ID})[0]
-    f = maria_facts(con, CALL_DAY)
+    # The first alerts Monitoring raised from the demo's start day on (step 2.8)
+    alert = lambda level: rows(con, """
+        SELECT day, level, facility_id, investigation_id, text FROM alerts
+        WHERE level = $l AND day >= 23 ORDER BY day, alert_id LIMIT 1""", {"l": level})[0]
+    as_message = lambda a: msg("alert", a.pop("day"), a)
     return {
         "tick.json": msg("tick", ALARM_DAY, {"speed": 1, "kpi": kpi_headline(con, ALARM_DAY, PATHWAY_ID)}),
-        "alert_patient.json": msg("alert", CALL_DAY, {
-            "level": "patient", "facility_id": None, "investigation_id": None,
-            "text": {"it": f"{MARIA} ({f['age']} anni, {f['comune']}): scorta di furosemide finita da "
-                           f"{f['days_without_drug']} giorni",
-                     "en": f"{MARIA} ({f['age']}, {f['comune']}): furosemide supply ran out {f['days_without_drug']} "
-                           "days ago"}}),
-        "alert_regional.json": msg("alert", ALARM_DAY, {
-            "level": "regional", "facility_id": live["ids"][slow], "investigation_id": INVESTIGATION_ID,
-            "text": {"it": f"{slow}: attesa per l'ecocardiogramma {it_number(waits[slow])} giorni, negli altri "
-                           f"ospedali {it_number(others)}",
-                     "en": f"{slow}: echo wait {waits[slow]:.1f} days, {others:.1f} at the other hospitals"}}),
+        "alert_patient.json": as_message(alert("patient")),
+        "alert_regional.json": as_message(alert("regional")),
         "action.json": msg("action", CALL_DAY, call),
         "investigation.json": [
             msg("investigation", ALARM_DAY, {

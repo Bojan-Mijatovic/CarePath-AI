@@ -66,7 +66,9 @@ def test_map_risk_matches_pathway_state(con):
 def test_sankey_counts_every_patient_once(con):
     total = con.execute("SELECT sum(patients) FROM sankey_flows").fetchone()[0]
     assert total == con.execute("SELECT count(*) FROM pathway_state").fetchone()[0]
-    # A step leads to itself only when it is periodic (lab_bnp every 90 days): most patients, so the console
-    # draws the Sankey in two columns, last step done and next step, where a loop is not a cycle (step 2.16).
+    # A step leads to itself when it is periodic (lab_bnp every 90 days, most patients) or a rule pulled it
+    # again (cardio_visit after a weight gain), so the console draws the Sankey in two columns, last step
+    # done and next step, where a loop is not a cycle (step 2.16).
     loops = {s for (s,) in con.execute("SELECT DISTINCT from_step FROM sankey_flows WHERE from_step = to_step").fetchall()}
-    assert loops == {"lab_bnp"}
+    assert "lab_bnp" in loops
+    assert loops <= {"lab_bnp", "cardio_visit"}

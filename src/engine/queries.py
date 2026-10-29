@@ -8,7 +8,7 @@ import json
 
 import duckdb
 
-JSON_COLUMNS = {"scope", "payload", "rationale", "evidence", "details", "reasons", "script"}
+JSON_COLUMNS = {"scope", "payload", "rationale", "evidence", "details", "reasons", "script", "text"}
 
 
 def rows(con: duckdb.DuckDBPyConnection, sql: str, params: dict | None = None) -> list[dict]:

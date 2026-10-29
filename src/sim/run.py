@@ -14,6 +14,7 @@ import duckdb
 import numpy as np
 import pandas as pd
 
+from agents.monitoring import Monitoring
 from engine import pathway as pathway_model
 from engine import worklist
 from engine.db import RUNS_DIR, create_run, open_run
@@ -52,6 +53,8 @@ def run(run_id: str, days: int = 365, seed: int = 42, overwrite: bool = False, r
         state = StateEngine(con, sim.pathway)
         risk = RiskModel(sim.pathway)
         agents = run_id.split("_")[1] == "agents"
+        sim_scenario = int(run_id[1])
+        monitoring = Monitoring(sim.pathway, run_id, dict(con.execute("SELECT name, facility_id FROM facilities").fetchall()))
         for d in range(sim.first_day, days):
             t0 = time.perf_counter()
             events = sim.step(d)
@@ -61,10 +64,11 @@ def run(run_id: str, days: int = 365, seed: int = 42, overwrite: bool = False, r
             if d >= 0:  # the first update reads the warm-up as history
                 state.update(con, d)
                 risk.update(con, state, d)
+                monitoring.run(con, state, risk, d, sim_scenario)
                 state.refresh_kpi(con, d)
                 state.refresh_map(con, d, risk.risk, HIGH_RISK)
                 if agents:
-                    worklist.refresh(con, state, risk, d)
+                    worklist.refresh(con, state, risk, d, monitoring.fired)
                 sim_ms.append((t1 - t0) * 1000)
                 write_ms.append((t2 - t1) * 1000)
                 state_ms.append((time.perf_counter() - t2) * 1000)

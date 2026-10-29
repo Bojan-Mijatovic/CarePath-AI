@@ -26,6 +26,8 @@ KPI_LEVELS = ("ats", "asst", "comune")
 ACTION_TYPES = ("reminder", "call_task", "notify_mmg", "reschedule", "enroll_proposal", "rule_proposal",
                 "pathway_proposal", "bed_proposal", "bed_assignment")
 ACTION_STATUSES = ("proposed", "approved", "executed", "rejected", "undone")
+DEVIATION_KINDS = ("rule", "overdue")
+ALERT_LEVELS = ("patient", "regional")
 AUDIT_EVENTS = ("created", "approved", "rejected", "executed", "undone", "config_changed")
 
 
@@ -152,6 +154,23 @@ TABLES = {
         script           JSON,
         outcome          VARCHAR,
         PRIMARY KEY (day, patient_id)""",
+    "deviations": f"""
+        day         INTEGER NOT NULL,
+        patient_id  VARCHAR NOT NULL,
+        pathway_id  VARCHAR NOT NULL,
+        kind        VARCHAR NOT NULL CHECK (kind IN {_one_of(DEVIATION_KINDS)}),
+        code        VARCHAR NOT NULL""",
+    "alerts": f"""
+        alert_id          VARCHAR PRIMARY KEY,
+        day               INTEGER NOT NULL,
+        level             VARCHAR NOT NULL CHECK (level IN {_one_of(ALERT_LEVELS)}),
+        pathway_id        VARCHAR NOT NULL,
+        patient_id        VARCHAR,
+        facility_id       VARCHAR,
+        step              VARCHAR,
+        text              JSON NOT NULL,
+        investigation_id  VARCHAR,
+        closed_day        INTEGER""",
     "actions": f"""
         action_id       VARCHAR PRIMARY KEY,
         agent           VARCHAR NOT NULL,

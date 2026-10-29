@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Status | **v1.7**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), all proposed 28 Oct 2026. Changes follow §0 |
-| Last updated | 28 Oct 2026 |
+| Status | **v1.8**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026. Changes follow §0 |
+| Last updated | 29 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
 | Rule | Nobody builds against anything that is not in this file. Whoever waits on another part works with fixtures of the same shape (`testing/fixtures/`, step 1.23) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C20 proposed in v1.1–v1.7)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C21 proposed in v1.1–v1.8)
 
 | # | Change | Why |
 |---|---|---|
@@ -50,6 +50,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C18 (D36) | `map_comuni` defined (§5.2): `adherence_pct` is the share of enrolled patients who are on track, collected every drug of the pathway in the last 60 days and, if ever on telemonitoring, sent a reading in the last 7 days; `alarm` is `adherence_pct` below 50%; fewer than 10 patients give NULL and no alarm; `risk_mean` and `high_risk_patients` are NULL until Risk (step 2.3). `sankey_flows` is a DuckDB view. Answers SPEC Q7 for the map | Q7 left the map's meaning open. Measured on all 3 scenarios, 154 comuni, days 35 and 62: `on_track_pct` alone spreads the hidden rural comuni of pattern 3 from rank 8 to 151 and dispensing alone stays at 69–100%; the combined measure ranges 20–91% (the prototype shows 38–76%) and puts them mostly among the 30 worst. The prototype frames exactly the comuni under 50% |
 | C19 (D37) | Risk defined (§5.1): the chance of an unplanned admission in the next 30 days; high risk is 0.10 or more; drivers only for high-risk patients. `map_comuni` gets `risk_mean` and `high_risk_patients`; `risk_drivers` returns `{drivers, patients}` over the segment's high-risk patients; both risk tools give `empty_result` only on a run where Risk never ran (§6) | The Solution Plan names XGBoost and top-3 drivers but no label, threshold or tool computation. Measured on seed 42 (not trained on): AUC 0.62 in all 3 scenarios, equal to the simulator's own hazard (0.62), so the 30-day outcome is mostly chance; a 7-day label scored 0.71 but rested on weight gain, which the pathway rule already catches, and ranked patients who left telemonitoring lower. 0.10 marks 1.2% of patients, 19% of whom are admitted within 30 days (7×). TreeSHAP for all 10,000 patients took 500 ms a tick, for the high-risk ones 12 ms |
 | C20 (D38) | `worklist_today` defined (§5.2): one list per day, agents arm only, everyone out of hospital with an overdue step or a high risk, ranked by risk; reasons filled by code; `pathways` a list of `pathway_id`s; `outcome` the day's `CALL` code. Pathway steps get a `label` and drugs a name in `drug_names`, both `{"it", "en"}` (§4) | Q7 left `pathways` and `outcome` open, and the list needs history: demo step 9a goes back to day 31's list on day 62. Reasons in two languages name steps and drugs; without names in the pathway file the code would have to name the disease (AC17). On day 30 of scenario 2 the list holds about 2,400 patients; the console shows the top 20 per Centro Servizi (step 2.20) |
+| C21 (D39) | Monitoring defined (§4, §5.3): how rules are evaluated and explained, a step's `max_wait_days` for the regional alarm, the tables `deviations` and `alerts`, patient alerts for high-risk patients only, pulls read by `patients_overdue` | The SPEC named Monitoring's outputs but not their rules or storage: "regional alarm when the same deviation exceeds a threshold at one facility" had no threshold, alerts had nowhere to live, and a pulled deadline existed only in memory, so a tool and the engine disagreed on overdue visits (239 against 314, caught by a test). Measured on scenario 2: about 160 new deviations a day, 8 of them of high-risk patients; a 30-day echo threshold alarms on days 29, 33 and 32 in scenarios 1–3 and nowhere else |
 
 ## 1. Scope
 
@@ -186,6 +187,10 @@ One JSON file per pathway in `spec/pathways/`, validated against `spec/pathways/
 
 Anything outside this grammar fails validation. That is how a generated pathway or rule is checked before activation.
 
+**Evaluation** (C21, `src/engine/rules.py`): a rule holds for an enrolled patient when every clause does. A feature that does not exist for the patient (no reading ever, so no `days_since_last_reading`) makes its clause false. `no_dispense(atc, n)` holds when the drug was not dispensed in the last `n` days, never included. `overdue(step, n)` holds when the step is overdue by `n` days or more. A `{"flag"}` rule sets the flag in `pathway_state.flags` while it holds. A `{"step", "due_days"}` rule pulls the step when it starts to hold: the step falls due `due_days` later, or stays at an earlier pull, until it is done after the pull day or its clock starts again after the pull day (§5.1: a new anchor for a step with `after`, a new discharge for a periodic step), so a readmission does not leave a visit overdue from before it; the sweep of the next day shows it. Texts that explain a rule are filled from its clauses, their values and the pathway's names ("Peso +2,1 kg in 3 giorni: Visita cardiologica entro 7 giorni"), so a rule needs no label.
+
+**`max_wait_days`** (C21, optional, only on a step with a `service`): a facility whose mean wait for the step, over the bookings of the last 7 days (`wait_by_hospital` with `period_days = 7`), is longer raises a regional alarm (§5.3). HF: echo, 30 days (PDTA §3).
+
 **Names** (C20): every step has a `label` and every drug of `any_drug_atc` a name in `drug_names`, both `{"it", "en"}`. Texts that name a step or a drug (worklist reasons, call scripts, rationales) take them from here, so no disease is named in code (AC17).
 
 **`service`** (C14, optional) names the capacity service a step is booked in: the `service` of `capacity_slots` and the `code` of its `BOOKING` events. A service belongs to one step of a pathway at most, so every booking maps to one step. The simulator books a step only if it has a service.
@@ -253,13 +258,28 @@ All views are DuckDB views or tables refreshed once per tick and must answer in 
 
 **`map_comuni`** (C18) is a table the tick refreshes for the current day, one row per comune with enrolled patients of the pathway, by where they live. `adherence_pct` is the share of those patients who meet all of: `status` is `on_track`; every drug in the pathway's `eligibility.any_drug_atc` dispensed in the last 60 days; if they ever started telemonitoring (warm-up included), a `TELEMON_READING` in the last 7 days. The windows are those of the `dispensing` and `telemonitoring` measures (§6). With fewer than 10 patients `adherence_pct` is NULL and `alarm` false; otherwise `alarm` is `adherence_pct < 0.5`, the prototype's low band. `readmission_rate_30d` equals the comune's `kpi_daily` row of the day. `risk_mean` is the mean `risk_score` of the comune's enrolled patients and `high_risk_patients` counts those at high risk (C19); both are NULL only where Risk did not run. Regional alarms from Monitoring (step 2.8) come as `alert` messages, not as map rows.
 
-**`worklist_today`** (C20) is a table with one list per day, kept for every day so the console can show an earlier day's list (demo step 9a). It is built on the tick of the agents arm only (§9 step 6; the baseline arm is without CarePath). A patient is on the list when out of hospital (an `ADMISSION` after the last `DISCHARGE` means in hospital) with at least one overdue step or a high risk (C19). `rank` orders by `risk_score`, highest first, then `patient_id`. `reasons` is filled by code from the pathway's names (§4): each overdue step with its days late, and for a high-risk patient the chance of admission with the drivers and their values, for example "Rischio alto: 96% di ricovero in 30 giorni (+2,9 kg in 3 giorni, 29,4 km dall'ospedale); Esame BNP in ritardo di 17 giorni". Driver texts are neutral ("ultimo ritiro di furosemide oggi"): a driver says a value raises the risk, not that something is missing. Flags from Monitoring (step 2.8) add their reasons there. `pathways` is the list of `pathway_id`s with a reason. `escalation_step` is the patient's highest in `pathway_state`. `script` is NULL until the Daily Worklist agent (phase 3). `outcome` is the code of the `CALL` event recorded for the patient that day (for example `completed`, `delivery_arranged`), NULL until called; the action service fills it (step 2.12).
+**`worklist_today`** (C20) is a table with one list per day, kept for every day so the console can show an earlier day's list (demo step 9a). It is built on the tick of the agents arm only (§9 step 6; the baseline arm is without CarePath). A patient is on the list when out of hospital (an `ADMISSION` after the last `DISCHARGE` means in hospital) with at least one overdue step, a high risk (C19) or a pathway rule that holds (C21). `rank` orders by `risk_score`, highest first, then `patient_id`. `reasons` is filled by code from the pathway's names (§4): each overdue step with its days late, and for a high-risk patient the chance of admission with the drivers and their values, for example "Rischio alto: 96% di ricovero in 30 giorni (+2,9 kg in 3 giorni, 29,4 km dall'ospedale); Esame BNP in ritardo di 17 giorni". Driver texts are neutral ("ultimo ritiro di furosemide oggi"): a driver says a value raises the risk, not that something is missing. Every rule that holds adds its text (§4), for example "Furosemide non ritirato negli ultimi 30 giorni". `pathways` is the list of `pathway_id`s with a reason. `escalation_step` is the patient's highest in `pathway_state`. `script` is NULL until the Daily Worklist agent (phase 3). `outcome` is the code of the `CALL` event recorded for the patient that day (for example `completed`, `delivery_arranged`), NULL until called; the action service fills it (step 2.12).
 
 **Readmission, PNE-style:** an unplanned `ADMISSION` within 30 days after a `DISCHARGE` with an HF main diagnosis. Rate = such readmissions ÷ HF discharges in the period. Simplified versus the official PNE protocol; the simplification is listed in the limitations.
 
 **Cost:** `est_readmission_cost_eur = readmissions × readmission_cost_eur`, a single configured parameter. Its value and source (e.g. the DRG tariff) are open question Q2; until then the column is NULL.
 
 **`kpi_daily`** (C14) is a table with one row per day from day 0, pathway, level and key. Keys are `ats` for the ATS, `asst_id` and `comune_istat`, by where the patient lives; a unit without enrolled patients has no row. `patients` counts enrolled patients; `on_track_pct` is a fraction (§2) despite its name; `overdue` does not include `dropped`. Readmissions cover the period from day 0 to the row's day: `readmissions_30d` counts unplanned admissions in the period within 30 days after an index discharge (the discharge may be in the warm-up), and `readmission_rate_30d` divides them by the index discharges in the period, or is NULL without discharges. The rate is noisy in the first days (day 0 of scenario 2: 5 of 8). `actions_executed` counts the pathway's actions executed up to that day and `actions_pending` those still `proposed`; an action counts where its patient lives, or only at ATS level when it has no patient.
+
+### 5.3 Monitoring: deviations and alerts (C21)
+
+Monitoring (`src/agents/monitoring.py`, step 2.8) runs on every tick of both arms after Risk (§9 step 4). Rules only, no LLM. It writes `flags`, pulls steps (§4) and fills two tables; it creates no actions (the action service does, step 2.12).
+
+| Table | Columns | One row per |
+|---|---|---|
+| `deviations` | `day`, `patient_id`, `pathway_id`, `kind` (`rule`, `overdue`), `code` (rule id or step id) | a rule that starts to hold for a patient, or a step that becomes overdue; Intervention acts on them (step 2.13), and the tools read rule pulls from them |
+| `alerts` | `alert_id` (`al_<run>_<n>`), `day`, `level` (`patient`, `regional`), `pathway_id`, `patient_id`, `facility_id`, `step`, `text` (`{"it", "en"}`), `investigation_id`, `closed_day` | an alert, as pushed on the stream (§10) |
+
+**Patient alert:** one per high-risk patient (C19) with new deviations that day, naming each with its values; about 8 a day in scenario 2 (D39). All deviations, of every patient, are in `deviations` and in the worklist.
+
+**Regional alarm:** a facility over a step's `max_wait_days` (§4) opens one alarm for that facility and step; it closes (`closed_day`) when the wait is back within the threshold, and a later breach opens a new one. Measured with the 30-day echo threshold: scenario 1 day 29 (Ospedale A), 2 day 33 (Ospedale B), 3 day 32 (Ospedale C); no other facility goes above 3 days. `investigation_id` is set when the Investigator starts (step 2.9).
+
+The baseline arm runs Monitoring too, since rules belong to the PDTA; only the agents arm's alerts are pushed.
 
 ## 6. Tools
 
@@ -307,7 +327,7 @@ Every number in `data` follows the precision rule in §2. `testing/test_tools_de
 
 - `compliance_by_step`: for each step with a deadline, the share of deadlines that fell due in the last 90 days and were met on time. Deadlines follow §5.1: a step with `after` gets one per event of that step; a periodic step gets one per completion, discharge or enrolment. A deadline that a newer anchor replaced before it fell due does not count.
 - `wait_by_hospital`: mean days from booking to the booked day, over the `BOOKING`s of the step's `service` (C14) made in the period by patients of the pathway, by the hospital or clinic booked. A step without a service gives `bad_argument`.
-- `patients_overdue`: patients with the step overdue today by the rules of §5.1 (the same set as `overdue_steps`), the most overdue first.
+- `patients_overdue`: patients with the step overdue today by the rules of §5.1 (the same set as `overdue_steps`), the most overdue first. A deadline a rule pulled earlier counts, read from `deviations` (C21); `compliance_by_step` counts the pathway's own deadlines only.
 - `free_slots`: free slots from tomorrow for `horizon_days`. On a live run the tick keeps `capacity_slots` current (step 2.1); on a finished run it is exact only on the last day.
 - `adherence_by_group` and `readmissions_by_comune`: at most the 10 worst groups (lowest adherence, highest readmission rate) with at least 10 patients, or 5 index discharges for readmissions; then `rest_of_ats` over every other patient of the pathway, or `null` when all groups are shown. Age bands: `<65`, `65-74`, `75-84`, `85+`. Comuni are named.
 - `readmission_rate_30d` over a period: §5.2 with the period's last `period_days` days in place of day 0 to today (180 days for `compare_segments`). `dispensing` and `telemonitoring` use 60 days and `on_time_fraction` pools every deadline of the last 90 days.
@@ -511,7 +531,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 |---|---|---|---|
 | Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D. **Closed** (D28): demo values, no clinical confirmation for the PoC | Italian colleague via R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source | R5 | week 2 |
-| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14–C20 proposed with D32–D38 (28 Oct 2026) | all, at the sync | week 1 |
+| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14–C21 proposed with D32–D39 (28 Oct 2026) | all, at the sync | week 1 |
 | Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |
 | Q5 | Daily limit of automatic actions per facility: 50 a sensible default? | R3, R5 | week 2 |
 | Q6 | Do we need calendar dates on screen, or is "Giorno N" enough for the audience? | R5 | week 2 |

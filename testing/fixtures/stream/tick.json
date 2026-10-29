@@ -7,9 +7,9 @@
     "kpi": {
       "pathway_id": "hf_lombardia_v1",
       "patients": 9981,
-      "on_track_pct": 0.7262,
-      "overdue": 698,
-      "dropped": 1610,
+      "on_track_pct": 0.7223,
+      "overdue": 725,
+      "dropped": 1611,
       "readmissions_30d": 49,
       "readmission_rate_30d": 0.1361,
       "actions_executed": 1,

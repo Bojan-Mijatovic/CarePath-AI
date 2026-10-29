@@ -19,6 +19,7 @@ Il percorso parte da ogni dimissione ospedaliera per scompenso cardiaco (ICD-9-C
 
 - Se il peso rilevato dal telemonitoraggio aumenta di 2 kg o più in 3 giorni, la visita cardiologica va anticipata ed eseguita entro 7 giorni.
 - Se il paziente non ritira il furosemide (ATC C03CA01) da 30 giorni, va segnalato un rischio di aderenza alla terapia.
+- Se in una struttura l'attesa media per l'ecocardiogramma, sulle prenotazioni degli ultimi 7 giorni, supera 30 giorni, va segnalato un allarme all'ATS.
 
 ## 4. Stato del paziente nel percorso
 

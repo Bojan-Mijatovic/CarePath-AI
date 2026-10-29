@@ -29,7 +29,8 @@ def test_start_replays_every_run_to_the_start_day(demo):
 def test_only_the_scenario_on_screen_advances(demo):
     demo.choose(2)
     msgs = demo.advance()
-    assert [(m["type"], m["scenario"], m["day"]) for m in msgs] == [("tick", 2, START + 1)]
+    assert (msgs[0]["type"], msgs[0]["scenario"], msgs[0]["day"]) == ("tick", 2, START + 1)
+    assert {(m["type"], m["day"]) for m in msgs[1:]} <= {("alert", START + 1)}  # Monitoring's, agents arm
     assert {k: r.day for k, r in demo.runs.items()} == {"s1_agents": START, "s1_baseline": START,
                                                         "s2_agents": START + 1, "s2_baseline": START + 1}
     demo.choose(1)

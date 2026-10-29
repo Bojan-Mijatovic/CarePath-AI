@@ -19,6 +19,7 @@ The pathway starts at every hospital discharge for heart failure (ICD-9-CM 428.*
 
 - If the weight recorded by telemonitoring rises by 2 kg or more in 3 days, the cardiology visit is brought forward to within 7 days.
 - If the patient has not collected furosemide (ATC C03CA01) for 30 days, an adherence risk is flagged.
+- If at one facility the mean wait for an echocardiogram, over the bookings of the last 7 days, exceeds 30 days, an alarm is raised to the ATS.
 
 ## 4. Patient status on the pathway
 
