@@ -15,6 +15,7 @@ DAYS_MEASURED = 20
 
 
 @pytest.mark.acceptance
+@pytest.mark.timing
 def test_ac02_tick_speed(tmp_path):
     demo = Demo(tmp_path, scenarios=(2,))  # 10,000 patients, opening on day 23 as in the demo
     demo.start()

@@ -66,6 +66,33 @@ def pattern_1(inv: dict, scenario: int, facility_names: dict[str, str]) -> dict:
             "found": wait and slots}
 
 
+def _cited(inv: dict, grouping: str, measure: str) -> list[str]:
+    """Italian texts of the claims resting on adherence_by_group with this grouping and measure."""
+    steps = {s["step"]: s for s in inv["steps"]}
+    return [c["text"]["it"] for c in inv["claims"]
+            if steps[c["step"]]["tool"] == "adherence_by_group" and steps[c["step"]]["args"].get("grouping") == grouping
+            and steps[c["step"]]["args"].get("measure", "dispensing") == measure]
+
+
+def pattern_2(inv: dict, scenario: int) -> dict:
+    """AC1, pattern 2: a claim on dispensing by MMG group names the hidden cooperative (coop_6 or Cooperativa 6)."""
+    truth = json.loads((TRUTH_DIR / f"scenario_{scenario}.json").read_text(encoding="utf-8"))
+    coop = truth["low_adherence_group"]["coop_id"]
+    names = (coop, "Cooperativa " + coop.removeprefix("coop_"))
+    found = any(any(n in text for n in names) for text in _cited(inv, "mmg_group", "dispensing"))
+    return {"group": coop, "found": found}
+
+
+def pattern_3(inv: dict, scenario: int) -> dict:
+    """AC1, pattern 3: claims on telemonitoring by comune name at least half of the hidden comuni, the rule of
+    the data-side proof (sim.pattern_proof.compare)."""
+    truth = json.loads((TRUTH_DIR / f"scenario_{scenario}.json").read_text(encoding="utf-8"))
+    comuni = truth["rural_dropout_comuni"]
+    texts = _cited(inv, "comune", "telemonitoring")
+    named = sorted(c for c in comuni if any(c in text for text in texts))
+    return {"comuni": comuni, "named": named, "found": len(named) * 2 >= len(comuni)}
+
+
 def main(argv: list[str]) -> None:
     live = "--live" in argv
     scenarios = [int(a) for a in argv if a.isdigit()] or [1, 2, 3]
@@ -91,6 +118,8 @@ def main(argv: list[str]) -> None:
                 print(f"  [{c['step']}] {c['text']['it']}")
             print(f"  => {inv['conclusion']['it']}")
             print(f"  pattern 1 {'FOUND' if score['found'] else 'NOT FOUND'}: {score}; tick {seconds} s", flush=True)
+            for name, other in (("pattern 2", pattern_2(inv, n)), ("pattern 3", pattern_3(inv, n))):
+                print(f"  {name} {'FOUND' if other['found'] else 'NOT FOUND'}: {other}", flush=True)
             out = RESULTS_DIR / f"investigation_s{n}_{investigator.PROMPT_VERSION}.json"
             out.write_text(json.dumps({"scenario": n, "tick_seconds": seconds, "pattern_1": score,
                                        "question": inv["question"],

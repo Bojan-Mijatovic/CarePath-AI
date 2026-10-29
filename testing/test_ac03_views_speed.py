@@ -22,6 +22,7 @@ CALLS = {
 
 
 @pytest.mark.acceptance
+@pytest.mark.timing
 def test_ac03_views_speed(fixture_scenario):
     runs, _ = fixture_scenario
     con = connect_for_tools("s2_agents", runs_dir=runs)
