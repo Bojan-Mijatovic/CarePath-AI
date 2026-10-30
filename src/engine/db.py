@@ -168,6 +168,8 @@ TABLES = {
         patient_id        VARCHAR,
         facility_id       VARCHAR,
         step              VARCHAR,
+        group_alarm       VARCHAR,
+        group_key         VARCHAR,
         text              JSON NOT NULL,
         investigation_id  VARCHAR,
         closed_day        INTEGER""",

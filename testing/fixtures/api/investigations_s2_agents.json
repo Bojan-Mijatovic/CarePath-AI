@@ -1,9 +1,9 @@
 [
   {
-    "investigation_id": "inv_s2_agents_1",
+    "investigation_id": "inv_s2_agents_3",
     "day": 33,
     "pathway_id": "hf_lombardia_v1",
-    "alert_id": "al_s2_agents_338",
+    "alert_id": "al_s2_agents_340",
     "question": {
       "it": "Allarme regionale del giorno 33: Ospedale B · Ecocardiogramma: attesa media 31,0 giorni sulle prenotazioni degli ultimi 7 giorni (soglia PDTA 30 giorni)",
       "en": "Regional alarm on day 33: Ospedale B · Echocardiogram: mean wait 31.0 days over the bookings of the last 7 days (PDTA threshold 30 days)"
@@ -63,37 +63,266 @@
     "claims": [
       {
         "text": {
-          "it": "Sul percorso Scompenso cardiaco, l'attesa media per l'ecocardiogramma nell'ultimo periodo di 7 giorni è di 31,0 giorni presso l'Ospedale B, superiore alla soglia PDTA di 30 giorni.",
-          "en": "On the pathway Heart Failure, the average waiting time for an echocardiogram in the last 7-day period is 31.0 days at Hospital B, exceeding the PDTA threshold of 30 days."
+          "it": "Il tempo medio di attesa per l'ecocardiogramma all'Ospedale B negli ultimi 7 giorni è di 31,0 giorni, superiore alla soglia PDTA di 30 giorni.",
+          "en": "The average waiting time for an echocardiogram at Hospital B in the last 7 days is 31.0 days, exceeding the PDTA threshold of 30 days."
         },
         "step": 1
       },
       {
         "text": {
-          "it": "L'Ospedale B ha attualmente 0 slot disponibili per l'esame ecocardiogramma, mentre l'Ospedale A ha 114 slot e l'Ospedale C ne ha 102, indicando un margine significativo di capacità disponibile negli altri ospedali dell'ATS.",
-          "en": "Hospital B currently has 0 available slots for the echocardiogram examination, while Hospital A has 114 slots and Hospital C has 102 slots, indicating a significant capacity margin available at the other hospitals within the ATS."
+          "it": "L'Ospedale B ha 0 slot disponibili per l'ecocardiogramma nei prossimi 21 giorni, mentre l'Ospedale A ha 114 slot e l'Ospedale C ne ha 102, indicando un margine di capacità disponibile in entrambi gli altri ospedali.",
+          "en": "Hospital B has 0 available slots for echocardiogram in the next 21 days, while Hospital A has 114 slots and Hospital C has 102 slots, indicating a capacity buffer available at both other hospitals."
         },
         "step": 2
       },
       {
         "text": {
-          "it": "Presso l'ASST Cremona (Ospedale B), ci sono 17 pazienti in ritardo per l'ecocardiogramma, con un massimo di 47 giorni di ritardo; i pazienti più in ritardo sono p_02531 (47 giorni), p_01182 e p_08948 (40 giorni), p_07322 (39 giorni), e p_05433 (26 giorni).",
-          "en": "At ASST Cremona (Hospital B), there are 17 patients delayed for the echocardiogram, with a maximum delay of 47 days; the patients with the longest delays are p_02531 (47 days), p_01182 and p_08948 (40 days), p_07322 (39 days), and p_05433 (26 days)."
+          "it": "All'Ospedale B sono presenti 17 pazienti in ritardo per l'ecocardiogramma, con un massimo di 47 giorni di ritardo; i pazienti più in ritardo sono p_02531 (47 giorni), p_01182 e p_08948 (40 giorni), p_07322 (39 giorni), e p_05433 (26 giorni).",
+          "en": "At Hospital B, there are 17 patients delayed for echocardiogram, with a maximum delay of 47 days; the patients with the longest delays are p_02531 (47 days), p_01182 and p_08948 (40 days), p_07322 (39 days), and p_-05433 (26 days)."
         },
         "step": 3
       },
       {
         "text": {
-          "it": "La compliance al percorso Scompenso cardiaco nell'ASST Cremona è del 83,65% per l'ecocardiogramma, del 85,39% per il BNP, del 79,8% per la visita cardiologica e del 55,25% per il telemonitoraggio, indicando un'area critica nel telemonitoraggio e un'efficienza relativamente bassa nel completamento del percorso.",
-          "en": "Compliance with the Heart Failure pathway at ASST Cremona is 83.65% for echocardiogram, 85.39% for BNP, 79.8% for cardiology visit, and 55.25% for telemonitoring, indicating a critical area in telemonitoring and relatively low efficiency in completing the pathway."
+          "it": "La compliance all'Ospedale B per il percorso hf_lombardia_v1 è del 83,65% per l'ecocardiogramma, ma solo del 55,25% per il telemonitoraggio, indicando un'area critica nel follow-up post-dimissione.",
+          "en": "The compliance at Hospital B for the hf_lombardia_v1 pathway is 83.65% for echocardiogram, but only 55.25% for telemonitoring, indicating a critical area in post-discharge follow-up."
         },
         "step": 4
       }
     ],
     "conclusion": {
-      "it": "L'allarme è causato da un'attesa media di 31,0 giorni per l'ecocardiogramma presso l'Ospedale B, con 0 slot disponibili e 17 pazienti in ritardo, tra cui alcuni con ritardi superiori a 40 giorni. Il margine di intervento è presente negli altri ospedali dell'ATS (A e C), che hanno rispettivamente 114 e 102 slot disponibili. Si suggerisce di redistribuire le prenotazioni verso Ospedale A o Ospedale C per ridurre i tempi di attesa e i ritardi, specialmente per i pazienti più in ritardo, e di monitorare il telemonitoraggio, che presenta la più bassa compliance.",
-      "en": "The alarm is caused by an average waiting time of 31.0 days for the echocardiogram at Hospital B, with 0 available slots and 17 patients delayed, including some with delays exceeding 40 days. The intervention margin is present at the other hospitals within the ATS (A and C), which have respectively 114 and 102 available slots. It is recommended to redistribute appointments towards Hospital A or Hospital C to reduce waiting times and delays, especially for patients with the longest delays, and to monitor telemonitoring, which shows the lowest compliance."
+      "it": "L'allarme all'Ospedale B è causato da un'attesa media di 31,0 giorni per l'ecocardiogramma, con 0 slot disponibili nei prossimi 21 giorni e 17 pazienti in ritardo. Il margine di intervento esiste negli altri ospedali (A e C), che hanno capacità disponibile. Si suggerisce di redistribuire i pazienti in ritardo verso Ospedale A o C, e di monitorare il gap nel telemonitoraggio (compliance 55,25%), che potrebbe contribuire al ritardo nel percorso.",
+      "en": "The alarm at Hospital B is caused by an average waiting time of 31.0 days for echocardiogram, with 0 available slots in the next 21 days and 17 patients delayed. The intervention margin exists at the other hospitals (A and C), which have available capacity. It is recommended to redistribute delayed patients to Hospital A or C, and to monitor the gap in telemonitoring (compliance at 55.25%), which may contribute to delays in the pathway."
     },
-    "prompt_version": "investigator-v4"
+    "prompt_version": "investigator-v5"
+  },
+  {
+    "investigation_id": "inv_s2_agents_2",
+    "day": 0,
+    "pathway_id": "hf_lombardia_v1",
+    "alert_id": "al_s2_agents_57",
+    "question": {
+      "it": "Allarme regionale del giorno 0: Telemonitoraggio di chi vive solo a oltre 40 km, per area: Borgocarbonara, Magnacavallo 0%, resto dell'ATS 88% (soglia 60 punti sotto)",
+      "en": "Regional alarm on day 0: Telemonitoring of patients living alone over 40 km away, by area: Borgocarbonara, Magnacavallo 0%, rest of the ATS 88% (threshold 60 points below)"
+    },
+    "steps": [
+      {
+        "step": 1,
+        "tool": "adherence_by_area",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "measure": "telemonitoring",
+          "segment": {
+            "lives_alone": true,
+            "distance_km_min": 40
+          }
+        },
+        "result_summary": {
+          "it": "Borgocarbonara, Magnacavallo 0 · Poggio Rusco, Sermide e Felonica 0,06 · Calvatone, Canneto sull'Oglio, Casalromano 0,62 · rest_of_ats 0,88",
+          "en": "Borgocarbonara, Magnacavallo 0 · Poggio Rusco, Sermide e Felonica 0.06 · Calvatone, Canneto sull'Oglio, Casalromano 0.62 · rest_of_ats 0.88"
+        }
+      },
+      {
+        "step": 2,
+        "tool": "adherence_by_group",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "grouping": "comune",
+          "measure": "telemonitoring",
+          "period_days": 60
+        },
+        "result_summary": {
+          "it": "Poggio Rusco 0,55 · Borgocarbonara 0,57 · Sermide e Felonica 0,59 · Pomponesco 0,64 · Vailate 0,65 · Borgo Mantovano 0,66 · +5",
+          "en": "Poggio Rusco 0.55 · Borgocarbonara 0.57 · Sermide e Felonica 0.59 · Pomponesco 0.64 · Vailate 0.65 · Borgo Mantovano 0.66 · +5"
+        }
+      },
+      {
+        "step": 3,
+        "tool": "patients_overdue",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "step": "telemon",
+          "asst": "asst_mantova",
+          "limit": 5
+        },
+        "result_summary": {
+          "it": "count 73 · patients: 5",
+          "en": "count 73 · patients: 5"
+        }
+      },
+      {
+        "step": 4,
+        "tool": "wait_by_hospital",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "step": "telemon",
+          "period_days": 30
+        },
+        "result_summary": {
+          "it": "nessun dato (bad_argument)",
+          "en": "no data (bad_argument)"
+        }
+      },
+      {
+        "step": 5,
+        "tool": "compliance_by_step",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "asst": "asst_mantova"
+        },
+        "result_summary": {
+          "it": "telemon 0,66 · cardio_visit 0,75 · echo 0,74 · lab_bnp 0,94",
+          "en": "telemon 0.66 · cardio_visit 0.75 · echo 0.74 · lab_bnp 0.94"
+        }
+      }
+    ],
+    "claims": [
+      {
+        "text": {
+          "it": "Nell'area di Borgocarbonara e Magnacavallo, il tasso di adesione al telemonitoraggio per pazienti che vivono da soli a più di 40 km è del 0.0%, con 5 pazienti coinvolti, mentre nel resto dell'ATS è del 87.69% (valore di riferimento). Questo rappresenta un divario significativo rispetto alla soglia di 60 punti sotto, evidenziando un'area critica con un margine di intervento immediato.",
+          "en": "In the area of Borgocarbonara and Magnacavallo, the adherence rate to telemonitoring for patients living alone more than 40 km away is 0.0%, involving 5 patients, while in the rest of the ATS it is 87.69% (reference value). This represents a significant gap below the 60-point threshold, highlighting a critical area requiring immediate intervention."
+        },
+        "step": 1
+      },
+      {
+        "text": {
+          "it": "A livello comunale, i comuni di Borgocarbonara e Magnacavallo mostrano tassi di adesione al telemonitoraggio per pazienti che vivono da soli a più di 40 km rispettivamente del 57.14% e 0.0%, con un valore medio del 57.14% per Borgocarbonara e 0.0% per Magnacavallo. Altri comuni della stessa area, come Poggio Rusco (54.55%) e Sermide e Felonica (59.09%), presentano tassi inferiori alla media regionale, indicando un pattern diffuso di bassa adesione in alcune zone del territorio ASST Mantova.",
+          "en": "At the municipal level, the municipalities of Borgocarbonara and Magnacavallo show adherence rates to telemonitoring for patients living alone more than 40 km away of 57.14% and 0.0% respectively, with an average value of 57.14% for Borgocarbonara and 0.0% for Magnacavallo. Other municipalities in the same area, such as Poggio Rusco (54.55%) and Sermide e Felonica (59.09%), show rates below the regional average, indicating a widespread pattern of low adherence in certain areas of the ASST Mantova territory."
+        },
+        "step": 2
+      },
+      {
+        "text": {
+          "it": "Nell'ASST Mantova, ci sono 73 pazienti in ritardo nel telemonitoraggio, con un massimo di 98 giorni di ritardo. I pazienti più in ritardo sono: p_03980 (98 giorni), p_03811 (97 giorni), p_00618 (96 giorni), p_08275 (96 giorni), p_01200 (94 giorni). Questi dati indicano un accumulo significativo di pazienti non monitorati, con un rischio crescente di complicanze.",
+          "en": "In ASST Mantova, there are 73 patients with delayed telemonitoring, with a maximum delay of 98 days. The patients with the longest delays are: p_03980 (98 days), p_03811 (97 days), p_00618 (96 days), p_08275 (96 days), p_01200 (94 days). These data indicate a significant accumulation of unmonitored patients, posing an increasing risk of complications."
+        },
+        "step": 3
+      },
+      {
+        "text": {
+          "it": "Nell'ASST Mantova, i tassi di adesione ai passi del percorso sono: cardio_visit (75.14%), echo (74.32%), lab_bnp (93.87%), telemon (66.1%). Il telemonitoraggio presenta il tasso più basso tra i passi del percorso, con un margine di miglioramento del 16.1% rispetto al valore massimo (lab_bnp). Questo indica che il telemonitoraggio è il nodo critico del percorso in ASST Mantova.",
+          "en": "In ASST Mantova, the adherence rates to the steps of the pathway are: cardio_visit (75.14%), echo (74.32%), lab_bnp (93.87%), telemon (66.1%). Telemonitoring has the lowest rate among the pathway steps, with a 16.1% improvement margin compared to the maximum value (lab_bnp). This indicates that telemonitoring is the critical node of the pathway in ASST Mantova."
+        },
+        "step": 5
+      }
+    ],
+    "conclusion": {
+      "it": "Il dato allarmante riguarda specificamente l'area di Borgocarbonara e Magnacavallo, dove l'adesione al telemonitoraggio è al 0.0% per pazienti che vivono da soli a più di 40 km. Questo è in linea con i dati locali che mostrano tassi bassi anche in altri comuni della stessa ASST. L'ASST Mantova presenta un ritardo significativo nel telemonitoraggio (66.1%), con 73 pazienti in ritardo, il più alto tra tutti i passi del percorso. L'intervento deve concentrarsi su Borgocarbonara e Magnacavallo, con un focus sul recupero dei pazienti in ritardo e sulla riattivazione del telemonitoraggio, in particolare per i pazienti che vivono da soli a più di 40 km.",
+      "en": "The alarming figure specifically concerns the area of Borgocarbonara and Magnacavallo, where adherence to telemonitoring is 0.0% for patients living alone more than 40 km away. This is consistent with local data showing low rates even in other municipalities within the same ASST. ASST Mantova exhibits a significant delay in telemonitoring (66.1%), with 73 patients behind schedule, the highest among all pathway steps. Intervention must focus on Borgocarbonara and Magnacavallo, with emphasis on recovering patients with delayed monitoring and reactivating telemonitoring, particularly for patients living alone more than 40 km away."
+    },
+    "prompt_version": "investigator-v5"
+  },
+  {
+    "investigation_id": "inv_s2_agents_1",
+    "day": 0,
+    "pathway_id": "hf_lombardia_v1",
+    "alert_id": "al_s2_agents_56",
+    "question": {
+      "it": "Allarme regionale del giorno 0: Ritiro dei farmaci per gruppo di MMG: coop_3 89%, resto dell'ATS 100% (soglia 5 punti sotto)",
+      "en": "Regional alarm on day 0: Drug collection by MMG group: coop_3 89%, rest of the ATS 100% (threshold 5 points below)"
+    },
+    "steps": [
+      {
+        "step": 1,
+        "tool": "adherence_by_group",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "grouping": "mmg_group",
+          "measure": "dispensing"
+        },
+        "result_summary": {
+          "it": "coop_3 0,89 · coop_7 0,99 · coop_8 0,99 · coop_15 1 · coop_4 1 · coop_13 1 · +5",
+          "en": "coop_3 0.89 · coop_7 0.99 · coop_8 0.99 · coop_15 1 · coop_4 1 · coop_13 1 · +5"
+        }
+      },
+      {
+        "step": 2,
+        "tool": "adherence_by_group",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "grouping": "comune",
+          "measure": "dispensing",
+          "period_days": 60
+        },
+        "result_summary": {
+          "it": "Izano 0,74 · Fiesco 0,77 · Camisano 0,82 · Montodine 0,83 · Ripalta Arpina 0,86 · Ricengo 0,87 · +5",
+          "en": "Izano 0.74 · Fiesco 0.77 · Camisano 0.82 · Montodine 0.83 · Ripalta Arpina 0.86 · Ricengo 0.87 · +5"
+        }
+      },
+      {
+        "step": 3,
+        "tool": "adherence_by_area",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "measure": "dispensing",
+          "segment": {
+            "mmg_group": "coop_3"
+          },
+          "period_days": 60
+        },
+        "result_summary": {
+          "it": "nessun dato (bad_argument)",
+          "en": "no data (bad_argument)"
+        }
+      },
+      {
+        "step": 4,
+        "tool": "adherence_by_area",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "measure": "dispensing",
+          "segment": {
+            "mmg_group": "coop_3"
+          },
+          "period_days": 60
+        },
+        "result_summary": {
+          "it": "nessun dato (bad_argument)",
+          "en": "no data (bad_argument)"
+        }
+      },
+      {
+        "step": 5,
+        "tool": "adherence_by_group",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "grouping": "age_band",
+          "measure": "dispensing",
+          "period_days": 60
+        },
+        "result_summary": {
+          "it": "75-84 0,99 · <65 0,99 · 85+ 0,99 · 65-74 0,99 · rest_of_ats –",
+          "en": "75-84 0.99 · <65 0.99 · 85+ 0.99 · 65-74 0.99 · rest_of_ats –"
+        }
+      }
+    ],
+    "claims": [
+      {
+        "text": {
+          "it": "Il tasso di ritiro dei farmaci per il percorso Scompenso cardiaco (hf_lombardia_v1) nella cooperativa coop_3 è del 89,01%, molto al di sotto della soglia di allarme regionale (5 punti sotto il 100%), mentre il resto dell'ATS si attesta al 99,92%.",
+          "en": "The withdrawal rate of medications for the Heart Failure (hf_lombardia_v1) pathway in the cooperative coop_3 is 89.01%, significantly below the regional alarm threshold (5 percentage points below 100%), while the rest of the ATS stands at 99.92%."
+        },
+        "step": 1
+      },
+      {
+        "text": {
+          "it": "Nel comune di Camisano, il tasso di ritiro dei farmaci è del 81,82%, in Fiesco del 76,92%, in Izano del 74,07%, in Madignano del 87,5%, in Montodine del 82,76%, in Pianengo del 90,00%, in Ricengo del 86,67%, in Ripalta Arpina del 85,71%, in Romanengo del 89,47% e in Soncino del 87,62%. Il resto dell'ATS ha un tasso del 99,45%.",
+          "en": "In the commune of Camisano, the medication withdrawal rate is 81.82%; in Fiesco it is 76.92%; in Izano it is 74.07%; in Madignano it is 87.5%; in Montodine it is 82.76%; in Pianengo it is 90.00%; in Ricengo it is 86.67%; in Ripalta Arpina it is 85.71%; in Romanengo it is 89.47%; and in Soncino it is 87.62%. The rest of the ATS has a rate of 99.45%."
+        },
+        "step": 2
+      },
+      {
+        "text": {
+          "it": "Il tasso di ritiro dei farmaci per età non mostra differenze significative: tra i pazienti di età 65-74 anni è del 99,13%, tra 75-84 anni del 98,85%, tra 85+ del 99,10%, e sotto i 65 anni del 99,03%. Non è disponibile un valore per il resto dell'ATS in questa segmentazione.",
+          "en": "The medication withdrawal rate by age shows no significant differences: for patients aged 65-74 years it is 99.13%; for those aged 75-84 years it is 98.85%; for those aged 85 and over it is 99.10%; and for those under 65 years it is 99.03%. No value is available for the rest of the ATS in this age segmentation."
+        },
+        "step": 5
+      }
+    ],
+    "conclusion": {
+      "it": "Il problema è localizzato principalmente nei comuni di Camisano, Fiesco, Izano e Montodine, dove i tassi di ritiro dei farmaci sono inferiori al 83%. La cooperativa coop_3, che include questi comuni, presenta un tasso complessivo del 89,01%, in linea con i dati locali. Il margine per intervento è concentrato nei comuni con i tassi più bassi, in particolare Fiesco (76,92%) e Izano (74,07%). L'azione suggerita è un intervento mirato a questi comuni, con focus su supporto ai pazienti, verifica delle prescrizioni e potenziale riattivazione dei canali di comunicazione con le MMG.",
+      "en": "The issue is primarily localized in the communes of Camisano, Fiesco, Izano, and Montodine, where medication withdrawal rates are below 83%. The cooperative coop_3, which includes these communes, has an overall rate of 89.01%, consistent with local data. The intervention margin is concentrated in the communes with the lowest rates, particularly Fiesco (76.92%) and Izano (74.07%). The recommended action is a targeted intervention in these communes, focusing on patient support, prescription verification, and potential reactivation of communication channels with GPs."
+    },
+    "prompt_version": "investigator-v5"
   }
 ]

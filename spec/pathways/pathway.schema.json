@@ -87,6 +87,49 @@
       "title": "Escalation",
       "type": "object"
     },
+    "GroupAlarm": {
+      "additionalProperties": false,
+      "description": "A regional alarm on a group of patients (SPEC §5.3, C26): the tool's worst group is more than\n`min_gap` below the rest of the ATS. `args` are the tool's, without pathway_id; Monitoring calls it.",
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "$ref": "#/$defs/Bilingual",
+          "description": "what is measured, for the alarm text"
+        },
+        "tool": {
+          "enum": [
+            "adherence_by_group",
+            "adherence_by_area"
+          ],
+          "title": "Tool",
+          "type": "string"
+        },
+        "args": {
+          "additionalProperties": true,
+          "title": "Args",
+          "type": "object"
+        },
+        "min_gap": {
+          "description": "fraction below rest_of_ats that opens the alarm",
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Min Gap",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "tool",
+        "min_gap"
+      ],
+      "title": "GroupAlarm",
+      "type": "object"
+    },
     "Reference": {
       "additionalProperties": false,
       "properties": {
@@ -404,6 +447,13 @@
         "$ref": "#/$defs/Rule"
       },
       "title": "Rules",
+      "type": "array"
+    },
+    "group_alarms": {
+      "items": {
+        "$ref": "#/$defs/GroupAlarm"
+      },
+      "title": "Group Alarms",
       "type": "array"
     },
     "escalation": {

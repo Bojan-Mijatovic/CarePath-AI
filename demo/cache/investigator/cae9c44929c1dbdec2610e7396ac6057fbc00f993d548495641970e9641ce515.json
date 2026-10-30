@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il tasso di ritiro dei farmaci per il gruppo di MMG coop_11 nel percorso Scompenso cardiaco è pari al 90,00%, come segnalato dall'allarme regionale. Questo valore è inferiore al 99,92% registrato per il resto dell'ATS, evidenziando una differenza di 9,92 punti percentuali.\", \"Tra gli altri gruppi di MMG, i tassi più vicini a coop_11 sono: coop_7 (99,25%), coop_8 (99,43%), coop_9 (99,61%), coop_10 (99,68%), coop_13 (99,57%), coop_15 (99,51%), coop_4 (99,56%), coop_1 (99,62%), coop_6 (99,79%). Tutti questi gruppi superano il 99%, mentre coop_11 è l'unico sotto il 90%.\", \"Il margine di miglioramento per coop_11 è significativo: dal 90,00% al 99,92% del resto dell'ATS, con un potenziale aumento di 9,92 punti percentuali nel tasso di ritiro dei farmaci.\"], \"conclusion\": \"Il dato allarmante riguarda specificamente il gruppo di MMG coop_11, che presenta un tasso di ritiro dei farmaci del 90,00%, molto al di sotto della soglia regionale e del resto dell'ATS (99,92%). Il margine di intervento è ampio e localizzato: l'azione deve concentrarsi su coop_11, con analisi delle cause specifiche del basso ritiro (es. accesso ai farmaci, comunicazione con i pazienti, gestione delle ricette) e confronto con i gruppi più performanti (es. coop_6, coop_10) per identificare best practice da replicare.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The withdrawal rate of medications for the MMG coop_11 group in the Heart Failure pathway is 90.00%, as reported by the regional alert. This value is below the 99.92% recorded for the rest of the ATS, highlighting a difference of 9.92 percentage points.\",\n    \"Among other MMG groups, the rates closest to coop_11 are: coop_7 (99.25%), coop_8 (9-than-99.43%), coop_9 (99.61%), coop_10 (99.68%), coop_13 (99.57%), coop_15 (99.51%), coop_4 (99.56%), coop_1 (99.62%), coop_6 (99.79%). All these groups exceed 99%, while coop_11 is the only one below 90%.\",\n    \"The improvement margin for coop_11 is significant: from 90.00% to 99.92% for the rest of the ATS, with a potential increase of 9.92 percentage points in the medication withdrawal rate.\"\n  ],\n  \"conclusion\": \"The alarming figure specifically concerns the MMG coop_11 group, which shows a medication withdrawal rate of 90.00%, significantly below the regional threshold and the rest of the ATS (99.92%). The intervention margin is broad and targeted: action must focus on coop_11, with a specific analysis of the causes behind the low withdrawal rate (e.g. access to medications, patient communication, prescription management) and a comparison with the most performing groups (e.g. coop_6, coop_10) to identify best practices to be replicated.\"\n}"
+  }
+}

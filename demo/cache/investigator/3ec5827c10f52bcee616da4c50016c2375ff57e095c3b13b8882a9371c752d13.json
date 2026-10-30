@@ -1,7 +1,7 @@
 {
   "agent": "investigator",
   "model": "qwen3:30b-instruct",
-  "prompt_version": "investigator-v4",
+  "prompt_version": "investigator-v5",
   "request": {
     "messages": [
       {
@@ -279,6 +279,158 @@
               "grouping"
             ],
             "title": "AdherenceArgs",
+            "type": "object"
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "adherence_by_area",
+          "description": "Aderenza per area (un comune con i comuni entro 12 km), anche per un segmento di pazienti: le 3 aree peggiori, ciascuna con i suoi comuni, e il resto dell'ATS.",
+          "parameters": {
+            "additionalProperties": false,
+            "properties": {
+              "pathway_id": {
+                "description": "ID del percorso, es. hf_lombardia_v1",
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "title": "Pathway Id",
+                "type": "string"
+              },
+              "measure": {
+                "default": "telemonitoring",
+                "description": "come in adherence_by_group",
+                "enum": [
+                  "dispensing",
+                  "telemonitoring"
+                ],
+                "title": "Measure",
+                "type": "string"
+              },
+              "segment": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "description": "C8: every key optional, combined with AND; {} is the whole population of the pathway.",
+                    "properties": {
+                      "asst_id": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "asst_mantova",
+                              "asst_cremona",
+                              "asst_crema"
+                            ],
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Asst Id"
+                      },
+                      "comune_istat": {
+                        "anyOf": [
+                          {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "codici ISTAT dei comuni",
+                        "title": "Comune Istat"
+                      },
+                      "coop_id": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "gruppo (cooperativa) di MMG, es. coop_3",
+                        "title": "Coop Id"
+                      },
+                      "age_min": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Age Min"
+                      },
+                      "age_max": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Age Max"
+                      },
+                      "lives_alone": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Lives Alone"
+                      },
+                      "distance_km_min": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "distanza minima dall'ospedale di riferimento, km",
+                        "title": "Distance Km Min"
+                      }
+                    },
+                    "title": "Segment",
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "solo i pazienti del segmento; senza, tutti"
+              },
+              "period_days": {
+                "default": 60,
+                "maximum": 365,
+                "minimum": 7,
+                "title": "Period Days",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "pathway_id"
+            ],
+            "title": "AreaArgs",
             "type": "object"
           }
         }

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **v1.12**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), proposed 29 Oct 2026. Changes follow §0 |
+| Status | **v1.12**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), v1.13 adds C26 (D47, step 2.30), proposed 29 Oct 2026. Changes follow §0 |
 | Last updated | 29 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C25 proposed in v1.1–v1.12)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C26 proposed in v1.1–v1.13)
 
 | # | Change | Why |
 |---|---|---|
@@ -55,6 +55,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C23 (D41) | The pathway file gets `label` `{"it", "en"}` and an optional `readmission_reference` (§4) | The console named the disease itself ("Scompenso cardiaco" in three places) and held the national HF readmission rate (11.87%), so a second pathway would show both wrongly (AC17); `name` is Italian only. The AC17 test now fails if the console contains any name of the pathway file, Maria's story excepted |
 | C24 (D42) | Investigator input, loop and answer, and the `investigations` table (§6) | Step 2.9 needs them; the SPEC had only the stream message of one step. Claims point at a step number so every claim keeps the tool call the Verifier repeats; result summaries come from code so no model-written number reaches the stream |
 | C25 (D43) | The Investigator runs on the alarm's tick, not asynchronously (§9 step 7); `GET /investigations` (§10) | `free_slots` reads `capacity_slots`, which the tick rewrites every day: an investigation started later would see other numbers, so its cache keys would miss in the demo (SPEC §8). From the cache the alarm's tick takes 0.4–0.7 s, inside AC2; the Chiedi screen (step 2.17) needs the stored investigation |
+| C26 (D47) | Group alarms in the pathway file (§4, §5.3), the tool `adherence_by_area` (§6), `alerts.group_alarm` and `group_key`, `alert_id` and `group_key` in the alert message (§10), and the Investigator's opening for a group alarm | Step 2.22 found patterns 2 and 3 in 0 of 3 scenarios: only the echo alarm started an investigation. Measured over days 20–62 of all 3 scenarios (step 2.30): the hidden MMG group collects drugs 86–90% against 98.5% or more for every other group; no single comune shows pattern 3 (0–2 of 4–6 hidden comuni below 50%), but areas of comuni within 12 km, among patients living alone over 40 km away, name 3 of 6, 2–4 of 4 and 3 of 4 hidden comuni with none wrong. With the tool, the worst area is 66–88 points below the rest of the ATS on every day from 0 to 60, and areas of other comuni, of 5–6 patients, up to 54 points from noise alone: the 60-point threshold has a margin of 6 points on both sides. The radius and the 5-patient minimum were picked from 8, 12 and 16 km on these 3 scenarios, and 40 km is the simulator's own threshold for pattern 3 (also the example segment in C8): this is tuned to the scenarios and stated in the limitations |
 
 ## 1. Scope
 
@@ -195,6 +196,17 @@ Anything outside this grammar fails validation. That is how a generated pathway 
 
 **`max_wait_days`** (C21, optional, only on a step with a `service`): a facility whose mean wait for the step, over the bookings of the last 7 days (`wait_by_hospital` with `period_days = 7`), is longer raises a regional alarm (§5.3). HF: echo, 30 days (PDTA §3).
 
+**`group_alarms`** (C26, optional): regional alarms on a group of patients. Each has an `id`, a `label` `{"it", "en"}` for the alarm text, a group `tool` (`adherence_by_group` or `adherence_by_area`, §6) with its `args` (without `pathway_id`) and a `min_gap`: the alarm is open while the tool's worst group is more than `min_gap` below its `rest_of_ats` (§5.3). HF (PDTA §3): drug collection by MMG group, 5 points (pattern 2); telemonitoring of patients living alone over 40 km away, by area, 60 points (pattern 3).
+
+```json
+"group_alarms": [
+  {"id": "dispensing_mmg_group", "label": {"it": "Ritiro dei farmaci per gruppo di MMG", "en": "..."},
+   "tool": "adherence_by_group", "args": {"grouping": "mmg_group", "measure": "dispensing"}, "min_gap": 0.05},
+  {"id": "telemon_alone_far", "label": {"it": "Telemonitoraggio di chi vive solo a oltre 40 km, per area", "en": "..."},
+   "tool": "adherence_by_area", "args": {"measure": "telemonitoring", "segment": {"lives_alone": true, "distance_km_min": 40}}, "min_gap": 0.6}
+]
+```
+
 **Pathway label and reference** (C23): `label` `{"it", "en"}` is how the console names the pathway (top bar, Panoramica); `name` stays the Italian title of the PDTA document. `readmission_reference` (optional) is a published 30-day readmission rate `{"rate", "label": {"it", "en"}}`, for HF `{"rate": 0.1187, "label": {"it": "Italia, PNE 2025", ...}}`; the console shows it next to the run's rate, and nothing when it is missing.
 
 **Names** (C20): every step has a `label` and every drug of `any_drug_atc` a name in `drug_names`, both `{"it", "en"}`. Texts that name a step or a drug (worklist reasons, call scripts, rationales) take them from here, so no disease is named in code (AC17).
@@ -279,11 +291,13 @@ Monitoring (`src/agents/monitoring.py`, step 2.8) runs on every tick of both arm
 | Table | Columns | One row per |
 |---|---|---|
 | `deviations` | `day`, `patient_id`, `pathway_id`, `kind` (`rule`, `overdue`), `code` (rule id or step id) | a rule that starts to hold for a patient, or a step that becomes overdue; Intervention acts on them (step 2.13), and the tools read rule pulls from them |
-| `alerts` | `alert_id` (`al_<run>_<n>`), `day`, `level` (`patient`, `regional`), `pathway_id`, `patient_id`, `facility_id`, `step`, `text` (`{"it", "en"}`), `investigation_id`, `closed_day` | an alert, as pushed on the stream (§10) |
+| `alerts` | `alert_id` (`al_<run>_<n>`), `day`, `level` (`patient`, `regional`), `pathway_id`, `patient_id`, `facility_id`, `step`, `group_alarm`, `group_key`, `text` (`{"it", "en"}`), `investigation_id`, `closed_day` | an alert, as pushed on the stream (§10); `group_alarm` and `group_key` belong to a group alarm (C26) |
 
 **Patient alert:** one per high-risk patient (C19) with new deviations that day, naming each with its values; about 8 a day in scenario 2 (D39). All deviations, of every patient, are in `deviations` and in the worklist.
 
 **Regional alarm:** a facility over a step's `max_wait_days` (§4) opens one alarm for that facility and step; it closes (`closed_day`) when the wait is back within the threshold, and a later breach opens a new one. Measured with the 30-day echo threshold: scenario 1 day 29 (Ospedale A), 2 day 33 (Ospedale B), 3 day 32 (Ospedale C); no other facility goes above 3 days. `investigation_id` is set when the Investigator starts (step 2.9).
+
+**Group alarm** (C26): each of the pathway's `group_alarms` (§4) opens one alarm while its tool's worst group is more than `min_gap` below `rest_of_ats`, and closes when it is not, checked on day 0 and every 7 days after: the measures span 60 days of dispensing or 7 of readings, and the two calls cost about 30 ms a tick per arm, which the both-arms budget (§9) has no room for every day. `group_key` is the worst group on the opening day (an MMG group, or an area's first comune), and the text names the group, or all comuni of the area, with both values. One alarm per group alarm, not per group, so an area whose members shift by a comune does not reopen it. The effects of patterns 2 and 3 are in the warm-up history, so both open on day 0, before the demo's start day.
 
 The baseline arm runs Monitoring too, since rules belong to the PDTA; only the agents arm's alerts are pushed.
 
@@ -315,6 +329,7 @@ Every number in `data` follows the precision rule in §2. `testing/test_tools_de
 | `patients_overdue` | `pathway_id`, `step`, `asst?`, `limit=20` | `{count, patients: [{patient_id, days_overdue, risk_score}]}` |
 | `free_slots` | `service`, `asst?`, `horizon_days=21` | `{facility_name: free_slots}` |
 | `adherence_by_group` | `pathway_id`, `grouping` (`mmg`, `mmg_group`, `comune`, `age_band`), `measure` (`dispensing`, `telemonitoring`; default `dispensing`, C8), `period_days=60` | `{group: fraction}`, plus `rest_of_ats` |
+| `adherence_by_area` (C26) | `pathway_id`, `measure` (default `telemonitoring`), `segment?`, `period_days=60` | `{areas: [{comuni, value, patients}], rest_of_ats}` |
 | `readmissions_by_comune` | `pathway_id`, `period_days=180` | `{comune_name: rate}`, sorted descending |
 | `risk_drivers` | `pathway_id`, `segment?` | `{drivers: [{name, weight}], patients}` (C19) |
 | `compare_segments` | `pathway_id`, `a`, `b` (segments), `metric` | `{a: value, b: value, difference}` |
@@ -336,11 +351,12 @@ Every number in `data` follows the precision rule in §2. `testing/test_tools_de
 - `patients_overdue`: patients with the step overdue today by the rules of §5.1 (the same set as `overdue_steps`), the most overdue first. A deadline a rule pulled earlier counts, read from `deviations` (C21); `compliance_by_step` counts the pathway's own deadlines only.
 - `free_slots`: free slots from tomorrow for `horizon_days`. On a live run the tick keeps `capacity_slots` current (step 2.1); on a finished run it is exact only on the last day.
 - `adherence_by_group` and `readmissions_by_comune`: at most the 10 worst groups (lowest adherence, highest readmission rate) with at least 10 patients, or 5 index discharges for readmissions; then `rest_of_ats` over every other patient of the pathway, or `null` when all groups are shown. Age bands: `<65`, `65-74`, `75-84`, `85+`. Comuni are named.
+- `adherence_by_area` (C26): an area is a comune with every comune whose centroid lies within 12 km of it, pooled over the segment's patients, so a cluster of small comuni shows where no single comune reaches 10 patients. The worst area with at least 5 patients comes first; its comuni are then left out and the next is searched, up to 3 areas, so areas do not overlap. `comuni` are the area's comuni with patients in the segment, by name; `rest_of_ats` is every segment patient outside the shown areas. Values come from integer counts (C7).
 - `readmission_rate_30d` over a period: §5.2 with the period's last `period_days` days in place of day 0 to today (180 days for `compare_segments`). `dispensing` and `telemonitoring` use 60 days and `on_time_fraction` pools every deadline of the last 90 days.
 - `risk_drivers` (C19): over the segment's high-risk patients today, `weight` is the share whose `risk_drivers` include the driver, most frequent first; `patients` is how many high-risk patients that is. No high-risk patient in the segment gives `empty_result`. The `risk_mean` metric is the mean `risk_score` of the segment's enrolled patients, summed as integers (C7). Both give `empty_result` on a run where Risk never ran (no positive score).
 - `eligibility_candidates` and `free_beds` come with option B and Bed Finder.
 
-**Investigator** (C24, `src/agents/investigator.py`, step 2.9). Input: a regional alarm's text and step, the pathway file and the run's facilities (name, type, ASST); the system prompt gives the steps, the facilities and a general method, never where a problem is. Code runs the alarm's own evidence first, for the whole ATS: `wait_by_hospital` for the alarm's step over the alarm's 7-day window and `free_slots` for its service; they are steps 1 and 2 and the model sees them as its own calls. At most 6 tool calls (steps) in all, one gateway call per turn with `qwen3:30b-instruct` (D11); each tool result goes back to the model with its step number (`passo`). The answer is `{"claims": [{"text", "step"}], "conclusion"}` in Italian, validated against a Pydantic schema; a claim must point at a step whose tool returned `data`, others are dropped, and none left is a failure. `qwen3:4b-instruct` translates claims and conclusion into English (D31). Each step's `result_summary` on the stream (§10) is filled by code from the tool's data, not by the model. The Investigator only reads; whoever runs it stores the row:
+**Investigator** (C24, `src/agents/investigator.py`, step 2.9). Input: a regional alarm's text and step, the pathway file and the run's facilities (name, type, ASST); the system prompt gives the steps, the facilities and a general method, never where a problem is. Code runs the alarm's own evidence first, for the whole ATS: `wait_by_hospital` for the alarm's step over the alarm's 7-day window and `free_slots` for its service; they are steps 1 and 2 and the model sees them as its own calls. For a group alarm (C26) the opening is the call Monitoring made, the alarm's tool with its `args`, as step 1. At most 6 tool calls (steps) in all, one gateway call per turn with `qwen3:30b-instruct` (D11); each tool result goes back to the model with its step number (`passo`). The answer is `{"claims": [{"text", "step"}], "conclusion"}` in Italian, validated against a Pydantic schema; a claim must point at a step whose tool returned `data`, others are dropped, and none left is a failure. `qwen3:4b-instruct` translates claims and conclusion into English (D31). Each step's `result_summary` on the stream (§10) is filled by code from the tool's data, not by the model. The Investigator only reads; whoever runs it stores the row:
 
 | Table | Columns |
 |---|---|
@@ -492,7 +508,7 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `type` | `payload` |
 |---|---|
 | `tick` | `{"speed": 4, "kpi": {...}}`: headline numbers for the cards |
-| `alert` | `{"level": "patient" \| "regional", "text": {"it": "...", "en": "..."}, "facility_id": "osp_B", "investigation_id": "..."}` |
+| `alert` | `{"alert_id": "al_s2_agents_338", "level": "patient" \| "regional", "text": {"it": "...", "en": "..."}, "facility_id": "osp_B", "group_key": null, "investigation_id": "..."}`; `group_key` names the group of a group alarm (C26), and `alert_id` links the investigation to its alarm |
 | `action` | one row of `actions` |
 | `investigation` | `{"investigation_id", "step": n, "tool", "args", "result_summary": {"it", "en"}, "verified": true \| false \| null, "final": false}` |
 

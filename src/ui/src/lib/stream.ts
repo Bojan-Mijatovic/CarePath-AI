@@ -7,9 +7,12 @@ type Envelope<T extends string, P> = { type: T; scenario: number; day: number; p
 
 export type TickPayload = { speed?: number; kpi?: Kpi }
 export type AlertPayload = {
+  alert_id: string
   level: 'patient' | 'regional'
   text: Bilingual
   facility_id: string | null
+  /** MMG group or first comune of the area, for a group alarm (C26) */
+  group_key: string | null
   investigation_id: string | null
 }
 export type InvestigationPayload = {

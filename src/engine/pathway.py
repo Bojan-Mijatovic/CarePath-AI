@@ -121,6 +121,16 @@ class Rule(Strict):
         return refs | ({self.then.step} if self.then.step else set())
 
 
+class GroupAlarm(Strict):
+    """A regional alarm on a group of patients (SPEC §5.3, C26): the tool's worst group is more than
+    `min_gap` below the rest of the ATS. `args` are the tool's, without pathway_id; Monitoring calls it."""
+    id: str = Field(pattern=ID)
+    label: Bilingual = Field(description="what is measured, for the alarm text")
+    tool: Literal["adherence_by_group", "adherence_by_area"]
+    args: dict = Field(default_factory=dict)
+    min_gap: float = Field(gt=0, lt=1, description="fraction below rest_of_ats that opens the alarm")
+
+
 class Escalation(Strict):
     reminder_day: int = Field(ge=0)
     call_after_days: int = Field(gt=0)
@@ -142,6 +152,7 @@ class Pathway(Strict):
     status_thresholds: StatusThresholds
     steps: list[Step] = Field(min_length=1)
     rules: list[Rule] = Field(default_factory=list)
+    group_alarms: list[GroupAlarm] = Field(default_factory=list)
     escalation: Escalation
     ward_by_diagnosis: dict[str, list[str]] = Field(default_factory=dict, description="Bed Finder, optional layer")
 
@@ -158,6 +169,8 @@ class Pathway(Strict):
                 raise ValueError(f"step {s.id}: after={s.after!r} must name an earlier step")
         if len({r.id for r in self.rules}) != len(self.rules):
             raise ValueError("rule ids must be unique")
+        if len({g.id for g in self.group_alarms}) != len(self.group_alarms):
+            raise ValueError("group alarm ids must be unique")
         for r in self.rules:
             unknown = r.referenced_steps() - set(ids)
             if unknown:

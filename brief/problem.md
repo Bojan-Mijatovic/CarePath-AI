@@ -87,3 +87,5 @@ The euro figures and the effect of each intervention rest on probabilities the t
 **Out of scope** (the "Gde ovo može da ide" slide): real FSE 2.0 integration, a data-mapping agent, outcome learning and causal analysis, phenotyping, NLP on discharge letters, a third disease (BPCO), and federated analysis across several ATS.
 
 **Not proved by the PoC:** work on real data and integrations, clinical validation, and the real effect of interventions. In the simulation these are assumptions.
+
+**Tuned to the scenarios:** the alarm that finds pattern 3 (patients living alone far away who leave telemonitoring) uses a 12 km area, a 5-patient minimum and a 60-point threshold chosen on the same three scenarios it is tested on, and its 40 km segment is the simulator's own threshold for the pattern (delivery plan D47). On real data it would need its own calibration.

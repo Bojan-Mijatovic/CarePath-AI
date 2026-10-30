@@ -20,6 +20,8 @@ Il percorso parte da ogni dimissione ospedaliera per scompenso cardiaco (ICD-9-C
 - Se il peso rilevato dal telemonitoraggio aumenta di 2 kg o più in 3 giorni, la visita cardiologica va anticipata ed eseguita entro 7 giorni.
 - Se il paziente non ritira il furosemide (ATC C03CA01) da 30 giorni, va segnalato un rischio di aderenza alla terapia.
 - Se in una struttura l'attesa media per l'ecocardiogramma, sulle prenotazioni degli ultimi 7 giorni, supera 30 giorni, va segnalato un allarme all'ATS.
+- Se i pazienti di un gruppo di MMG ritirano i farmaci del percorso, negli ultimi 60 giorni, più di 5 punti percentuali sotto il resto dell'ATS, va segnalato un allarme all'ATS.
+- Se tra i pazienti che vivono soli a oltre 40 km dall'ospedale di riferimento la quota con una lettura di telemonitoraggio negli ultimi 7 giorni, in un'area di comuni vicini (entro 12 km), è più di 60 punti percentuali sotto il resto dell'ATS, va segnalato un allarme all'ATS.
 
 ## 4. Stato del paziente nel percorso
 

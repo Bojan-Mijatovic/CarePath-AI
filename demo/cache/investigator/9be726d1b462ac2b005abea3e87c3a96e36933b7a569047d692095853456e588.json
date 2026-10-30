@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"L'attesa media per l'ecocardiogramma all'Ospedale C è di 31,1 giorni negli ultimi 7 giorni, superiore alla soglia PDTA di 30 giorni.\", \"L'Ospedale C ha 0 slot disponibili per l'ecocardiogramma nei prossimi 21 giorni, mentre l'Ospedale A ha 112 slot e l'Ospedale B ne ha 96, indicando un forte margine di capacità disponibile negli altri ospedali dell'ATS.\", \"All'Ospedale C ci sono 11 pazienti in ritardo per l'ecocardiogramma, con un massimo di 42 giorni di ritardo, suggerendo un accumulo significativo di pazienti non serviti.\", \"La compliance all'Ospedale C per il passo 'echo' è del 81,54%, inferiore alla media del percorso (es. lab_bnp al 87,52%), indicando un punto debole nel flusso diagnostico.\"], \"conclusion\": \"L'allarme è causato da un accumulo di pazienti in attesa all'Ospedale C, con 0 slot disponibili nei prossimi 21 giorni e 11 pazienti in ritardo. Il margine di intervento è nell'ottimizzazione della distribuzione delle prenotazioni: si suggerisce di deviare pazienti in ritardo verso Ospedale A o B, che hanno capacità disponibile e performance più elevate nel percorso.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The average waiting time for an echocardiogram at Hospital C is 31.1 days over the last 7 days, exceeding the PDTA threshold of 30 days.\",\n    \"Hospital C has 0 available slots for an echocardiogram in the next 21 days, while Hospital A has 112 slots and Hospital B has 96 slots, indicating a significant capacity buffer available at the other hospitals in the ATS.\",\n    \"At Hospital C, there are 11 patients delayed for an echocardiogram, with a maximum delay of 42 days, suggesting a significant accumulation of unserved patients.\",\n    \"The compliance at Hospital C for the 'echo' step is 81.54%, below the pathway average (e.g. lab_bnp at 87.52%), indicating a weak point in the diagnostic flow.\"\n  ],\n  \"conclusion\": \"The alert is caused by a buildup of patients waiting at Hospital C, with 0 available slots in the next 21 days and 11 patients delayed. The intervention margin lies in optimizing the distribution of appointments: it is recommended to redirect delayed patients to Hospital A or B, which have available capacity and higher performance in the pathway.\"\n}"
+  }
+}

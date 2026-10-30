@@ -28,7 +28,7 @@ RUN = "s2_agents"
 LAST_DAY = 45  # past the echo alarm (day 33) and the weight-gain pulls of the 40s
 IDS = {"hf_lombardia_v1": "other_v1", "discharge": "step_a", "telemon": "step_b", "cardio_visit": "step_c",
        "echo": "step_d", "lab_bnp": "step_e", "weight_gain": "rule_a", "no_furosemide": "rule_b",
-       "adherence_risk": "flag_a"}
+       "adherence_risk": "flag_a", "dispensing_mmg_group": "alarm_a", "telemon_alone_far": "alarm_b"}
 DERIVED = ("pathway_state", "kpi_daily", "map_comuni", "deviations", "alerts", "worklist_today")
 UI = Path(__file__).resolve().parents[1] / "src" / "ui" / "src"
 UI_EXEMPT = {"lib/story.ts", "screens/MariaStory.tsx"}  # Maria's story (D41)
@@ -51,13 +51,20 @@ def renamed() -> pathway_model.Pathway:
         r["id"] = IDS[r["id"]]
         r["if"] = re.sub(r"overdue\('(\w+)'", lambda m: f"overdue('{IDS[m[1]]}'", r["if"])
         r["then"] = {k: IDS.get(v, v) if k in ("step", "flag") else v for k, v in r["then"].items()}
+    for g in p["group_alarms"]:  # C26
+        g["id"] = IDS[g["id"]]
+        letter = g["id"][-1].upper()
+        g["label"] = {"it": f"Allarme {letter}", "en": f"Alarm {letter}"}
     return pathway_model.Pathway.model_validate(p)
 
 
 OTHER = renamed()
 BACK = {new: old for old, new in IDS.items()}
-# Names in texts, back to HF: step labels and the drug, also with a capital first letter as rule texts start.
-TEXT_BACK = {o.label.it: h.label.it for o, h in zip(OTHER.steps, HF.steps)} | {
+# Names in texts, back to HF: group alarm and step labels and the drug, also with a capital first letter as
+# rule texts start. Alarm labels first: HF's telemonitoring alarm label contains the step label.
+TEXT_BACK = {o.label.it: h.label.it for o, h in zip(OTHER.group_alarms, HF.group_alarms)} | {
+    o.label.en: h.label.en for o, h in zip(OTHER.group_alarms, HF.group_alarms)} | {
+    o.label.it: h.label.it for o, h in zip(OTHER.steps, HF.steps)} | {
     o.label.en: h.label.en for o, h in zip(OTHER.steps, HF.steps)} | {"zetamide": "furosemide", "Zetamide": "Furosemide"}
 
 
@@ -178,8 +185,9 @@ def console_files():
 
 
 def file_names(p: pathway_model.Pathway) -> set[str]:
-    """What the pathway file names: the pathway, its steps, drugs and codes."""
+    """What the pathway file names: the pathway, its steps, group alarms, drugs and codes."""
     names = {p.pathway_id, p.name, p.label.it, p.label.en, *p.eligibility.any_drug_atc}
+    names |= {n for g in p.group_alarms for n in (g.id, g.label.it, g.label.en)}
     names |= {c.rstrip("*") for c in p.eligibility.any_diagnosis}
     names |= {n for d in p.eligibility.drug_names.values() for n in (d.it, d.en)}
     for s in p.steps:

@@ -175,7 +175,7 @@ def stream(con, live: dict) -> dict[str, object]:
     call = rows(con, "SELECT * FROM actions WHERE action_id = $a", {"a": CALL_ID})[0]
     # The first alerts Monitoring raised from the demo's start day on (step 2.8)
     alert = lambda level: rows(con, """
-        SELECT day, level, facility_id, investigation_id, text FROM alerts
+        SELECT day, alert_id, level, facility_id, group_key, investigation_id, text FROM alerts
         WHERE level = $l AND day >= 23 ORDER BY day, alert_id LIMIT 1""", {"l": level})[0]
     as_message = lambda a: msg("alert", a.pop("day"), a)
     return {

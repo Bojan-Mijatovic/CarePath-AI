@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Nell'area di Calvatone, Rivarolo del Re ed Uniti, Spineda, il tasso di adesione al telemonitoraggio per pazienti che vivono soli a più di 40 km è del 0.0%, con 7 pazienti coinvolti, rispetto al 85.48% del resto dell'ATS.\", \"Tra i comuni della zona, Borgocarbonara ha un tasso di adesione al telemonitoraggio del 71.43%, Magnacavallo del 40.0%, Casalmaggiore del 59.38%, mentre Calvatone, Rivarolo del Re ed Uniti, Spineda hanno tutti un tasso di 0.0%.\", \"Nell'ASST Mantova, ci sono 70 pazienti in ritardo nel telemonitoraggio, con un massimo di 98 giorni di ritardo; i pazienti più in ritardo sono p_03980 (98 giorni), p_03811 (97 giorni), p_00618 (96 giorni), p_08275 (96 giorni), p_01200 (94 giorni).\", \"Nell'ASST Mantova, il tasso di adesione al telemonitoraggio è del 67.07%, mentre per le visite cardiologiche è del 75.14%, per l'ecocardiogramma del 74.32% e per l'esame BNP del 93.87%.\"], \"conclusion\": \"Il problema è localizzato principalmente nell'ASST Mantova, in particolare nei comuni di Calvatone, Rivarolo del Re ed Uniti, Spineda, dove l'adesione al telemonitoraggio è al 0.0%. Il ritardo nel telemonitoraggio è significativo (fino a 98 giorni) e non è legato a tempi di attesa, ma a un'aderenza bassa. Il margine di intervento è nell'ASST Mantova, con particolare attenzione ai comuni citati e ai pazienti in ritardo. L'azione suggerita è un intervento mirato per ripristinare l'adesione al telemonitoraggio in questi comuni, con focus sui pazienti più in ritardo.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"In the area of Calvatone, Rivarolo del Re ed Uniti, Spineda, the adherence rate to telemonitoring for patients living alone at more than 40 km is 0.0%, involving 7 patients, compared to 85.48% in the rest of the ATS.\",\n    \"Among the communes in the area, Borgocarbonara has a telemonitoring adherence rate of 71.43%, Magnacavallo of 40.-than%, Casalmaggiore of 59.38%, while Calvatone, Rivarolo del Re ed Uniti, and Spineda all have a rate of 0.0%.\",\n    \"In the ASST Mantova, there are 70 patients with delayed telemonitoring, with a maximum delay of 98 days; the patients with the greatest delay are p_03980 (98 days), p_03811 (97 days), p_00618 (96 days), p_08275 (96 days), p_01200 (94 days).\",\n    \"In the ASST Mantova, the telemonitoring adherence rate is 67.07%, while for cardiology visits it is 75.14%, for echocardiography 74.32%, and for BNP test 93.87%.\"\n  ],\n  \"conclusion\": \"The issue is primarily localized in the ASST Mantova, particularly in the communes of Calvatone, Rivarolo del Re ed Uniti, Spineda, where telemonitoring adherence is at 0.0%. The delay in telemonitoring is significant (up to 98 days) and is not related to waiting times, but rather to low adherence. The intervention margin is within the ASST Mantova, with particular attention to the mentioned communes and the patients with delays. The suggested action is a targeted intervention to restore telemonitoring adherence in these communes, with a focus on the patients with the greatest delays.\"\n}"
+  }
+}

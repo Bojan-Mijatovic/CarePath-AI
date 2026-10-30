@@ -11,7 +11,10 @@ Rules only, no LLM. Every tick it evaluates the pathway's rules over the state e
   instead of 160);
 - raises a regional alarm when a facility's mean wait for a step, over the bookings of the last 7 days, is
   longer than the step's `max_wait_days`, and closes it when the wait falls back. The wait comes from the
-  `wait_by_hospital` tool, so the number in the alarm is the one the Investigator and the Verifier see.
+  `wait_by_hospital` tool, so the number in the alarm is the one the Investigator and the Verifier see;
+- raises a regional alarm for each of the pathway's `group_alarms` while the tool's worst group is more
+  than `min_gap` below the rest of the ATS (C26), checked every GROUP_EVERY_DAYS days, one alarm per group alarm, named after the worst group
+  on the day it opens, so a cluster whose members shift by a comune does not reopen it.
 
 Texts are filled by code from the pathway's names (AC17).
 """
@@ -30,11 +33,29 @@ from engine.risk import HIGH_RISK, RiskModel
 from engine.state import NEVER, StateEngine
 
 WAIT_WINDOW_DAYS = 7  # bookings of the last week (PDTA §3)
-ALERT_COLUMNS = ["alert_id", "day", "level", "pathway_id", "patient_id", "facility_id", "step", "text"]
+# Group alarms are checked on day 0 and every 7 days after: their measures span 60 days of dispensing or 7 of
+# readings, and the two tool calls cost about 30 ms a tick per arm, which AC2's both-arms budget had no room
+# for (step 2.30: mean 374-418 ms without them, 461-462 with, on the same laptop).
+GROUP_EVERY_DAYS = 7
+ALERT_COLUMNS = ["alert_id", "day", "level", "pathway_id", "patient_id", "facility_id", "step", "group_alarm",
+                 "group_key", "text"]
 
 
 def it_number(x: float) -> str:
     return f"{x:.1f}".replace(".", ",")
+
+
+def worst_groups(tool: str, data: dict) -> list[tuple[str, list[str], float]]:
+    """(key, names, value) of every group in a group tool's data, worst first: an MMG group is its own
+    name, an area its comuni (adherence_by_area)."""
+    if tool == "adherence_by_area":
+        return [(a["comuni"][0], a["comuni"], a["value"]) for a in data["areas"]]
+    groups = [(k, [k], v) for k, v in data.items() if k != "rest_of_ats"]
+    return sorted(groups, key=lambda g: (g[2], g[0]))
+
+
+def pct(x: float) -> str:
+    return f"{round(x * 100)}%"
 
 
 class Monitoring:
@@ -44,7 +65,7 @@ class Monitoring:
         self.fired: dict[str, np.ndarray] = {}      # who meets each rule today
         self.flags_written: np.ndarray | None = None  # flag bit mask per patient, as last written
         self.late_before: np.ndarray | None = None
-        self.open: dict[tuple[str, str], str] = {}    # (facility_id, step) -> alert_id of the open alarm
+        self.open: dict[tuple[str, str], str] = {}    # (facility_id, step) or ("group", id) -> open alarm's alert_id
         self.alerts = 0
 
     def run(self, con: duckdb.DuckDBPyConnection, state: StateEngine, risk: RiskModel, day: int,
@@ -63,7 +84,7 @@ class Monitoring:
         self.late_before = late
         self._write_deviations(con, state, day, new_rules, new_late)
         return (self._patient_alerts(con, state, risk, day, scenario, new_rules, new_late)
-                + self._regional_alarms(con, day, scenario))
+                + self._regional_alarms(con, day, scenario) + self._group_alarms(con, day, scenario))
 
     def _write_flags(self, con, state: StateEngine, day: int) -> None:
         """Flags as a bit mask per patient, turned into the list in SQL like the engine's overdue_steps, and
@@ -99,13 +120,17 @@ class Monitoring:
         con.unregister("deviation_rows")
 
     def _alert(self, day: int, scenario: int, level: str, text: dict, patient_id=None, facility_id=None,
-               step=None) -> tuple[list, dict]:
+               step=None, group_alarm=None, group_key=None) -> tuple[list, dict]:
         """A new alert: its `alerts` row, without investigation_id and closed_day, and its stream message."""
         self.alerts += 1
         row = [f"al_{self.run_id}_{self.alerts}", day, level, self.pathway.pathway_id, patient_id, facility_id, step,
-               json.dumps(text, ensure_ascii=False)]
+               group_alarm, group_key, json.dumps(text, ensure_ascii=False)]
         return row, {"type": "alert", "scenario": scenario, "day": day,
-                     "payload": {"level": level, "facility_id": facility_id, "investigation_id": None, "text": text}}
+                     "payload": {"alert_id": row[0], "level": level, "facility_id": facility_id,
+                                 "group_key": group_key, "investigation_id": None, "text": text}}
+
+    def _insert_alert(self, con, row: list) -> None:
+        con.execute(f"INSERT INTO alerts ({', '.join(ALERT_COLUMNS)}) VALUES ({', '.join('?' * len(row))})", row)
 
     def _patient_alerts(self, con, state: StateEngine, risk: RiskModel, day: int, scenario: int, new_rules: dict,
                         new_late: np.ndarray) -> list[dict]:
@@ -157,9 +182,38 @@ class Monitoring:
                                 "en": f"{name} · {s.label.en}: mean wait {wait:.1f} days over the bookings of the last "
                                       f"{WAIT_WINDOW_DAYS} days (PDTA threshold {s.max_wait_days} days)"}
                         row, msg = self._alert(day, scenario, "regional", text, facility_id=key[0], step=s.id)
-                        con.execute("INSERT INTO alerts VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)", row)
+                        self._insert_alert(con, row)
                         self.open[key] = row[0]
                         out.append(msg)
                     elif wait <= s.max_wait_days and key in self.open:
                         con.execute("UPDATE alerts SET closed_day = ? WHERE alert_id = ?", [day, self.open.pop(key)])
+        return out
+
+    def _group_alarms(self, con, day: int, scenario: int) -> list[dict]:
+        out = []
+        if day % GROUP_EVERY_DAYS:
+            return out
+        with tool_cursor(con) as cur:
+            ctx = tools.Context(self.run_id, tools.Query(cur), day)
+            for g in self.pathway.group_alarms:
+                result = tools.call(ctx, g.tool, {"pathway_id": self.pathway.pathway_id, **g.args})
+                if result.get("error", {}).get("code", "empty_result") != "empty_result":
+                    raise RuntimeError(f"{g.tool} for {g.id}: {result['error']}")
+                data, key = result.get("data"), ("group", g.id)
+                rest = data and data["rest_of_ats"]
+                worst = worst_groups(g.tool, data)[0] if rest is not None else None
+                breach = worst is not None and worst[2] < rest - g.min_gap
+                if breach and key not in self.open:
+                    group, names, value = worst
+                    shown = ", ".join(names)
+                    text = {"it": f"{g.label.it}: {shown} {pct(value)}, resto dell'ATS {pct(rest)} "
+                                  f"(soglia {round(g.min_gap * 100)} punti sotto)",
+                            "en": f"{g.label.en}: {shown} {pct(value)}, rest of the ATS {pct(rest)} "
+                                  f"(threshold {round(g.min_gap * 100)} points below)"}
+                    row, msg = self._alert(day, scenario, "regional", text, group_alarm=g.id, group_key=group)
+                    self._insert_alert(con, row)
+                    self.open[key] = row[0]
+                    out.append(msg)
+                elif not breach and key in self.open:
+                    con.execute("UPDATE alerts SET closed_day = ? WHERE alert_id = ?", [day, self.open.pop(key)])
         return out

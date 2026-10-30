@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il gruppo di MMG 'coop_6' ha un tasso di ritiro farmaci del 87,31%, mentre il resto dell'ATS è al 99,92%, con una differenza di 12,61 punti percentuali, superiore alla soglia di 5 punti.\", \"Nell'ASST Mantova, il tasso di completamento del percorso Scompenso cardiaco è: visita cardiologica al 75,14%, ecocardiogramma al 74,32%, esame BNP al 93,87%, telemonitoraggio al 67,07%.\", \"Nell'ASST Mantova, ci sono 963 pazienti in ritardo per l'esame BNP, con un ritardo di 30 giorni; i primi 5 pazienti in lista hanno un rischio score compreso tra 0,0219 e 0,0355.\"], \"conclusion\": \"Il problema principale è concentrato nel gruppo 'coop_6' per il ritiro dei farmaci, con un gap significativo rispetto al resto dell'ATS. Tuttavia, anche nell'ASST Mantova (dove si trova 'coop_6') si osservano ritardi significativi in tutti gli step del percorso, in particolare nel telemonitoraggio (67,07%) e nell'ecocardiogramma (74,32%). Il ritardo nell'esame BNP (963 pazienti in ritardo di 30 giorni) rappresenta un punto critico con potenziale impatto sulla gestione del percorso. L'intervento deve essere focalizzato su 'coop_6' per il ritiro farmaci, ma anche su tutta l'ASST Mantova per migliorare l'aderenza agli step successivi, in particolare telemonitoraggio ed ecocardiogramma.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The MMG group 'coop_6' has a medication withdrawal rate of 87.31%, while the rest of the ATS is at 99.92%, with a difference of 12.61 percentage points, exceeding the 5-point threshold.\",\n    \"In the ASST Mantova, the completion rate of the Heart Failure pathway is: cardiac consultation at 75.14%, echocardiogram at 74.32%, BNP test at 93.87%, telemonitoring at 67.07%.\",\n    \"In the ASST Mantova, there are 963 patients with a delay in the BNP test, with a 30-day delay; the first 5 patients in the list have a risk score ranging from 0.0219 to 0.0355.\"\n  ],\n  \"conclusion\": \"The main issue is concentrated in the 'coop_6' group regarding medication withdrawal, with a significant gap compared to the rest of the ATS. However, even within ASST Mantova (where 'coop_6' is located), significant delays are observed across all steps of the pathway, particularly in telemonitoring (67.07%) and echocardiogram (74.32%). The delay in the BNP test (963 patients with a 30-day delay) represents a critical point with potential impact on pathway management. Intervention must be focused on 'coop_6' for medication withdrawal, but also on the entire ASST Mantova to improve adherence to subsequent pathway steps, particularly telemonitoring and echocardiogram.\"\n}"
+  }
+}

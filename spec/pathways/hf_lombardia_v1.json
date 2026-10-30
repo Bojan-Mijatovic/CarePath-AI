@@ -17,6 +17,12 @@
     {"id": "weight_gain", "if": "weight_gain_kg_3d >= 2", "then": {"step": "cardio_visit", "due_days": 7}},
     {"id": "no_furosemide", "if": "no_dispense('C03CA01', 30)", "then": {"flag": "adherence_risk"}}
   ],
+  "group_alarms": [
+    {"id": "dispensing_mmg_group", "label": {"it": "Ritiro dei farmaci per gruppo di MMG", "en": "Drug collection by MMG group"},
+     "tool": "adherence_by_group", "args": {"grouping": "mmg_group", "measure": "dispensing"}, "min_gap": 0.05},
+    {"id": "telemon_alone_far", "label": {"it": "Telemonitoraggio di chi vive solo a oltre 40 km, per area", "en": "Telemonitoring of patients living alone over 40 km away, by area"},
+     "tool": "adherence_by_area", "args": {"measure": "telemonitoring", "segment": {"lives_alone": true, "distance_km_min": 40}}, "min_gap": 0.6}
+  ],
   "escalation": {"reminder_day": 0, "call_after_days": 3, "mmg_after_days": 7, "high_risk_skips_reminder": true},
   "ward_by_diagnosis": {"428.*": ["cardiologia", "medicina_interna"]}
 }

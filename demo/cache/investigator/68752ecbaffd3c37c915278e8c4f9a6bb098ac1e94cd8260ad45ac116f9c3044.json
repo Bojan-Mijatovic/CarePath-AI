@@ -1,16 +1,16 @@
 {
   "agent": "investigator",
   "model": "qwen3:30b-instruct",
-  "prompt_version": "investigator-v4",
+  "prompt_version": "investigator-v5",
   "request": {
     "messages": [
       {
         "role": "system",
-        "content": "Sei l'Investigator di CarePath AI per l'ATS della Val Padana. Ricevi un allarme e ne cerchi le cause con gli strumenti, che leggono i dati fino a oggi, giorno 33.\n\nRegole:\n- Usa solo gli strumenti. Ogni numero che scrivi deve venire dal risultato di uno strumento.\n- Nessuna diagnosi e nessuna modifica di terapia.\n- Al massimo 6 chiamate di strumenti. Quando hai abbastanza dati, smetti di chiamarli.\n\nMetodo: verifica il dato dell'allarme; confrontalo con gli altri ospedali o gruppi; cerca dove c'e' margine per intervenire in tutta l'ATS, non solo dove c'e' l'allarme; guarda quali pazienti ne sono colpiti.\n\nStrutture dell'ATS (nome, tipo, ASST):\n- Poliambulatorio 1, ambulatorio, asst_mantova\n- Poliambulatorio 2, ambulatorio, asst_mantova\n- Poliambulatorio 3, ambulatorio, asst_mantova\n- Poliambulatorio 4, ambulatorio, asst_cremona\n- Poliambulatorio 5, ambulatorio, asst_cremona\n- Poliambulatorio 6, ambulatorio, asst_crema\n- Ospedale A, ospedale, asst_mantova\n- Ospedale B, ospedale, asst_cremona\n- Ospedale C, ospedale, asst_crema\n\nPercorso hf_lombardia_v1 (Scompenso cardiaco). Step del percorso:\n- discharge: Dimissione\n- telemon: Telemonitoraggio\n- cardio_visit: Visita cardiologica (servizio cardio_visit)\n- echo: Ecocardiogramma (servizio echo)\n- lab_bnp: Esame BNP (servizio lab)"
+        "content": "Sei l'Investigator di CarePath AI per l'ATS della Val Padana. Ricevi un allarme e ne cerchi le cause con gli strumenti, che leggono i dati fino a oggi, giorno 29.\n\nRegole:\n- Usa solo gli strumenti. Ogni numero che scrivi deve venire dal risultato di uno strumento.\n- Nessuna diagnosi e nessuna modifica di terapia.\n- Al massimo 6 chiamate di strumenti. Quando hai abbastanza dati, smetti di chiamarli.\n\nMetodo: verifica il dato dell'allarme; confrontalo con gli altri ospedali o gruppi; cerca dove c'e' margine per intervenire in tutta l'ATS, non solo dove c'e' l'allarme; guarda quali pazienti ne sono colpiti.\n\nStrutture dell'ATS (nome, tipo, ASST):\n- Poliambulatorio 1, ambulatorio, asst_mantova\n- Poliambulatorio 2, ambulatorio, asst_mantova\n- Poliambulatorio 3, ambulatorio, asst_mantova\n- Poliambulatorio 4, ambulatorio, asst_cremona\n- Poliambulatorio 5, ambulatorio, asst_cremona\n- Poliambulatorio 6, ambulatorio, asst_crema\n- Ospedale A, ospedale, asst_mantova\n- Ospedale B, ospedale, asst_cremona\n- Ospedale C, ospedale, asst_crema\n\nPercorso hf_lombardia_v1 (Scompenso cardiaco). Step del percorso:\n- discharge: Dimissione\n- telemon: Telemonitoraggio\n- cardio_visit: Visita cardiologica (servizio cardio_visit)\n- echo: Ecocardiogramma (servizio echo)\n- lab_bnp: Esame BNP (servizio lab)"
       },
       {
         "role": "user",
-        "content": "Allarme regionale del giorno 33: Ospedale B · Ecocardiogramma: attesa media 31,0 giorni sulle prenotazioni degli ultimi 7 giorni (soglia PDTA 30 giorni)"
+        "content": "Allarme regionale del giorno 29: Ospedale A · Ecocardiogramma: attesa media 31,1 giorni sulle prenotazioni degli ultimi 7 giorni (soglia PDTA 30 giorni)"
       },
       {
         "role": "assistant",
@@ -39,12 +39,12 @@
       {
         "role": "tool",
         "tool_name": "wait_by_hospital",
-        "content": "{\"data\":{\"Ospedale A\":2.2,\"Ospedale B\":31.0,\"Ospedale C\":2.0},\"passo\":1,\"source\":{\"args\":{\"pathway_id\":\"hf_lombardia_v1\",\"period_days\":7,\"step\":\"echo\"},\"day\":33,\"run_id\":\"s2_agents\",\"tool\":\"wait_by_hospital\"}}"
+        "content": "{\"data\":{\"Ospedale A\":31.1,\"Ospedale B\":2.0,\"Ospedale C\":2.1},\"passo\":1,\"source\":{\"args\":{\"pathway_id\":\"hf_lombardia_v1\",\"period_days\":7,\"step\":\"echo\"},\"day\":29,\"run_id\":\"s1_agents\",\"tool\":\"wait_by_hospital\"}}"
       },
       {
         "role": "tool",
         "tool_name": "free_slots",
-        "content": "{\"data\":{\"Ospedale A\":114,\"Ospedale B\":0,\"Ospedale C\":102},\"passo\":2,\"source\":{\"args\":{\"horizon_days\":21,\"service\":\"echo\"},\"day\":33,\"run_id\":\"s2_agents\",\"tool\":\"free_slots\"}}"
+        "content": "{\"data\":{\"Ospedale A\":0,\"Ospedale B\":101,\"Ospedale C\":58},\"passo\":2,\"source\":{\"args\":{\"horizon_days\":21,\"service\":\"echo\"},\"day\":29,\"run_id\":\"s1_agents\",\"tool\":\"free_slots\"}}"
       },
       {
         "role": "assistant",
@@ -56,7 +56,7 @@
               "arguments": {
                 "pathway_id": "hf_lombardia_v1",
                 "step": "echo",
-                "asst": "asst_cremona",
+                "asst": "asst_mantova",
                 "limit": 5
               }
             }
@@ -66,7 +66,7 @@
       {
         "role": "tool",
         "tool_name": "patients_overdue",
-        "content": "{\"data\":{\"count\":17,\"patients\":[{\"days_overdue\":47,\"patient_id\":\"p_02531\",\"risk_score\":0.0253},{\"days_overdue\":40,\"patient_id\":\"p_01182\",\"risk_score\":0.0287},{\"days_overdue\":40,\"patient_id\":\"p_08948\",\"risk_score\":0.0194},{\"days_overdue\":39,\"patient_id\":\"p_07322\",\"risk_score\":0.0377},{\"days_overdue\":26,\"patient_id\":\"p_05433\",\"risk_score\":0.0238}]},\"passo\":3,\"source\":{\"args\":{\"asst\":\"asst_cremona\",\"limit\":5,\"pathway_id\":\"hf_lombardia_v1\",\"step\":\"echo\"},\"day\":33,\"run_id\":\"s2_agents\",\"tool\":\"patients_overdue\"}}"
+        "content": "{\"data\":{\"count\":37,\"patients\":[{\"days_overdue\":47,\"patient_id\":\"p_00651\",\"risk_score\":0.022},{\"days_overdue\":42,\"patient_id\":\"p_07211\",\"risk_score\":0.0372},{\"days_overdue\":41,\"patient_id\":\"p_02314\",\"risk_score\":0.0443},{\"days_overdue\":41,\"patient_id\":\"p_06221\",\"risk_score\":0.0505},{\"days_overdue\":40,\"patient_id\":\"p_03841\",\"risk_score\":0.038}]},\"passo\":3,\"source\":{\"args\":{\"asst\":\"asst_mantova\",\"limit\":5,\"pathway_id\":\"hf_lombardia_v1\",\"step\":\"echo\"},\"day\":29,\"run_id\":\"s1_agents\",\"tool\":\"patients_overdue\"}}"
       },
       {
         "role": "assistant",
@@ -77,7 +77,7 @@
               "name": "compliance_by_step",
               "arguments": {
                 "pathway_id": "hf_lombardia_v1",
-                "asst": "asst_cremona"
+                "asst": "asst_mantova"
               }
             }
           }
@@ -86,7 +86,7 @@
       {
         "role": "tool",
         "tool_name": "compliance_by_step",
-        "content": "{\"data\":{\"cardio_visit\":0.798,\"echo\":0.8365,\"lab_bnp\":0.8539,\"telemon\":0.5525},\"passo\":4,\"source\":{\"args\":{\"asst\":\"asst_cremona\",\"pathway_id\":\"hf_lombardia_v1\"},\"day\":33,\"run_id\":\"s2_agents\",\"tool\":\"compliance_by_step\"}}"
+        "content": "{\"data\":{\"cardio_visit\":0.7792,\"echo\":0.7989,\"lab_bnp\":0.8621,\"telemon\":0.6448},\"passo\":4,\"source\":{\"args\":{\"asst\":\"asst_mantova\",\"pathway_id\":\"hf_lombardia_v1\"},\"day\":29,\"run_id\":\"s1_agents\",\"tool\":\"compliance_by_step\"}}"
       }
     ],
     "tools": [
@@ -321,6 +321,158 @@
               "grouping"
             ],
             "title": "AdherenceArgs",
+            "type": "object"
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "adherence_by_area",
+          "description": "Aderenza per area (un comune con i comuni entro 12 km), anche per un segmento di pazienti: le 3 aree peggiori, ciascuna con i suoi comuni, e il resto dell'ATS.",
+          "parameters": {
+            "additionalProperties": false,
+            "properties": {
+              "pathway_id": {
+                "description": "ID del percorso, es. hf_lombardia_v1",
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "title": "Pathway Id",
+                "type": "string"
+              },
+              "measure": {
+                "default": "telemonitoring",
+                "description": "come in adherence_by_group",
+                "enum": [
+                  "dispensing",
+                  "telemonitoring"
+                ],
+                "title": "Measure",
+                "type": "string"
+              },
+              "segment": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "description": "C8: every key optional, combined with AND; {} is the whole population of the pathway.",
+                    "properties": {
+                      "asst_id": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "asst_mantova",
+                              "asst_cremona",
+                              "asst_crema"
+                            ],
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Asst Id"
+                      },
+                      "comune_istat": {
+                        "anyOf": [
+                          {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "codici ISTAT dei comuni",
+                        "title": "Comune Istat"
+                      },
+                      "coop_id": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "gruppo (cooperativa) di MMG, es. coop_3",
+                        "title": "Coop Id"
+                      },
+                      "age_min": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Age Min"
+                      },
+                      "age_max": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Age Max"
+                      },
+                      "lives_alone": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Lives Alone"
+                      },
+                      "distance_km_min": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "distanza minima dall'ospedale di riferimento, km",
+                        "title": "Distance Km Min"
+                      }
+                    },
+                    "title": "Segment",
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "solo i pazienti del segmento; senza, tutti"
+              },
+              "period_days": {
+                "default": 60,
+                "maximum": 365,
+                "minimum": 7,
+                "title": "Period Days",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "pathway_id"
+            ],
+            "title": "AreaArgs",
             "type": "object"
           }
         }
@@ -737,6 +889,6 @@
   },
   "response": {
     "role": "assistant",
-    "content": "L'allarme riguarda Ospedale B, dove l'attesa media per l'ecocardiogramma è di 31,0 giorni negli ultimi 7 giorni, superiore alla soglia di 30 giorni.\n\nAnalisi approfondita:\n- Ospedale B ha **0 posti liberi** per l'ecocardiogramma nei prossimi 21 giorni, indicando un completo esaurimento della capacità.\n- A livello di ASST Cremona (che include Ospedale B), ci sono **17 pazienti in ritardo** per l'ecocardiogramma, con un massimo di 47 giorni di ritardo.\n- La compliance per lo step echo nell'ASST Cremona è del **83,65%**, inferiore alla media dell'ATS, suggerendo un problema strutturale nel percorso.\n\nConfronto con altri ospedali:\n- Ospedale A e Ospedale C hanno attese medie di 2,2 e 2,0 giorni rispettivamente, con centinaia di posti liberi, indicando una capacità sottoutilizzata.\n\nConclusioni:\n- Il problema è localizzato a **Ospedale B**, dove la capacità è esaurita e non ci sono posti disponibili.\n- Il ritardo si è accumulato nel tempo, con pazienti in ritardo fino a 47 giorni.\n- La compliance per l'ecocardiogramma è inferiore alla media, suggerendo un'incapacità di gestire il carico.\n\nNon ci sono margini di intervento nell'ATS per redistribuire pazienti, poiché Ospedale B è l'unico con capacità disponibile per l'ecocardiogramma (0 posti liberi), e gli altri ospedali hanno capacità sottoutilizzata ma non sono in grado di gestire il carico aggiuntivo.\n\nNon è possibile intervenire in tutta l'ATS per risolvere il problema, poiché la causa è specifica di Ospedale B."
+    "content": "L'allarme riguarda l'attesa media per l'ecocardiogramma a Ospedale A, che è di 31,1 giorni (soglia 30 giorni). Analisi approfondita:\n\n1. **Attesa media**: Ospedale A ha un'attesa media di 31,1 giorni negli ultimi 7 giorni, superiore alla soglia. Gli altri ospedali (B: 2,0 giorni; C: 2,1 giorni) sono molto più efficienti.\n\n2. **Posti liberi**: Ospedale A ha 0 posti liberi nei prossimi 21 giorni per l'ecocardiogramma, mentre Ospedale B ne ha 101 e Ospedale C 58. Questo indica un blocco operativo a Ospedale A.\n\n3. **Pazienti in ritardo**: A Ospedale A (ASST Mantova) ci sono 37 pazienti con scadenza dell'ecocardiogramma in ritardo, con un massimo di 47 giorni di ritardo. Questi pazienti sono a rischio elevato (score fino a 0,0505).\n\n4. **Compliance per step (ASST Mantova)**: \n   - Ecocardiogramma: 79,89% di compliance (sotto la soglia di 85% considerata ottimale).\n   - Telemonitoraggio: 64,48% (molto basso).\n   - Visita cardiologica: 77,92%.\n   - Esame BNP: 86,21%.\n\nConclusione: Il problema è localizzato a Ospedale A, con attesa media superiore alla soglia, assenza di posti liberi e un numero significativo di pazienti in ritardo. La bassa compliance al telemonitoraggio (64,48%) potrebbe aggravare il ritardo nell'ecocardiogramma, poiché il telemonitoraggio è un passo chiave per il follow-up. Il margine di intervento è nell'ottimizzazione della pianificazione degli ecocardiogrammi a Ospedale A e nel supporto al telemonitoraggio per ridurre il rischio di riammissione."
   }
 }

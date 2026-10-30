@@ -1,7 +1,7 @@
 {
   "agent": "investigator",
   "model": "qwen3:30b-instruct",
-  "prompt_version": "investigator-v4",
+  "prompt_version": "investigator-v5",
   "request": {
     "messages": [
       {
@@ -143,6 +143,6 @@
   },
   "response": {
     "role": "assistant",
-    "content": "{\n  \"claims\": [\n    {\n      \"step\": 1,\n      \"text\": \"Il tempo medio di attesa per l'ecocardiogramma all'Ospedale C è di 31,1 giorni negli ultimi 7 giorni, superiore alla soglia del PDTA di 30 giorni.\"\n    },\n    {\n      \"step\": 2,\n      \"text\": \"L'Ospedale C ha 0 slot disponibili per l'ecocardiogramma nei prossimi 21 giorni, mentre l'Ospedale A ha 112 slot e l'Ospedale B ne ha 96, indicando un margine significativo di capacità disponibile negli altri ospedali.\"\n    },\n    {\n      \"step\": 3,\n      \"text\": \"All'Ospedale C ci sono 11 pazienti in ritardo per l'ecocardiogramma, con un ritardo massimo di 42 giorni, e tutti i pazienti in ritardo appartengono all'ASST Crema.\"\n    },\n    {\n      \"step\": 4,\n      \"text\": \"La compliance all'Ospedale C per il passo 'echo' è del 81,54%, inferiore alla media del percorso (es. lab_bnp al 87,52%), indicando un potenziale colpo di coda nel percorso che potrebbe influenzare l'intero flusso.\"\n    }\n  ],\n  \"conclusion\": \"L'allarme è specifico all'Ospedale C, dove l'attesa media supera la soglia e non ci sono slot disponibili. Tuttavia, il margine di intervento esiste negli altri ospedali (A e B), che hanno capacità disponibile. Si suggerisce di redistribuire parte delle prenotazioni di ecocardiogramma dall'Ospedale C a Ospedale A o B, in particolare per i 11 pazienti in ritardo, per ridurre i tempi di attesa e migliorare la compliance del percorso.\"\n}"
+    "content": "{\n  \"claims\": [\n    {\n      \"step\": 1,\n      \"text\": \"L'attesa media per l'ecocardiogramma all'Ospedale C è di 31,1 giorni negli ultimi 7 giorni, superiore alla soglia PDTA di 30 giorni.\"\n    },\n    {\n      \"step\": 2,\n      \"text\": \"L'Ospedale C ha 0 slot disponibili per l'ecocardiogramma nei prossimi 21 giorni, mentre l'Ospedale A ha 112 slot e l'Ospedale B ne ha 96, indicando un forte margine di capacità disponibile negli altri ospedali dell'ATS.\"\n    },\n    {\n      \"step\": 3,\n      \"text\": \"All'Ospedale C ci sono 11 pazienti in ritardo per l'ecocardiogramma, con un massimo di 42 giorni di ritardo, suggerendo un accumulo significativo di pazienti non serviti.\"\n    },\n    {\n      \"step\": 4,\n      \"text\": \"La compliance all'Ospedale C per il passo 'echo' è del 81,54%, inferiore alla media del percorso (es. lab_bnp al 87,52%), indicando un punto debole nel flusso diagnostico.\"\n    }\n  ],\n  \"conclusion\": \"L'allarme è causato da un accumulo di pazienti in attesa all'Ospedale C, con 0 slot disponibili nei prossimi 21 giorni e 11 pazienti in ritardo. Il margine di intervento è nell'ottimizzazione della distribuzione delle prenotazioni: si suggerisce di deviare pazienti in ritardo verso Ospedale A o B, che hanno capacità disponibile e performance più elevate nel percorso.\"\n}"
   }
 }

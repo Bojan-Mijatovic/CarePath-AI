@@ -1,16 +1,16 @@
 {
   "agent": "investigator",
   "model": "qwen3:30b-instruct",
-  "prompt_version": "investigator-v4",
+  "prompt_version": "investigator-v5",
   "request": {
     "messages": [
       {
         "role": "system",
-        "content": "Sei l'Investigator di CarePath AI per l'ATS della Val Padana. Ricevi un allarme e ne cerchi le cause con gli strumenti, che leggono i dati fino a oggi, giorno 32.\n\nRegole:\n- Usa solo gli strumenti. Ogni numero che scrivi deve venire dal risultato di uno strumento.\n- Nessuna diagnosi e nessuna modifica di terapia.\n- Al massimo 6 chiamate di strumenti. Quando hai abbastanza dati, smetti di chiamarli.\n\nMetodo: verifica il dato dell'allarme; confrontalo con gli altri ospedali o gruppi; cerca dove c'e' margine per intervenire in tutta l'ATS, non solo dove c'e' l'allarme; guarda quali pazienti ne sono colpiti.\n\nStrutture dell'ATS (nome, tipo, ASST):\n- Poliambulatorio 1, ambulatorio, asst_mantova\n- Poliambulatorio 2, ambulatorio, asst_mantova\n- Poliambulatorio 3, ambulatorio, asst_mantova\n- Poliambulatorio 4, ambulatorio, asst_cremona\n- Poliambulatorio 5, ambulatorio, asst_cremona\n- Poliambulatorio 6, ambulatorio, asst_crema\n- Ospedale A, ospedale, asst_mantova\n- Ospedale B, ospedale, asst_cremona\n- Ospedale C, ospedale, asst_crema\n\nPercorso hf_lombardia_v1 (Scompenso cardiaco). Step del percorso:\n- discharge: Dimissione\n- telemon: Telemonitoraggio\n- cardio_visit: Visita cardiologica (servizio cardio_visit)\n- echo: Ecocardiogramma (servizio echo)\n- lab_bnp: Esame BNP (servizio lab)"
+        "content": "Sei l'Investigator di CarePath AI per l'ATS della Val Padana. Ricevi un allarme e ne cerchi le cause con gli strumenti, che leggono i dati fino a oggi, giorno 0.\n\nRegole:\n- Usa solo gli strumenti. Ogni numero che scrivi deve venire dal risultato di uno strumento.\n- Nessuna diagnosi e nessuna modifica di terapia.\n- Al massimo 6 chiamate di strumenti. Quando hai abbastanza dati, smetti di chiamarli.\n\nMetodo: verifica il dato dell'allarme; confrontalo con gli altri ospedali o gruppi; cerca dove c'e' margine per intervenire in tutta l'ATS, non solo dove c'e' l'allarme; guarda quali pazienti ne sono colpiti.\n\nStrutture dell'ATS (nome, tipo, ASST):\n- Poliambulatorio 1, ambulatorio, asst_mantova\n- Poliambulatorio 2, ambulatorio, asst_mantova\n- Poliambulatorio 3, ambulatorio, asst_mantova\n- Poliambulatorio 4, ambulatorio, asst_cremona\n- Poliambulatorio 5, ambulatorio, asst_cremona\n- Poliambulatorio 6, ambulatorio, asst_crema\n- Ospedale A, ospedale, asst_mantova\n- Ospedale B, ospedale, asst_cremona\n- Ospedale C, ospedale, asst_crema\n\nPercorso hf_lombardia_v1 (Scompenso cardiaco). Step del percorso:\n- discharge: Dimissione\n- telemon: Telemonitoraggio\n- cardio_visit: Visita cardiologica (servizio cardio_visit)\n- echo: Ecocardiogramma (servizio echo)\n- lab_bnp: Esame BNP (servizio lab)"
       },
       {
         "role": "user",
-        "content": "Allarme regionale del giorno 32: Ospedale C · Ecocardiogramma: attesa media 31,1 giorni sulle prenotazioni degli ultimi 7 giorni (soglia PDTA 30 giorni)"
+        "content": "Allarme regionale del giorno 0: Telemonitoraggio di chi vive solo a oltre 40 km, per area: Calvatone, Rivarolo del Re ed Uniti, Spineda 0%, resto dell'ATS 85% (soglia 60 punti sotto)"
       },
       {
         "role": "assistant",
@@ -18,19 +18,14 @@
         "tool_calls": [
           {
             "function": {
-              "name": "wait_by_hospital",
+              "name": "adherence_by_area",
               "arguments": {
                 "pathway_id": "hf_lombardia_v1",
-                "step": "echo",
-                "period_days": 7
-              }
-            }
-          },
-          {
-            "function": {
-              "name": "free_slots",
-              "arguments": {
-                "service": "echo"
+                "measure": "telemonitoring",
+                "segment": {
+                  "lives_alone": true,
+                  "distance_km_min": 40
+                }
               }
             }
           }
@@ -38,35 +33,8 @@
       },
       {
         "role": "tool",
-        "tool_name": "wait_by_hospital",
-        "content": "{\"data\":{\"Ospedale A\":2.3,\"Ospedale B\":2.0,\"Ospedale C\":31.1},\"passo\":1,\"source\":{\"args\":{\"pathway_id\":\"hf_lombardia_v1\",\"period_days\":7,\"step\":\"echo\"},\"day\":32,\"run_id\":\"s3_agents\",\"tool\":\"wait_by_hospital\"}}"
-      },
-      {
-        "role": "tool",
-        "tool_name": "free_slots",
-        "content": "{\"data\":{\"Ospedale A\":112,\"Ospedale B\":96,\"Ospedale C\":0},\"passo\":2,\"source\":{\"args\":{\"horizon_days\":21,\"service\":\"echo\"},\"day\":32,\"run_id\":\"s3_agents\",\"tool\":\"free_slots\"}}"
-      },
-      {
-        "role": "assistant",
-        "content": "",
-        "tool_calls": [
-          {
-            "function": {
-              "name": "patients_overdue",
-              "arguments": {
-                "pathway_id": "hf_lombardia_v1",
-                "step": "echo",
-                "asst": "asst_crema",
-                "limit": 5
-              }
-            }
-          }
-        ]
-      },
-      {
-        "role": "tool",
-        "tool_name": "patients_overdue",
-        "content": "{\"data\":{\"count\":11,\"patients\":[{\"days_overdue\":42,\"patient_id\":\"p_09637\",\"risk_score\":0.0229},{\"days_overdue\":41,\"patient_id\":\"p_09160\",\"risk_score\":0.0378},{\"days_overdue\":32,\"patient_id\":\"p_03967\",\"risk_score\":0.0359},{\"days_overdue\":27,\"patient_id\":\"p_06380\",\"risk_score\":0.0184},{\"days_overdue\":18,\"patient_id\":\"p_08204\",\"risk_score\":0.0294}]},\"passo\":3,\"source\":{\"args\":{\"asst\":\"asst_crema\",\"limit\":5,\"pathway_id\":\"hf_lombardia_v1\",\"step\":\"echo\"},\"day\":32,\"run_id\":\"s3_agents\",\"tool\":\"patients_overdue\"}}"
+        "tool_name": "adherence_by_area",
+        "content": "{\"data\":{\"areas\":[{\"comuni\":[\"Calvatone\",\"Rivarolo del Re ed Uniti\",\"Spineda\"],\"patients\":7,\"value\":0.0},{\"comuni\":[\"Casalmaggiore\"],\"patients\":20,\"value\":0.05},{\"comuni\":[\"Borgocarbonara\",\"Magnacavallo\"],\"patients\":5,\"value\":0.4}],\"rest_of_ats\":0.8548},\"passo\":1,\"source\":{\"args\":{\"measure\":\"telemonitoring\",\"pathway_id\":\"hf_lombardia_v1\",\"period_days\":60,\"segment\":{\"distance_km_min\":40.0,\"lives_alone\":true}},\"day\":0,\"run_id\":\"s1_agents\",\"tool\":\"adherence_by_area\"}}"
       }
     ],
     "tools": [
@@ -301,6 +269,158 @@
               "grouping"
             ],
             "title": "AdherenceArgs",
+            "type": "object"
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "adherence_by_area",
+          "description": "Aderenza per area (un comune con i comuni entro 12 km), anche per un segmento di pazienti: le 3 aree peggiori, ciascuna con i suoi comuni, e il resto dell'ATS.",
+          "parameters": {
+            "additionalProperties": false,
+            "properties": {
+              "pathway_id": {
+                "description": "ID del percorso, es. hf_lombardia_v1",
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "title": "Pathway Id",
+                "type": "string"
+              },
+              "measure": {
+                "default": "telemonitoring",
+                "description": "come in adherence_by_group",
+                "enum": [
+                  "dispensing",
+                  "telemonitoring"
+                ],
+                "title": "Measure",
+                "type": "string"
+              },
+              "segment": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "description": "C8: every key optional, combined with AND; {} is the whole population of the pathway.",
+                    "properties": {
+                      "asst_id": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "asst_mantova",
+                              "asst_cremona",
+                              "asst_crema"
+                            ],
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Asst Id"
+                      },
+                      "comune_istat": {
+                        "anyOf": [
+                          {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "codici ISTAT dei comuni",
+                        "title": "Comune Istat"
+                      },
+                      "coop_id": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "gruppo (cooperativa) di MMG, es. coop_3",
+                        "title": "Coop Id"
+                      },
+                      "age_min": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Age Min"
+                      },
+                      "age_max": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Age Max"
+                      },
+                      "lives_alone": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Lives Alone"
+                      },
+                      "distance_km_min": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "distanza minima dall'ospedale di riferimento, km",
+                        "title": "Distance Km Min"
+                      }
+                    },
+                    "title": "Segment",
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "solo i pazienti del segmento; senza, tutti"
+              },
+              "period_days": {
+                "default": 60,
+                "maximum": 365,
+                "minimum": 7,
+                "title": "Period Days",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "pathway_id"
+            ],
+            "title": "AreaArgs",
             "type": "object"
           }
         }
@@ -721,10 +841,12 @@
     "tool_calls": [
       {
         "function": {
-          "name": "compliance_by_step",
+          "name": "adherence_by_group",
           "arguments": {
             "pathway_id": "hf_lombardia_v1",
-            "asst": "asst_crema"
+            "grouping": "comune",
+            "measure": "telemonitoring",
+            "period_days": 60
           }
         }
       }

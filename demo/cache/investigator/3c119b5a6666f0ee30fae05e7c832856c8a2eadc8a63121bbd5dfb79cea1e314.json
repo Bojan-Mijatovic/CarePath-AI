@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Nell'area di Canneto sull'Oglio, Casalmoro e Casalromano, il tasso di adesione al telemonitoraggio per pazienti che vivono soli a più di 40 km è del 15,38%, con 13 pazienti coinvolti, ben al di sotto della soglia regionale di 60 punti sotto (valore regionale: 87,01%).\", \"A livello comunale, i comuni di Canneto sull'Oglio (63,64%) e Casalmorano (72,73%) mostrano tassi di adesione al telemonitoraggio inferiori al 75%, mentre Solferino (46,15%) è particolarmente critico, con un valore inferiore al 50%.\", \"Nell'ASST Mantova, ci sono 73 pazienti in ritardo nel telemonitoraggio, con un massimo di 98 giorni di ritardo; i pazienti più a rischio sono p_03980 (98 giorni) e p_03811 (97 giorni), con punteggi di rischio bassi (0,0596 e 0,0392).\", \"Nell'ASST Mantova, il tasso di compliance per il percorso Scompenso cardiaco è del 66,67% per la fase di telemonitoraggio, del 73,68% per l'ecocardiogramma e del 74,59% per la visita cardiologica, indicando un'aderenza complessiva inferiore al 75% in più passaggi.\"], \"conclusion\": \"L'allarme è causato da un'aderenza molto bassa al telemonitoraggio in specifici comuni dell'ASST Mantova (Canneto sull'Oglio, Casalmoro, Casalromano, Solferino), in particolare tra pazienti che vivono soli a più di 40 km. Il ritardo nel telemonitoraggio è diffuso (73 pazienti in ritardo) e l'ASST Mantova presenta un'aderenza complessiva inferiore al 75% in più passaggi. L'intervento deve concentrarsi su questi comuni, con un focus su Solferino e Canneto sull'Oglio, e su pazienti in ritardo, per migliorare l'adesione e ridurre il rischio di ricovero.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"In the area of Canneto sull'Oglio, Casalmoro and Casalromano, the enrollment rate for telemonitoring among patients living alone at more than 40 km is 15.38%, involving 13 patients, significantly below the regional threshold of 60 points below (regional value: 87.01%).\",\n    \"At the municipal level, the municipalities of Canneto sull'Oglio (63.64%) and Casalmorano (72. 73%) show telemonitoring enrollment rates below 75%, while Solferino (46.15%) is particularly critical, with a value below 50%.\",\n    \"In the ASST Mantova, there are 73 patients with delayed telemonitoring, with a maximum delay of 98 days; the patients at highest risk are p_03980 (98 days) and p_03811 (97 days), with low risk scores (0.0596 and 0.0392).\",\n    \"In the ASST Mantova, the compliance rate for the Heart Failure pathway is 66.67% for the telemonitoring phase, 73.68% for the echocardiogram, and 74.59% for the cardiology visit, indicating overall adherence below 75% across multiple steps.\"\n  ],\n  \"conclusion\": \"The alarm is caused by very low telemonitoring adherence in specific municipalities of ASST Mantova (Canneto sull'Oglio, Casalmoro, Casalromano, Solferino), particularly among patients living alone at more than 40 km. Delayed telemonitoring is widespread (73 patients delayed), and ASST Mantova shows overall adherence below 75% across multiple steps. The intervention must focus on these municipalities, with particular emphasis on Solferino and Canneto sull'Oglio, and on patients with delays, to improve adherence and reduce the risk of hospitalization.\"\n}"
+  }
+}

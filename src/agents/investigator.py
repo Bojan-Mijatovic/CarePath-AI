@@ -27,7 +27,8 @@ from engine.pathway import Pathway
 AGENT = "investigator"
 # Pattern 1 found in v1 0/3 (free_slots kept to the alarm's ASST), v2 1/3 (steps lost guessing ASST ids),
 # v3 0/3 (facilities given, still the alarm's ASST only); v4 opens with the alarm's evidence (`opening`).
-PROMPT_VERSION = "investigator-v4"
+# v5: the same prompt with the adherence_by_area tool, and group alarms (C26).
+PROMPT_VERSION = "investigator-v5"
 TRANSLATE_VERSION = "investigator-translate-v1"
 MAX_STEPS = 6
 SUMMARY_ITEMS = 6  # entries of a tool's data in a step's result summary
@@ -126,6 +127,8 @@ def summary(result: dict) -> dict:
         for k, v in list(data.items())[:SUMMARY_ITEMS]:
             if isinstance(v, (int, float)) and not isinstance(v, bool):
                 parts.append(f"{k} {_number(v, lang)}")
+            elif isinstance(v, list) and v and isinstance(v[0], dict) and "comuni" in v[0]:  # adherence_by_area
+                parts += [f"{', '.join(a['comuni'])} {_number(a['value'], lang)}" for a in v]
             elif isinstance(v, list):
                 parts.append(f"{k}: {len(v)}")
             elif v is None:
@@ -143,11 +146,15 @@ def system_prompt(pathway: Pathway, day: int, facilities: list[tuple[str, str, s
                          steps=steps, facilities=places)
 
 
-def opening(pathway: Pathway, step_id: str) -> list[dict]:
-    """The alarm's own evidence, called by code before the model: the wait for the alarm's step in every
-    hospital over the alarm's window, and the free slots of its service in the whole ATS. In three prompt
-    versions the model kept free_slots to the alarm's ASST and never saw capacity elsewhere (0, 1 and 0 of
-    3 scenarios); which data backs a move of patients is code's choice (CLAUDE.md rule 1), not the model's."""
+def opening(pathway: Pathway, step_id: str | None = None, group_alarm: str | None = None) -> list[dict]:
+    """The alarm's own evidence, called by code before the model. A wait alarm: the wait for the alarm's
+    step in every hospital over the alarm's window, and the free slots of its service in the whole ATS. In
+    three prompt versions the model kept free_slots to the alarm's ASST and never saw capacity elsewhere
+    (0, 1 and 0 of 3 scenarios); which data backs a move of patients is code's choice (CLAUDE.md rule 1),
+    not the model's. A group alarm (C26): the call Monitoring made, over the whole ATS."""
+    if group_alarm is not None:
+        g = next(g for g in pathway.group_alarms if g.id == group_alarm)
+        return [{"function": {"name": g.tool, "arguments": {"pathway_id": pathway.pathway_id, **g.args}}}]
     step = next(s for s in pathway.steps if s.id == step_id)
     calls = [{"function": {"name": "wait_by_hospital",
                            "arguments": {"pathway_id": pathway.pathway_id, "step": step.id, "period_days": WAIT_WINDOW_DAYS}}}]
@@ -172,17 +179,18 @@ def _run(ctx: tools.Context, inv: Investigation, calls: list[dict]) -> list[dict
     return out
 
 
-def investigate(ctx: tools.Context, pathway: Pathway, day: int, alarm: dict, step_id: str, investigation_id: str,
-                facilities: list[tuple[str, str, str]]) -> Investigation:
-    """One investigation of a regional alarm: `alarm` is its text ({"it", "en"}) and `step_id` its pathway
-    step. `facilities` are the run's (name, type, asst_id), reference data the caller reads: without them
-    the model guessed ASST ids and lost steps to errors. The first steps are `opening`; the model has the
-    rest. Raises llm.LLMUnavailable when the model gives no usable answer; there is no template (Solution
-    Plan §8)."""
+def investigate(ctx: tools.Context, pathway: Pathway, day: int, alarm: dict, investigation_id: str,
+                facilities: list[tuple[str, str, str]], step_id: str | None = None,
+                group_alarm: str | None = None) -> Investigation:
+    """One investigation of a regional alarm: `alarm` is its text ({"it", "en"}), and `step_id` its pathway
+    step (a wait alarm) or `group_alarm` its id in the pathway's group_alarms. `facilities` are the run's
+    (name, type, asst_id), reference data the caller reads: without them the model guessed ASST ids and
+    lost steps to errors. The first steps are `opening`; the model has the rest. Raises llm.LLMUnavailable
+    when the model gives no usable answer; there is no template (Solution Plan §8)."""
     inv = Investigation(investigation_id, day, pathway.pathway_id,
                         {lang: q.format(day=day, text=alarm[lang]) for lang, q in QUESTION.items()})
     definitions = tools.definitions()
-    first = opening(pathway, step_id)
+    first = opening(pathway, step_id, group_alarm)
     messages = [{"role": "system", "content": system_prompt(pathway, day, facilities)},
                 {"role": "user", "content": inv.question["it"]},
                 {"role": "assistant", "content": "", "tool_calls": first}]

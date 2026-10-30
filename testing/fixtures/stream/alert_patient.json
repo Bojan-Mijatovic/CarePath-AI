@@ -3,8 +3,10 @@
   "scenario": 2,
   "day": 23,
   "payload": {
+    "alert_id": "al_s2_agents_255",
     "level": "patient",
     "facility_id": null,
+    "group_key": null,
     "investigation_id": null,
     "text": {
       "it": "p_00171 (80 anni, Viadana): Telemonitoraggio: scadenza superata",

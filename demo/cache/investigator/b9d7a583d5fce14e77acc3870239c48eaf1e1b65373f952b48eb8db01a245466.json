@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il tempo medio di attesa per l'ecocardiogramma all'Ospedale B negli ultimi 7 giorni è di 31,0 giorni, superiore alla soglia PDTA di 30 giorni.\", \"L'Ospedale B ha 0 slot disponibili per l'ecocardiogramma nei prossimi 21 giorni, mentre l'Ospedale A ha 114 slot e l'Ospedale C ne ha 102, indicando un margine di capacità disponibile in entrambi gli altri ospedali.\", \"All'Ospedale B sono presenti 17 pazienti in ritardo per l'ecocardiogramma, con un massimo di 47 giorni di ritardo; i pazienti più in ritardo sono p_02531 (47 giorni), p_01182 e p_08948 (40 giorni), p_07322 (39 giorni), e p_05433 (26 giorni).\", \"La compliance all'Ospedale B per il percorso hf_lombardia_v1 è del 83,65% per l'ecocardiogramma, ma solo del 55,25% per il telemonitoraggio, indicando un'area critica nel follow-up post-dimissione.\"], \"conclusion\": \"L'allarme all'Ospedale B è causato da un'attesa media di 31,0 giorni per l'ecocardiogramma, con 0 slot disponibili nei prossimi 21 giorni e 17 pazienti in ritardo. Il margine di intervento esiste negli altri ospedali (A e C), che hanno capacità disponibile. Si suggerisce di redistribuire i pazienti in ritardo verso Ospedale A o C, e di monitorare il gap nel telemonitoraggio (compliance 55,25%), che potrebbe contribuire al ritardo nel percorso.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The average waiting time for an echocardiogram at Hospital B in the last 7 days is 31.0 days, exceeding the PDTA threshold of 30 days.\",\n    \"Hospital B has 0 available slots for echocardiogram in the next 21 days, while Hospital A has 114 slots and Hospital C has 102 slots, indicating a capacity buffer available at both other hospitals.\",\n    \"At Hospital B, there are 17 patients delayed for echocardiogram, with a maximum delay of 47 days; the patients with the longest delays are p_02531 (47 days), p_01182 and p_08948 (40 days), p_07322 (39 days), and p_-05433 (26 days).\",\n    \"The compliance at Hospital B for the hf_lombardia_v1 pathway is 83.65% for echocardiogram, but only 55.25% for telemonitoring, indicating a critical area in post-discharge follow-up.\"\n  ],\n  \"conclusion\": \"The alarm at Hospital B is caused by an average waiting time of 31.0 days for echocardiogram, with 0 available slots in the next 21 days and 17 patients delayed. The intervention margin exists at the other hospitals (A and C), which have available capacity. It is recommended to redistribute delayed patients to Hospital A or C, and to monitor the gap in telemonitoring (compliance at 55.25%), which may contribute to delays in the pathway.\"\n}"
+  }
+}

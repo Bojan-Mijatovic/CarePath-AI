@@ -83,7 +83,8 @@ def test_patient_360(built):
 
 def test_stream_messages(built):
     runs, f = built
-    payload_keys = {"tick": ["speed", "kpi"], "alert": ["level", "facility_id", "investigation_id", "text"],
+    payload_keys = {"tick": ["speed", "kpi"],
+                    "alert": ["alert_id", "level", "facility_id", "group_key", "investigation_id", "text"],
                     "action": columns(runs, "actions"),
                     "investigation": ["investigation_id", "step", "tool", "args", "result_summary", "verified", "final"]}
     messages = [m for path, m in f.items() if path.startswith("stream/")]
@@ -103,9 +104,11 @@ def test_stream_messages(built):
     assert [s["payload"]["step"] for s in steps] == list(range(1, len(steps) + 1))
     assert [s["payload"]["final"] for s in steps] == [False] * (len(steps) - 1) + [True]
     assert f["stream/alert_regional.json"]["payload"]["investigation_id"] == steps[0]["payload"]["investigation_id"]
-    stored = f["api/investigations_s2_agents.json"]
-    assert [i["investigation_id"] for i in stored] == [steps[0]["payload"]["investigation_id"]]
-    assert all(c["step"] in {s["step"] for s in stored[0]["steps"]} for c in stored[0]["claims"])
+    stored = f["api/investigations_s2_agents.json"]  # the two group alarms' of day 0 (C26), then the echo alarm's
+    assert len(stored) == 3
+    assert steps[0]["payload"]["investigation_id"] in [i["investigation_id"] for i in stored]
+    for inv in stored:
+        assert all(c["step"] in {s["step"] for s in inv["steps"]} for c in inv["claims"])
 
 
 def test_tool_envelopes(built):

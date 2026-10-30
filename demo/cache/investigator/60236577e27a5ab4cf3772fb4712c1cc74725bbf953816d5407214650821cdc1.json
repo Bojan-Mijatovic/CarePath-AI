@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"L'attesa media per l'ecocardiogramma all'Ospedale A negli ultimi 7 giorni è di 31,1 giorni, superiore alla soglia PDTA di 30 giorni.\", \"L'Ospedale A ha 0 slot disponibili per l'ecocardiogramma nei prossimi 21 giorni, mentre l'Ospedale B ne ha 101 e l'Ospedale C ne ha 58, indicando un forte disallineamento nella capacità di erogazione tra le strutture.\", \"All'Ospedale A sono presenti 37 pazienti in ritardo per l'ecocardiogramma, con un massimo di 47 giorni di ritardo; i pazienti più a rischio (in termini di score) sono p_06221 (41 giorni, risk_score 0.0505) e p_02314 (41 giorni, risk_score 0.0443).\", \"La compliance all'Ospedale A per il percorso hf_lombardia_v1 è del 79,89% per l'ecocardiogramma, inferiore alla media del 86,21% per l'esame BNP e al 77,92% per la visita cardiologica, suggerendo un punto critico nel passaggio tra cardio_visit ed echo.\"], \"conclusion\": \"L'allarme è causato da un'elevata attesa media all'Ospedale A (31,1 giorni) con 0 slot disponibili nei prossimi 21 giorni, in contrasto con capacità disponibili in altre strutture (B: 101, C: 58). Il ritardo è concentrato su 37 pazienti, con un rischio crescente per quelli più in ritardo. La compliance all'ecocardiogramma è inferiore rispetto ad altri step, indicando un blocco nel percorso. Si suggerisce di redistribuire i pazienti in ritardo verso Ospedale B o C, ottimizzando l'uso delle capacità disponibili.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The average waiting time for an echocardiogram at Hospital A in the last 7 days is 31.1 days, exceeding the PDTA threshold of 30 days.\",\n    \"Hospital A has 0 available slots for an echocardiogram in the next 21 days, while Hospital B has 101 and Hospital C has 58, indicating a significant misalignment in service capacity among the facilities.\",\n    \"At Hospital A, there are 37 patients delayed for an echocardiogram, with a maximum delay of 47 days; the patients at highest risk (in terms of score) are p_06221 (41 days, risk_score 0.0505) and p_02314 (41 days, risk_score 0.-0443).\",\n    \"The compliance at Hospital A for the hf_lombardia_v1 pathway is 79.89% for echocardiogram, below the average of 86.21% for BNP test and 77.92% for cardiac visit, suggesting a critical point in the transition from cardio_visit to echo.\"\n  ],\n  \"conclusion\": \"The alarm is caused by a high average waiting time at Hospital A (31.1 days) with 0 available slots in the next 21 days, contrasting with available capacity at other facilities (B: 101, C: 58). The delay is concentrated among 37 patients, with increasing risk for those with the longest delays. Compliance for echocardiogram is lower than for other steps, indicating a bottleneck in the pathway. It is recommended to redistribute delayed patients to Hospital B or C, optimizing the use of available capacity.\"\n}"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "agent": "investigator",
   "model": "qwen3:30b-instruct",
-  "prompt_version": "investigator-v4",
+  "prompt_version": "investigator-v5",
   "request": {
     "messages": [
       {
@@ -45,6 +45,28 @@
         "role": "tool",
         "tool_name": "free_slots",
         "content": "{\"data\":{\"Ospedale A\":114,\"Ospedale B\":0,\"Ospedale C\":102},\"passo\":2,\"source\":{\"args\":{\"horizon_days\":21,\"service\":\"echo\"},\"day\":33,\"run_id\":\"s2_agents\",\"tool\":\"free_slots\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "patients_overdue",
+              "arguments": {
+                "pathway_id": "hf_lombardia_v1",
+                "step": "echo",
+                "asst": "asst_cremona",
+                "limit": 5
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_name": "patients_overdue",
+        "content": "{\"data\":{\"count\":17,\"patients\":[{\"days_overdue\":47,\"patient_id\":\"p_02531\",\"risk_score\":0.0253},{\"days_overdue\":40,\"patient_id\":\"p_01182\",\"risk_score\":0.0287},{\"days_overdue\":40,\"patient_id\":\"p_08948\",\"risk_score\":0.0194},{\"days_overdue\":39,\"patient_id\":\"p_07322\",\"risk_score\":0.0377},{\"days_overdue\":26,\"patient_id\":\"p_05433\",\"risk_score\":0.0238}]},\"passo\":3,\"source\":{\"args\":{\"asst\":\"asst_cremona\",\"limit\":5,\"pathway_id\":\"hf_lombardia_v1\",\"step\":\"echo\"},\"day\":33,\"run_id\":\"s2_agents\",\"tool\":\"patients_overdue\"}}"
       }
     ],
     "tools": [
@@ -279,6 +301,158 @@
               "grouping"
             ],
             "title": "AdherenceArgs",
+            "type": "object"
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "adherence_by_area",
+          "description": "Aderenza per area (un comune con i comuni entro 12 km), anche per un segmento di pazienti: le 3 aree peggiori, ciascuna con i suoi comuni, e il resto dell'ATS.",
+          "parameters": {
+            "additionalProperties": false,
+            "properties": {
+              "pathway_id": {
+                "description": "ID del percorso, es. hf_lombardia_v1",
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "title": "Pathway Id",
+                "type": "string"
+              },
+              "measure": {
+                "default": "telemonitoring",
+                "description": "come in adherence_by_group",
+                "enum": [
+                  "dispensing",
+                  "telemonitoring"
+                ],
+                "title": "Measure",
+                "type": "string"
+              },
+              "segment": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "description": "C8: every key optional, combined with AND; {} is the whole population of the pathway.",
+                    "properties": {
+                      "asst_id": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "asst_mantova",
+                              "asst_cremona",
+                              "asst_crema"
+                            ],
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Asst Id"
+                      },
+                      "comune_istat": {
+                        "anyOf": [
+                          {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "codici ISTAT dei comuni",
+                        "title": "Comune Istat"
+                      },
+                      "coop_id": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "gruppo (cooperativa) di MMG, es. coop_3",
+                        "title": "Coop Id"
+                      },
+                      "age_min": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Age Min"
+                      },
+                      "age_max": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Age Max"
+                      },
+                      "lives_alone": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Lives Alone"
+                      },
+                      "distance_km_min": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "distanza minima dall'ospedale di riferimento, km",
+                        "title": "Distance Km Min"
+                      }
+                    },
+                    "title": "Segment",
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "solo i pazienti del segmento; senza, tutti"
+              },
+              "period_days": {
+                "default": 60,
+                "maximum": 365,
+                "minimum": 7,
+                "title": "Period Days",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "pathway_id"
+            ],
+            "title": "AreaArgs",
             "type": "object"
           }
         }
@@ -699,12 +873,10 @@
     "tool_calls": [
       {
         "function": {
-          "name": "patients_overdue",
+          "name": "compliance_by_step",
           "arguments": {
             "pathway_id": "hf_lombardia_v1",
-            "step": "echo",
-            "asst": "asst_cremona",
-            "limit": 5
+            "asst": "asst_cremona"
           }
         }
       }

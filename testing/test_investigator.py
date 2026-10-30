@@ -60,7 +60,7 @@ def fake(tmp_path):
 
 
 def investigate(ctx):
-    return investigator.investigate(ctx, HF, ctx.day, ALARM, "echo", "inv_s2_agents_1", FACILITIES)
+    return investigator.investigate(ctx, HF, ctx.day, ALARM, "inv_s2_agents_1", FACILITIES, step_id="echo")
 
 
 def test_opening_then_model_tools_then_claims_on_their_steps(ctx, fake):
@@ -142,10 +142,12 @@ def population():
 def test_the_tick_finds_pattern_1_from_the_cache(scenario, population, tmp_path):
     # Done-when of step 2.9 (AC1, pattern 1), on the tick as in the demo (step 2.17, C25), in cache_only (D14).
     llm.configure(mode="cache_only", log_path=None)
-    run, alarm, seconds = investigation_run.run_to_alarm(scenario, population, tmp_path)
+    run, alarms, seconds = investigation_run.run_to_alarm(scenario, population, tmp_path)
+    alarm = alarms[-1]  # the echo alarm; group alarms (C26) open earlier
     try:
         names = dict(run.con.execute("SELECT facility_id, name FROM facilities").fetchall())
-        linked = run.con.execute("SELECT investigation_id FROM alerts WHERE level = 'regional'").fetchall()[0][0]
+        linked = run.con.execute("SELECT investigation_id FROM alerts WHERE alert_id = $a",
+                                 {"a": alarm["payload"]["alert_id"]}).fetchall()[0][0]
         inv = investigation_run.stored(run, alarm)
     finally:
         run.close()

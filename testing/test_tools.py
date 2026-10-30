@@ -14,7 +14,8 @@ from sim.truth import TRUTH_DIR
 
 PW = "hf_lombardia_v1"
 SPEC_TOOLS = ["compliance_by_step", "wait_by_hospital", "patients_overdue", "free_slots", "adherence_by_group",
-              "readmissions_by_comune", "risk_drivers", "compare_segments"]  # SPEC §6, without the gated two
+              "adherence_by_area", "readmissions_by_comune", "risk_drivers", "compare_segments"]  # SPEC §6, without the gated two
+ALONE_FAR = {"lives_alone": True, "distance_km_min": 40}
 
 
 @pytest.fixture(scope="module")
@@ -84,6 +85,8 @@ def test_definitions_are_the_spec_tools_with_flat_schemas():
     ("free_slots", {"service": "echo", "asst": "asst_cremona"}),
     ("adherence_by_group", {"pathway_id": PW, "grouping": "mmg"}),
     ("adherence_by_group", {"pathway_id": PW, "grouping": "age_band", "measure": "telemonitoring"}),
+    ("adherence_by_area", {"pathway_id": PW}),
+    ("adherence_by_area", {"pathway_id": PW, "measure": "dispensing", "segment": ALONE_FAR}),
     ("readmissions_by_comune", {"pathway_id": PW}),
     ("compare_segments", {"pathway_id": PW, "a": {"lives_alone": True, "age_min": 75}, "b": {}, "metric": "on_time_fraction"}),
     ("compare_segments", {"pathway_id": PW, "a": {"lives_alone": True}, "b": {}, "metric": "risk_mean"}),
@@ -107,6 +110,8 @@ def test_envelope(ctx, name, args):
     ("free_slots", {"service": "mri"}, "bad_argument"),
     ("free_slots", {"service": "echo", "asst": "asst_milano"}, "bad_argument"),
     ("adherence_by_group", {"pathway_id": PW, "grouping": "street"}, "bad_argument"),
+    ("adherence_by_area", {"pathway_id": PW, "segment": {"age_min": 120}}, "empty_result"),
+    ("adherence_by_area", {"pathway_id": PW, "radius_km": 30}, "bad_argument"),
     ("compare_segments", {"pathway_id": PW, "a": {"colour": "red"}, "b": {}, "metric": "dispensing"}, "bad_argument"),
     ("compare_segments", {"pathway_id": PW, "a": {"age_min": 120}, "b": {}, "metric": "dispensing"}, "empty_result"),
     ("risk_drivers", {"pathway_id": PW, "segment": {"age_max": 40}}, "empty_result"),  # nobody at high risk
@@ -144,6 +149,24 @@ def test_tools_see_the_patterns_of_scenario_2(ctx):
     assert {"Poggio Rusco", "Borgocarbonara", "Sermide e Felonica"} <= set(comuni)  # pattern 3
     assert list(comuni)[-1] == "rest_of_ats"
     assert len(comuni) == tools.GROUPS_SHOWN + 1
+
+
+def test_adherence_by_area_finds_pattern_3_of_scenario_2(ctx):
+    # C26: one comune is too small to show it; an area of nearby comuni among patients living alone far away
+    # does (step 2.30), and the worst area holds only hidden comuni.
+    truth = set(json.loads((TRUTH_DIR / "scenario_2.json").read_text(encoding="utf-8"))["rural_dropout_comuni"])
+    data = tools.call(tools.Context("s2_agents", ctx.db, 35), "adherence_by_area",
+                      {"pathway_id": PW, "segment": ALONE_FAR})["data"]
+    worst = data["areas"][0]
+    assert set(worst["comuni"]) <= truth
+    assert len(worst["comuni"]) * 2 >= len(truth)
+    assert worst["value"] < data["rest_of_ats"] - 0.6
+    assert worst["patients"] >= tools.MIN_AREA_PATIENTS
+    assert len(data["areas"]) <= tools.AREAS_SHOWN
+    shown = [c for a in data["areas"] for c in a["comuni"]]
+    assert len(shown) == len(set(shown))  # areas do not overlap
+    values = [a["value"] for a in data["areas"]]
+    assert values == sorted(values)
 
 
 def test_wait_by_hospital_reproduces_the_fixture(ctx):

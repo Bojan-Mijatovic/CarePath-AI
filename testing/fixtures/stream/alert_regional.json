@@ -3,9 +3,11 @@
   "scenario": 2,
   "day": 33,
   "payload": {
+    "alert_id": "al_s2_agents_340",
     "level": "regional",
     "facility_id": "osp_B",
-    "investigation_id": "inv_s2_agents_1",
+    "group_key": null,
+    "investigation_id": "inv_s2_agents_3",
     "text": {
       "it": "Ospedale B · Ecocardiogramma: attesa media 31,0 giorni sulle prenotazioni degli ultimi 7 giorni (soglia PDTA 30 giorni)",
       "en": "Ospedale B · Echocardiogram: mean wait 31.0 days over the bookings of the last 7 days (PDTA threshold 30 days)"

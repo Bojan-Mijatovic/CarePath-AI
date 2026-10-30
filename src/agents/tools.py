@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Literal
 
 import duckdb
+import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from engine.db import RUNS_DIR, connect_for_tools
@@ -28,6 +29,7 @@ from engine.risk import HIGH_RISK
 
 ERROR_CODES = ("unknown_pathway", "unknown_step", "bad_argument", "empty_result")
 GROUPS_SHOWN, MIN_GROUP_PATIENTS, MIN_GROUP_DISCHARGES = 10, 10, 5
+AREA_KM, AREAS_SHOWN, MIN_AREA_PATIENTS = 12, 3, 5  # adherence_by_area (C26): measured on 3 scenarios, step 2.30
 COMPLIANCE_PERIOD_DAYS = 90  # compliance_by_step and the on_time_fraction metric
 READMISSION_DAYS = 30
 READING_WINDOW_DAYS = 7      # the `telemonitoring` measure (SPEC §6)
@@ -129,6 +131,14 @@ class AdherenceArgs(Args):
         "dispensing", description="dispensing = ritiro in farmacia di ogni farmaco del percorso nel periodo; "
                                   "telemonitoring = pazienti in telemonitoraggio con almeno una lettura negli "
                                   "ultimi 7 giorni")
+    period_days: int = Field(60, ge=7, le=365)
+
+
+class AreaArgs(Args):
+    pathway_id: str = PathwayId
+    measure: Literal["dispensing", "telemonitoring"] = Field(
+        "telemonitoring", description="come in adherence_by_group")
+    segment: Segment | None = Field(None, description="solo i pazienti del segmento; senza, tutti")
     period_days: int = Field(60, ge=7, le=365)
 
 
@@ -419,6 +429,48 @@ def adherence_by_group(ctx: Context, a: AdherenceArgs) -> dict:
     return _grouped(ctx.db, ctx, p, a.measure, a.period_days, key, "lowest", MIN_GROUP_PATIENTS)
 
 
+def _km(lat: np.ndarray, lon: np.ndarray) -> np.ndarray:
+    """Great-circle distance between every pair of points, km."""
+    la, lo = np.radians(lat), np.radians(lon)
+    h = (np.sin((la[:, None] - la[None, :]) / 2) ** 2
+         + np.cos(la[:, None]) * np.cos(la[None, :]) * np.sin((lo[:, None] - lo[None, :]) / 2) ** 2)
+    return 12742 * np.arcsin(np.sqrt(h))
+
+
+def adherence_by_area(ctx: Context, a: AreaArgs) -> dict:
+    """The worst areas, each a comune with every comune within AREA_KM of it, pooled over the segment's
+    patients: a cluster of small comuni that no single comune shows (C26). Areas do not overlap: after the
+    worst one its comuni are left out and the next is searched. Values come from integer counts (C7)."""
+    p = _pathway(a.pathway_id)
+    where, params = _segment(a.segment or Segment(), "s")
+    counts = dict((c, (n, d)) for c, n, d in ctx.db.rows(f"""
+        SELECT p.comune_istat, sum(x.num)::BIGINT, sum(x.den)::BIGINT
+        FROM ({_per_patient(p, a.measure, a.period_days)}) x JOIN patients p USING (patient_id)
+        JOIN mmg m ON m.mmg_id = p.mmg_id WHERE {where} GROUP BY 1""", {"pw": p.pathway_id, "d": ctx.day} | params))
+    if not counts:
+        raise ToolError("empty_result", "the segment has nobody to measure")
+    comuni = ctx.db.rows("SELECT comune_istat, name, lat, lon FROM comuni ORDER BY name")
+    names = np.array([c[1] for c in comuni], dtype=object)
+    num = np.array([counts.get(c[0], (0, 0))[0] for c in comuni])
+    den = np.array([counts.get(c[0], (0, 0))[1] for c in comuni])
+    near = _km(np.array([c[2] for c in comuni]), np.array([c[3] for c in comuni])) <= AREA_KM
+    left, areas = den > 0, []
+    while len(areas) < AREAS_SHOWN:
+        an, ad = near @ (num * left), near @ (den * left)
+        ok = np.flatnonzero(ad >= MIN_AREA_PATIENTS)
+        if not len(ok):
+            break
+        centre = ok[np.argmin([an[i] / ad[i] for i in ok])]  # comuni are sorted by name, so ties go by name
+        members = near[centre] & left
+        areas.append({"comuni": sorted(names[members]), "value": round(int(an[centre]) / int(ad[centre]), 4),
+                      "patients": int(ad[centre])})
+        left &= ~members
+    if not areas:
+        raise ToolError("empty_result", f"no area has at least {MIN_AREA_PATIENTS} patients of the segment")
+    rest_n, rest_d = int((num * left).sum()), int((den * left).sum())
+    return {"areas": areas, "rest_of_ats": round(rest_n / rest_d, 4) if rest_d else None}
+
+
 def readmissions_by_comune(ctx: Context, a: ReadmissionArgs) -> dict:
     p = _pathway(a.pathway_id)
     return _grouped(ctx.db, ctx, p, "readmission_rate_30d", a.period_days, "c.name", "highest", MIN_GROUP_DISCHARGES)
@@ -495,6 +547,9 @@ TOOLS = {
     "adherence_by_group": (AdherenceArgs, adherence_by_group,
                            "Aderenza per gruppo di pazienti (ritiro dei farmaci o letture del telemonitoraggio): i 10 "
                            "gruppi peggiori e il resto dell'ATS (rest_of_ats)."),
+    "adherence_by_area": (AreaArgs, adherence_by_area,
+                          f"Aderenza per area (un comune con i comuni entro {AREA_KM} km), anche per un segmento di "
+                          f"pazienti: le {AREAS_SHOWN} aree peggiori, ciascuna con i suoi comuni, e il resto dell'ATS."),
     "readmissions_by_comune": (ReadmissionArgs, readmissions_by_comune,
                                "Tasso di riammissione a 30 giorni per comune: i 10 comuni peggiori e il resto dell'ATS."),
     "risk_drivers": (RiskDriversArgs, risk_drivers, "Principali fattori di rischio per un segmento di pazienti."),

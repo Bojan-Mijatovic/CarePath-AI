@@ -17,6 +17,7 @@ CALLS = [
     ("free_slots", {"service": "echo", "horizon_days": 90}),
     ("adherence_by_group", {"pathway_id": PW, "grouping": "mmg_group"}),
     ("adherence_by_group", {"pathway_id": PW, "grouping": "comune", "measure": "telemonitoring", "period_days": 365}),
+    ("adherence_by_area", {"pathway_id": PW, "segment": SEGMENT}),
     ("readmissions_by_comune", {"pathway_id": PW, "period_days": 365}),
 ] + [("compare_segments", {"pathway_id": PW, "a": SEGMENT, "b": {}, "metric": m})
      for m in ("dispensing", "telemonitoring", "readmission_rate_30d", "on_time_fraction")]

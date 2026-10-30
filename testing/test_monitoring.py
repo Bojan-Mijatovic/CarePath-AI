@@ -35,14 +35,31 @@ def maria_run(tmp_path_factory):
 
 def test_echo_alarm_at_the_bottleneck_hospital_around_day_35(con):
     # Done-when of step 2.8: the echo alarm for Ospedale B fires around day 35 in scenario 2.
-    regional = con.execute("SELECT day, facility_id, step, text->>'it', closed_day FROM alerts WHERE level = 'regional'"
-                           ).fetchall()
+    regional = con.execute("SELECT day, facility_id, step, text->>'it', closed_day FROM alerts "
+                           "WHERE level = 'regional' AND group_alarm IS NULL").fetchall()
     assert len(regional) == 1
     day, facility, step, text, closed = regional[0]
     assert (facility, step) == ("osp_B", "echo")
     assert 30 <= day <= 36
     assert "soglia PDTA 30 giorni" in text
     assert closed is None  # the wait is still above 30 on day 62
+
+
+def test_group_alarms_name_the_hidden_mmg_group_and_area(con):
+    # Step 2.30 (C26): each group alarm of the pathway opens once, early, on the hidden places of scenario 2,
+    # and stays open to day 62; nothing else alarms.
+    rows = con.execute("SELECT group_alarm, group_key, text->>'it', facility_id, step, closed_day FROM alerts "
+                       "WHERE group_alarm IS NOT NULL ORDER BY group_alarm").fetchall()
+    assert [r[0] for r in rows] == sorted(g.id for g in HF.group_alarms)
+    by_id = {r[0]: r for r in rows}
+    assert by_id["dispensing_mmg_group"][1] == "coop_3"
+    far = by_id["telemon_alone_far"]
+    named = {c for c in ("Poggio Rusco", "Magnacavallo", "Borgocarbonara", "Sermide e Felonica") if c in far[2]}
+    assert far[1] in named
+    assert len(named) >= 2
+    for _, _, text, facility, step, closed in rows:
+        assert (facility, step, closed) == (None, None, None)
+        assert "resto dell'ATS" in text
 
 
 def test_flags_follow_the_rule(con):

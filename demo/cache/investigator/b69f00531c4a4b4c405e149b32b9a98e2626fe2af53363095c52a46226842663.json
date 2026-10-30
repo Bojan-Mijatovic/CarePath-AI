@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il tasso di ritiro dei farmaci per il percorso Scompenso cardiaco (hf_lombardia_v1) nella cooperativa coop_3 è del 89,01%, molto al di sotto della soglia di allarme regionale (5 punti sotto il 100%), mentre il resto dell'ATS si attesta al 99,92%.\", \"Nel comune di Camisano, il tasso di ritiro dei farmaci è del 81,82%, in Fiesco del 76,92%, in Izano del 74,07%, in Madignano del 87,5%, in Montodine del 82,76%, in Pianengo del 90,00%, in Ricengo del 86,67%, in Ripalta Arpina del 85,71%, in Romanengo del 89,47% e in Soncino del 87,62%. Il resto dell'ATS ha un tasso del 99,45%.\", \"Il tasso di ritiro dei farmaci per età non mostra differenze significative: tra i pazienti di età 65-74 anni è del 99,13%, tra 75-84 anni del 98,85%, tra 85+ del 99,10%, e sotto i 65 anni del 99,03%. Non è disponibile un valore per il resto dell'ATS in questa segmentazione.\"], \"conclusion\": \"Il problema è localizzato principalmente nei comuni di Camisano, Fiesco, Izano e Montodine, dove i tassi di ritiro dei farmaci sono inferiori al 83%. La cooperativa coop_3, che include questi comuni, presenta un tasso complessivo del 89,01%, in linea con i dati locali. Il margine per intervento è concentrato nei comuni con i tassi più bassi, in particolare Fiesco (76,92%) e Izano (74,07%). L'azione suggerita è un intervento mirato a questi comuni, con focus su supporto ai pazienti, verifica delle prescrizioni e potenziale riattivazione dei canali di comunicazione con le MMG.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The withdrawal rate of medications for the Heart Failure (hf_lombardia_v1) pathway in the cooperative coop_3 is 89.01%, significantly below the regional alarm threshold (5 percentage points below 100%), while the rest of the ATS stands at 99.92%.\",\n    \"In the commune of Camisano, the medication withdrawal rate is 81.82%; in Fiesco it is 76.92%; in Izano it is 74.07%; in Madignano it is 87.5%; in Montodine it is 82.76%; in Pianengo it is 90.00%; in Ricengo it is 86.67%; in Ripalta Arpina it is 85.71%; in Romanengo it is 89.47%; and in Soncino it is 87.62%. The rest of the ATS has a rate of 99.45%.\",\n    \"The medication withdrawal rate by age shows no significant differences: for patients aged 65-74 years it is 99.13%; for those aged 75-84 years it is 98.85%; for those aged 85 and over it is 99.10%; and for those under 65 years it is 99.03%. No value is available for the rest of the ATS in this age segmentation.\"\n  ],\n  \"conclusion\": \"The issue is primarily localized in the communes of Camisano, Fiesco, Izano, and Montodine, where medication withdrawal rates are below 83%. The cooperative coop_3, which includes these communes, has an overall rate of 89.01%, consistent with local data. The intervention margin is concentrated in the communes with the lowest rates, particularly Fiesco (76.92%) and Izano (74.07%). The recommended action is a targeted intervention in these communes, focusing on patient support, prescription verification, and potential reactivation of communication channels with GPs.\"\n}"
+  }
+}

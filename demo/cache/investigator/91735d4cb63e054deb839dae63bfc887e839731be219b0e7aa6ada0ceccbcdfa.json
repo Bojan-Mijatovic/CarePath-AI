@@ -1,7 +1,7 @@
 {
   "agent": "investigator",
   "model": "qwen3:30b-instruct",
-  "prompt_version": "investigator-v4",
+  "prompt_version": "investigator-v5",
   "request": {
     "messages": [
       {
@@ -45,48 +45,6 @@
         "role": "tool",
         "tool_name": "free_slots",
         "content": "{\"data\":{\"Ospedale A\":0,\"Ospedale B\":101,\"Ospedale C\":58},\"passo\":2,\"source\":{\"args\":{\"horizon_days\":21,\"service\":\"echo\"},\"day\":29,\"run_id\":\"s1_agents\",\"tool\":\"free_slots\"}}"
-      },
-      {
-        "role": "assistant",
-        "content": "",
-        "tool_calls": [
-          {
-            "function": {
-              "name": "patients_overdue",
-              "arguments": {
-                "pathway_id": "hf_lombardia_v1",
-                "step": "echo",
-                "asst": "asst_mantova",
-                "limit": 5
-              }
-            }
-          }
-        ]
-      },
-      {
-        "role": "tool",
-        "tool_name": "patients_overdue",
-        "content": "{\"data\":{\"count\":37,\"patients\":[{\"days_overdue\":47,\"patient_id\":\"p_00651\",\"risk_score\":0.022},{\"days_overdue\":42,\"patient_id\":\"p_07211\",\"risk_score\":0.0372},{\"days_overdue\":41,\"patient_id\":\"p_02314\",\"risk_score\":0.0443},{\"days_overdue\":41,\"patient_id\":\"p_06221\",\"risk_score\":0.0505},{\"days_overdue\":40,\"patient_id\":\"p_03841\",\"risk_score\":0.038}]},\"passo\":3,\"source\":{\"args\":{\"asst\":\"asst_mantova\",\"limit\":5,\"pathway_id\":\"hf_lombardia_v1\",\"step\":\"echo\"},\"day\":29,\"run_id\":\"s1_agents\",\"tool\":\"patients_overdue\"}}"
-      },
-      {
-        "role": "assistant",
-        "content": "",
-        "tool_calls": [
-          {
-            "function": {
-              "name": "compliance_by_step",
-              "arguments": {
-                "pathway_id": "hf_lombardia_v1",
-                "asst": "asst_mantova"
-              }
-            }
-          }
-        ]
-      },
-      {
-        "role": "tool",
-        "tool_name": "compliance_by_step",
-        "content": "{\"data\":{\"cardio_visit\":0.7792,\"echo\":0.7989,\"lab_bnp\":0.8621,\"telemon\":0.6448},\"passo\":4,\"source\":{\"args\":{\"asst\":\"asst_mantova\",\"pathway_id\":\"hf_lombardia_v1\"},\"day\":29,\"run_id\":\"s1_agents\",\"tool\":\"compliance_by_step\"}}"
       }
     ],
     "tools": [
@@ -321,6 +279,158 @@
               "grouping"
             ],
             "title": "AdherenceArgs",
+            "type": "object"
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "adherence_by_area",
+          "description": "Aderenza per area (un comune con i comuni entro 12 km), anche per un segmento di pazienti: le 3 aree peggiori, ciascuna con i suoi comuni, e il resto dell'ATS.",
+          "parameters": {
+            "additionalProperties": false,
+            "properties": {
+              "pathway_id": {
+                "description": "ID del percorso, es. hf_lombardia_v1",
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "title": "Pathway Id",
+                "type": "string"
+              },
+              "measure": {
+                "default": "telemonitoring",
+                "description": "come in adherence_by_group",
+                "enum": [
+                  "dispensing",
+                  "telemonitoring"
+                ],
+                "title": "Measure",
+                "type": "string"
+              },
+              "segment": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "description": "C8: every key optional, combined with AND; {} is the whole population of the pathway.",
+                    "properties": {
+                      "asst_id": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "asst_mantova",
+                              "asst_cremona",
+                              "asst_crema"
+                            ],
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Asst Id"
+                      },
+                      "comune_istat": {
+                        "anyOf": [
+                          {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "codici ISTAT dei comuni",
+                        "title": "Comune Istat"
+                      },
+                      "coop_id": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "gruppo (cooperativa) di MMG, es. coop_3",
+                        "title": "Coop Id"
+                      },
+                      "age_min": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Age Min"
+                      },
+                      "age_max": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Age Max"
+                      },
+                      "lives_alone": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "title": "Lives Alone"
+                      },
+                      "distance_km_min": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null,
+                        "description": "distanza minima dall'ospedale di riferimento, km",
+                        "title": "Distance Km Min"
+                      }
+                    },
+                    "title": "Segment",
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "solo i pazienti del segmento; senza, tutti"
+              },
+              "period_days": {
+                "default": 60,
+                "maximum": 365,
+                "minimum": 7,
+                "title": "Period Days",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "pathway_id"
+            ],
+            "title": "AreaArgs",
             "type": "object"
           }
         }
@@ -737,6 +847,19 @@
   },
   "response": {
     "role": "assistant",
-    "content": "L'allarme riguarda Ospedale A, dove l'attesa media per l'ecocardiogramma è di 31,1 giorni negli ultimi 7 giorni, superiore alla soglia di 30 giorni.\n\nAnalisi approfondita:\n- **Disponibilità posti**: Ospedale A ha 0 posti liberi per l'ecocardiogramma nei prossimi 21 giorni, mentre Ospedale B ne ha 101 e Ospedale C 58. Questo indica un blocco operativo specifico in Ospedale A.\n- **Pazienti in ritardo**: A Ospedale A ci sono 37 pazienti con scadenza dell'ecocardiogramma in ritardo, con un ritardo massimo di 47 giorni. Questi pazienti sono a rischio elevato (es. risk_score fino a 0,0505).\n- **Compliance**: La compliance per l'ecocardiogramma in ASST Mantova è del 79,89%, inferiore alla media regionale (es. Ospedale B: 85,2%, Ospedale C: 86,1%), suggerendo un problema strutturale o organizzativo.\n\nConclusione: Il problema è localizzato in Ospedale A, con carenza di posti disponibili e un accumulo significativo di pazienti in ritardo. Il rischio di riammissione è elevato per questi pazienti. Interventi urgenti sono necessari per riorganizzare le prenotazioni o utilizzare risorse esterne (es. Ospedale B/C)."
+    "content": "",
+    "tool_calls": [
+      {
+        "function": {
+          "name": "patients_overdue",
+          "arguments": {
+            "pathway_id": "hf_lombardia_v1",
+            "step": "echo",
+            "asst": "asst_mantova",
+            "limit": 5
+          }
+        }
+      }
+    ]
   }
 }
