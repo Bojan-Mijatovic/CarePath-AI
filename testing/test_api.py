@@ -54,6 +54,20 @@ def test_pathway_is_the_spec_file(tmp_path):
         assert client.get(f"/api/pathways/{missing}").status_code == 404
 
 
+def test_whatif_reads_the_grid_without_the_runs(tmp_path):
+    # C27, D48: the precomputed grid of the scenario on screen (scenario 1 by default); no run is needed.
+    client = make_client(tmp_path)
+    out = client.post("/api/whatif", json={"levers": {"extra_slots": 2}, "months": 6}).json()
+    assert out["scenario"] == 1 and out["levers"] == {"extra_slots": 2} and out["precomputed"] is True
+    assert out["avoided_readmissions"] == out["baseline"]["readmissions"] - out["lever"]["readmissions"]
+    assert "kpi" not in out["lever"]
+    assert client.post("/api/whatif", json={"levers": {"extra_slots": 9}}).status_code == 422
+    assert client.post("/api/whatif", json={"months": 3}).status_code == 422
+    assert client.post("/api/whatif", json={"levers": {"echo": 1}}).status_code == 422
+    empty = TestClient(create_app(ui_dir=None, whatif_dir=tmp_path / "none"))
+    assert empty.post("/api/whatif", json={}).status_code == 503
+
+
 def test_data_waits_for_the_runs(tmp_path):
     client = make_client(tmp_path)  # no lifespan, so the runs are never built
     assert client.get("/api/kpi").status_code == 503

@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from engine import pathway as pathway_model
-from engine import queries, story
+from engine import queries, story, whatif
 from engine.tick import Demo
 
 UI_DIST = Path(__file__).resolve().parents[1] / "ui" / "dist"
@@ -38,6 +38,11 @@ class StreamMessage(BaseModel):
 
 class Speed(BaseModel):
     factor: int
+
+
+class WhatIf(BaseModel):
+    levers: whatif.Levers = whatif.Levers()
+    months: int = whatif.MONTHS
 
 
 class Live:
@@ -125,7 +130,7 @@ class Live:
 
 
 def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path | None = UI_DIST,
-               story_dir: Path = story.STORY_DIR) -> FastAPI:
+               story_dir: Path = story.STORY_DIR, whatif_dir: Path = whatif.WHATIF_DIR) -> FastAPI:
     demo = demo or Demo()
     live = Live(demo, tick_seconds)
 
@@ -216,6 +221,16 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
     @api.get("/investigations")
     def investigations(run: str | None = None) -> list[dict]:
         return live.read(run, queries.investigations)
+
+    @api.post("/whatif")
+    def what_if(body: WhatIf) -> dict:
+        """The scenario on screen, from its precomputed grid (C27, D48); it does not wait for the runs."""
+        try:
+            return whatif.result(demo.scenario, body.levers, body.months, whatif_dir)
+        except FileNotFoundError:
+            raise HTTPException(503, f"no what-if grid for scenario {demo.scenario}: uv run python -m engine.whatif")
+        except ValueError as e:
+            raise HTTPException(422, str(e))
 
     @api.get("/pathways/{pathway_id}")
     def pathway(pathway_id: str) -> dict:

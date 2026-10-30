@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Status | **v1.12**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), v1.13 adds C26 (D47, step 2.30), proposed 29 Oct 2026. Changes follow §0 |
-| Last updated | 29 Oct 2026 |
+| Status | **v1.12**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), v1.13 adds C26 (D47, step 2.30), proposed 29 Oct 2026; v1.14 adds C27 (D48, step 2.5), proposed 30 Oct 2026. Changes follow §0 |
+| Last updated | 30 Oct 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
 | Rule | Nobody builds against anything that is not in this file. Whoever waits on another part works with fixtures of the same shape (`testing/fixtures/`, step 1.23) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C26 proposed in v1.1–v1.13)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C27 proposed in v1.1–v1.14)
 
 | # | Change | Why |
 |---|---|---|
@@ -56,6 +56,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C24 (D42) | Investigator input, loop and answer, and the `investigations` table (§6) | Step 2.9 needs them; the SPEC had only the stream message of one step. Claims point at a step number so every claim keeps the tool call the Verifier repeats; result summaries come from code so no model-written number reaches the stream |
 | C25 (D43) | The Investigator runs on the alarm's tick, not asynchronously (§9 step 7); `GET /investigations` (§10) | `free_slots` reads `capacity_slots`, which the tick rewrites every day: an investigation started later would see other numbers, so its cache keys would miss in the demo (SPEC §8). From the cache the alarm's tick takes 0.4–0.7 s, inside AC2; the Chiedi screen (step 2.17) needs the stored investigation |
 | C26 (D47) | Group alarms in the pathway file (§4, §5.3), the tool `adherence_by_area` (§6), `alerts.group_alarm` and `group_key`, `alert_id` and `group_key` in the alert message (§10), and the Investigator's opening for a group alarm | Step 2.22 found patterns 2 and 3 in 0 of 3 scenarios: only the echo alarm started an investigation. Measured over days 20–62 of all 3 scenarios (step 2.30): the hidden MMG group collects drugs 86–90% against 98.5% or more for every other group; no single comune shows pattern 3 (0–2 of 4–6 hidden comuni below 50%), but areas of comuni within 12 km, among patients living alone over 40 km away, name 3 of 6, 2–4 of 4 and 3 of 4 hidden comuni with none wrong. With the tool, the worst area is 66–88 points below the rest of the ATS on every day from 0 to 60, and areas of other comuni, of 5–6 patients, up to 54 points from noise alone: the 60-point threshold has a margin of 6 points on both sides. The radius and the 5-patient minimum were picked from 8, 12 and 16 km on these 3 scenarios, and 40 km is the simulator's own threshold for pattern 3 (also the example segment in C8): this is tuned to the scenarios and stated in the limitations |
+| C27 (D48) | What-if from full runs computed in advance on a grid (§9), `POST /whatif` reads it (§10), levers `{extra_slots}`; AC4 times the read (§11) | A full run takes 230–317 ms a day per arm (step 2.22), so 6 months of two arms are minutes against AC4's 10 s; a simulator-only run is fast but has no agents in it, and a second, simplified copy of the agents' logic would drift from the real one. D22 had this fallback for a missed AC4; it is the design from the start, like D18 for AC5. The lever's facility and first day come from Monitoring's own alarm, never from `scenario_truth` |
 
 ## 1. Scope
 
@@ -465,9 +466,9 @@ The baseline arm skips steps 6 and 7.
 |---|---|---|
 | Live tick at ×4 | both arms of the scenario on screen together under 500 ms per simulated day | ×4 = 2 days per s |
 | Start replay | all 6 runs to day 23 in under 3 min | runbook, T−5 min |
-| What-if (AC4) | 2 arms × 182 days under 10 s: about 27 ms per arm-day if the arms run one after the other, 55 ms if they run in parallel processes | 20–35 times stricter than AC2 |
+| What-if (AC4) | the result of 6 months, with and without agents, under 10 s; read from the precomputed grid (C27) | a full run takes minutes for 6 months |
 
-The runs share nothing they write, so the two runs on screen advance in parallel threads, and the start replays all six in parallel (step 2.3: with Risk, one after the other took a p95 of 509 ms, in parallel 369–419 ms). Run databases checkpoint only when closed, because a checkpoint every 16 MB of WAL stalled ticks (p95 up to 760 ms); with that and the 0.001 rule for risk scores, both arms took a p95 of 280–417 ms on a laptop whose speed varies by about ±40% (step 2.7). What-if runs skip LLM calls, view refreshes and WebSocket pushes; they compute KPIs once at the end. If AC4 is missed at the week-3 checkpoint, the demo lever's results are precomputed per scenario and replayed (D22).
+The runs share nothing they write, so the two runs on screen advance in parallel threads, and the start replays all six in parallel (step 2.3: with Risk, one after the other took a p95 of 509 ms, in parallel 369–419 ms). Run databases checkpoint only when closed, because a checkpoint every 16 MB of WAL stalled ticks (p95 up to 760 ms); with that and the 0.001 rule for risk scores, both arms took a p95 of 280–417 ms on a laptop whose speed varies by about ±40% (step 2.7). **What-if** (C27, `src/engine/whatif.py`, step 2.5). The levers' results are full runs, the demo's own code, computed in advance by `uv run python -m engine.whatif` into `demo/whatif/scenario_<n>.json` and read back (D48, the fallback of D22 as the design). Per scenario: the baseline arm, the agents arm, and the agents arm with 1 to 4 extra slots a day for the service of the first wait alarm (§5.3), at its facility, from the day after the alarm, for 6 months (183 days, the last included); run ids `s<n>_agents_<service>+<k>`. A lever is a capacity change on top of the scenario (`sim.step.CapacityChange`, step 2.26), so a lever run is the agents run day by day until the lever starts. For each run the file keeps the readmissions from the lever's first day to the last (`kpi_daily.readmissions_30d` at the last day minus the day before the lever), the 30-day rate, on-track share and overdue patients on the last day, the mean wait per facility over the 6 months (`wait_by_hospital`, so the number the agents see), and the daily ATS KPIs. The grid is computed again after a change to the simulator, the engine or the agents, like the LLM cache; a test compares its baseline arm with the fixture run. A lever on the telemonitoring deadline changes only when agents act and comes with Intervention (step 2.13).
 
 **Feedback hook:** `sim.feedback.apply(run_id, actions_executed_today) -> DataFrame of events` (§3.1 columns). The action service calls it once a day, after the simulator's step for that day, with the §7.1 rows it executed (`action_id`, `type`, `patient_id`, `executed_day` required; one day per call). The returned events record the actions themselves on day D (`call_task` → `CALL`, `reminder` → `REMINDER`, with `source = agent_action` and the `action_id`); their effects appear from day D + 1 in the simulator's own events. The process running a run registers its simulator with `sim.feedback.register(run_id, sim)`. Until step 2.13 the effects are a no-op except Maria's scripted response (step 1.19). The probabilities of each effect (for example, how much a call raises dispensing) will be configuration, listed in the limitations.
 
@@ -494,7 +495,7 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `GET /settings`, `PUT /settings/autonomy` | autonomy per action type |
 | `POST /ask` `{question}` | starts an investigation; steps arrive on the WebSocket |
 | `POST /pathways` `{pdta_text}` | Pathway Builder (option B, delivery plan D23) |
-| `POST /whatif` `{levers, months}` | what-if with and without agents |
+| `POST /whatif` `{levers: {extra_slots}, months}` | what-if with and without agents for the scenario on screen, from its grid (C27): `{scenario, facility_id, facility, service, lever_day, last_day, months, base_slots, levers, baseline, agents, lever, avoided_readmissions, precomputed: true}`, where `baseline`, `agents` and `lever` are run summaries `{run_id, readmissions, readmission_rate_30d, on_track_pct, overdue, wait_days, wait_by_facility}` and `avoided_readmissions` is baseline minus lever. `extra_slots` 0–4, `months` 6; anything else 422, no grid 503. It does not wait for the runs |
 | `POST /admissions` `{patient_id, diagnosis}` | Bed Finder (optional) |
 | `GET /reveal/{scenario}` | Rivelazione only; reads `scenario_truth` |
 | `WS /stream` | live messages |
@@ -540,7 +541,7 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 | AC1 | Agents find patterns 1–3 without hints in the prompt | agent log vs `scenario_truth` | `test_ac01_patterns_found.py` | core | R3 |
 | AC2 | One simulated day for all patients under 1 s | timer | `test_ac02_tick_speed.py` | core | R2 |
 | AC3 | KPI, Sankey and map under 200 ms | timer | `test_ac03_views_speed.py` | core | R2 |
-| AC4 | What-if 6 months, with and without agents, under 10 s | timer | `test_ac04_whatif_speed.py` | core | R2 |
+| AC4 | What-if 6 months, with and without agents, under 10 s (read from the precomputed grid of full runs, delivery plan D48) | timer | `test_ac04_whatif_speed.py` | core | R2 |
 | AC5 | Investigator under 2 s from cache (live 30 s not reachable on CPU laptops, delivery plan D18) | timer | `test_ac05_investigator_speed.py` | core | R3 |
 | AC6 | Ask correct on at least 8 of 10 benchmark questions | expected answers | `test_ac06_benchmark.py` | core | R3 |
 | AC7 | No action above its autonomy level without approval | test + audit log | `test_ac07_autonomy.py` | core | R3 |

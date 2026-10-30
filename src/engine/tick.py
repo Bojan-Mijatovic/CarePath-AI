@@ -30,7 +30,7 @@ from engine.state import StateEngine
 from sim import feedback
 from sim.population import generate_patients, load_reference
 from sim.run import append, load_reference_tables
-from sim.step import Simulator, load_scenario
+from sim.step import CapacityChange, Simulator, load_scenario
 
 SEED = 42
 START_DAY = 23  # the demo opens on day 23 (D21)
@@ -51,13 +51,17 @@ class Population:
 
 
 class Run:
-    def __init__(self, run_id: str, population: Population, runs_dir: Path = RUNS_DIR, days: int = HORIZON_DAYS):
+    def __init__(self, run_id: str, population: Population, runs_dir: Path = RUNS_DIR, days: int = HORIZON_DAYS,
+                 levers: tuple[CapacityChange, ...] = ()):
+        """`levers` are capacity changes on top of the scenario (what-if, step 2.5): before their first day
+        the run is the same as without them, day by day, since every random draw is per day (AC14)."""
         p = population
         self.run_id, self.scenario = run_id, int(run_id[1])
         self.agents = run_id.split("_")[1] == "agents"
         self.pathway_id = p.pathway.pathway_id
         self.sim = Simulator(p.seed, p.patients, p.ref, p.pathway, days=days)
         self.sim.apply_scenario(load_scenario(self.scenario), p.mmg)
+        self.sim.apply_capacity(list(levers))
         create_run(run_id, runs_dir=runs_dir, overwrite=True)
         self.con = open_run(run_id, runs_dir)
         load_reference_tables(self.con, p.ref, p.patients, p.mmg)
