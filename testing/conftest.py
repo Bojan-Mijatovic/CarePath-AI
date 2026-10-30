@@ -11,6 +11,30 @@ def pytest_collection_modifyitems(items):
 
 
 @pytest.fixture(scope="session")
+def alarm_investigations(tmp_path_factory):
+    """{scenario: ([stored investigations, None for a cache miss], facility names, facility ASSTs)}: each
+    scenario's agents arm ticked to its echo alarm in cache_only (D14), for AC1 and AC13. About 2 minutes."""
+    import investigation_run
+    from agents import llm
+    from engine.tick import Population
+
+    population, out = Population(), {}
+    llm.configure(mode="cache_only", log_path=None)
+    try:
+        for n in (1, 2, 3):
+            run, alarms, _ = investigation_run.run_to_alarm(n, population, tmp_path_factory.mktemp(f"s{n}"))
+            try:
+                facilities = run.con.execute("SELECT facility_id, name, asst_id FROM facilities").fetchall()
+                out[n] = ([investigation_run.stored(run, a) for a in alarms], {f: name for f, name, _ in facilities},
+                          {f: asst for f, _, asst in facilities})
+            finally:
+                run.close()
+    finally:
+        llm.configure()
+    return out
+
+
+@pytest.fixture(scope="session")
 def demo_played(tmp_path_factory):
     """The manifest's demo outputs played through the API in cache_only (step 2.11, testing/cache_warmup.py),
     for the cache completeness check (C10) and AC5. About 2 minutes."""

@@ -79,6 +79,18 @@ def _cited(inv: dict, tool: str, measure: str, grouping: str | None = None) -> l
             and steps[c["step"]]["args"].get("measure", default) == measure]
 
 
+def bottleneck_asst(inv: dict, scenario: int, facility_names: dict[str, str], facility_assts: dict[str, str]) -> dict:
+    """AC13, the ASST: the ASSTs of the hospitals that claims on wait_by_hospital name include the bottleneck's.
+    The Investigator names the hospital, not the ASST (none of the v5 answers does); each hospital belongs to
+    one ASST, which the prompt lists with it, and code maps the name to it."""
+    truth = json.loads((TRUTH_DIR / f"scenario_{scenario}.json").read_text(encoding="utf-8"))
+    steps = {s["step"]: s for s in inv["steps"]}
+    texts = [c["text"]["it"] for c in inv["claims"] if steps[c["step"]]["tool"] == "wait_by_hospital"]
+    named = sorted({facility_assts[f] for f, name in facility_names.items() if any(name in t for t in texts)})
+    return {"asst": truth["echo_bottleneck"]["asst_id"], "named": named,
+            "found": truth["echo_bottleneck"]["asst_id"] in named}
+
+
 def pattern_2(inv: dict, scenario: int) -> dict:
     """AC1, pattern 2: a claim on dispensing by MMG group names the hidden cooperative (coop_6 or Cooperativa 6)."""
     truth = json.loads((TRUTH_DIR / f"scenario_{scenario}.json").read_text(encoding="utf-8"))
