@@ -225,6 +225,12 @@ class Demo:
             self._parallel(go, self.run_ids(self.scenario))
             return [self.tick_message()]
 
+    def ask(self, question: str) -> tuple[dict, list[dict]]:
+        """POST /api/ask: an operator's question to the agents arm of the scenario on screen, on its day."""
+        with self.lock:
+            run = self.runs[self.default_run()]
+            return investigations.on_question(run.con, run.run_id, run.state.pathway, run.day, self.scenario, question)
+
     def tick_message(self) -> dict:
         """SPEC §10 `tick` for the scenario on screen; `kpi` is the agents arm's."""
         with self.lock:

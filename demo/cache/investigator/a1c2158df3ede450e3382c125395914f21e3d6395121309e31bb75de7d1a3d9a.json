@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"L'attesa per l'ecocardiogramma nell'ultimo periodo di 7 giorni è di 2.1 giorni presso l'Ospedale A.\", \"L'attesa per l'ecocardiogramma nell'ultimo periodo di 7 giorni è di 35.1 giorni presso l'Ospedale B.\", \"L'attesa per l'ecocardiogramma nell'ultimo periodo di 7 giorni è di 2.0 giorni presso l'Ospedale C.\"], \"conclusion\": \"L'Ospedale B ha l'attesa più lunga per l'ecocardiogramma nell'ultima settimana, con un valore di 35.1 giorni.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The waiting time for an echocardiogram in the last 7 days is 2.1 days at Hospital A.\",\n    \"The waiting time for an echocardiogram in the last 7 days is 35.1 days at Hospital B.\",\n    \"The waiting time for an echocardiogram in the last 7 days is 2.0 days at Hospital C.\"\n  ],\n  \"conclusion\": \"Hospital B has the longest waiting time for an echocardiogram in the last week, with a value of 35.1 days.\"\n}"
+  }
+}

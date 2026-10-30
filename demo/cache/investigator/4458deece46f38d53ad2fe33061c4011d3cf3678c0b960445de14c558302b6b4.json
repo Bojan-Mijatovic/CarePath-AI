@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"A Cremona, il tasso di aderenza al telemonitoraggio è del 0.5778, basato su 90 pazienti nei comuni di Borgocarbonara, Magnacavallo, Poggio Rusco e Sermide e Felonica.\", \"Nel comune di Poggio Rusco, il tasso di aderenza al telemonitoraggio è del 0.5, mentre a Sermide e Felonica è del 0.6.\", \"Il tasso di aderenza al telemonitoraggio nel resto dell'ATS è del 0.7882.\"], \"conclusion\": \"No, a Cremona i pazienti non smettono il telemonitoraggio più che nel resto dell'ATS. Il tasso di aderenza a Cremona (0.5778) è inferiore a quello del resto dell'ATS (0.7882).\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\"claims\": [\"In Cremona, the adherence rate to telemonitoring is 0.5778, based on 90 patients in the municipalities of Borgocarbonara, Magnacavallo, Poggio Rusco and Sermide and Felonica.\", \"In the municipality of Poggio Rusco, the adherence rate to telemonitoring is 0.5, while in Sermide and Felonica it is 0.6.\", \"The adherence rate to telemonitoring in the rest of the ATS is 0.7882.\"], \"conclusion\": \"No, in Cremona patients do not discontinue telemonitoring more than in the rest of the ATS. The adherence rate in Cremona (0.5778) is lower than that in the rest of the ATS (0.78 82).\"}"
+  }
+}

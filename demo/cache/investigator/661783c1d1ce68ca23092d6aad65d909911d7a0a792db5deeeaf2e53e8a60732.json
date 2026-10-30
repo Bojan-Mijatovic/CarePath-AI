@@ -863,12 +863,11 @@
     "tool_calls": [
       {
         "function": {
-          "name": "patients_overdue",
+          "name": "wait_by_hospital",
           "arguments": {
             "pathway_id": "hf_lombardia_v1",
             "step": "telemon",
-            "asst": "asst_mantova",
-            "limit": 5
+            "period_days": 90
           }
         }
       }

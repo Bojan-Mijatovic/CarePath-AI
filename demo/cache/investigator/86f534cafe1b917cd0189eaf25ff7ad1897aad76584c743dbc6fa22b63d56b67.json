@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il tasso di ritiro dei farmaci per il gruppo MMG coop_11 è del 90,00%, mentre il resto dell'ATS ha un tasso del 99,92% (dato da adhesion_by_group).\", \"Il tasso di ritiro dei farmaci per coop_11 è inferiore di 9,14 punti percentuali rispetto al resto dell'ATS (coop_11: 90,00%, resto ATS: 99,14%, differenza: -9,14 punti).\", \"Nell'ASST Mantova, ci sono 910 pazienti in ritardo per l'esame BNP, con i pazienti più in ritardo in ritardo di 30 giorni (es. p_00366, p_03001, p_03287, p_03814, p_05051).\", \"Il tempo medio di attesa per l'esame BNP è di 2,0 giorni in tutti gli ospedali (Ospedale A, B, C) e poliambulatori (Poliambulatorio 1, 2, 3, 4, 6), mentre Poliambulatorio 5 ha un tempo di 2,2 giorni.\"], \"conclusion\": \"Il ritiro dei farmaci in coop_11 è significativamente inferiore rispetto al resto dell'ATS, con un margine di miglioramento di 9,14 punti. Il ritardo nell'esame BNP è diffuso in ASST Mantova (910 pazienti in ritardo di 30 giorni), suggerendo un problema di coordinamento o follow-up. Nonostante i tempi di attesa siano simili in tutti i punti di accesso, il ritardo nei pazienti indica un gap nel processo di gestione. L'intervento dovrebbe focalizzarsi su coop_11 per migliorare il ritiro dei farmaci e su ASST Mantova per ridurre il ritardo nell'esame BNP, con particolare attenzione ai pazienti più in ritardo.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The medication withdrawal rate for the MMG coop_11 group is 90.00%, while the rest of the ATS has a rate of 99.92% (data from adhesion_by_group).\",\n    \"The medication withdrawal rate for coop_11 is 9.14 percentage points lower than the rest of the ATS (coop_11: 90.00%, rest of ATS:  99.14%, difference: -9.14 points).\",\n    \"In ASST Mantova, there are 910 patients delayed for the BNP test, with the patients most delayed being 30 days behind (e.g. p_00366, p_03001, p_03287, p_03814, p_05051).\",\n    \"The average waiting time for the BNP test is 2.0 days across all hospitals (Hospital A, B, C) and polyclinics (Polyclinic 1, 2, 3, 4, 6), while Polyclinic 5 has a waiting time of 2.2 days.\"\n  ],\n  \"conclusion\": \"The medication withdrawal rate in coop_11 is significantly lower than the rest of the ATS, with a potential improvement margin of 9.14 points. The delay in the BNP test is widespread in ASST Mantova (910 patients delayed by 30 days), suggesting a coordination or follow-up issue. Despite similar waiting times across all access points, the patient delays indicate a gap in the management process. The intervention should focus on coop_11 to improve medication withdrawal and on ASST Mantova to reduce delays in the BNP test, with particular attention to the patients most delayed.\"\n}"
+  }
+}

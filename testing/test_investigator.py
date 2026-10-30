@@ -126,6 +126,77 @@ def test_row_and_stream_messages(ctx, fake, tmp_path):
     assert messages[0]["payload"]["result_summary"]["it"].startswith("Ospedale")
 
 
+def test_a_question_has_no_opening_and_its_own_prompt(ctx, fake):
+    # Step 2.10: the model chooses the tools for a free question; the alarm prompt (v5) is untouched.
+    question = {"it": "Quale ospedale ha l'attesa più lunga?", "en": "Which hospital has the longest wait?"}
+    wait = ("wait_by_hospital", {"pathway_id": HF.pathway_id, "step": "echo", "period_days": 7})
+    final = {"claims": [{"text": "Ospedale B: 41 giorni", "step": 1}], "conclusion": "Ospedale B."}
+    client = fake(calls(wait), text("Fine."), text(final), text({"claims": ["Ospedale B: 41 days"],
+                                                                  "conclusion": "Ospedale B."}))
+    inv = investigator.ask(ctx, HF, ctx.day, question, "inv_s2_agents_9", FACILITIES)
+    assert [(s["tool"], s["args"]) for s in inv.steps] == [wait]
+    assert inv.question == question
+    assert inv.conclusion == {"it": "Ospedale B.", "en": "Ospedale B."}
+    assert inv.row()["prompt_version"] == investigator.ASK_VERSION != investigator.PROMPT_VERSION
+    first = client.calls[0]["messages"]
+    assert [m["role"] for m in first] == ["system", "user"]  # no opening
+    assert first[0]["content"].startswith("Sei l'Investigator di CarePath AI per l'ATS della Val Padana. Ricevi una domanda")
+    assert "scegli lo strumento e gli argomenti" in first[0]["content"]
+    assert client.calls[2]["format"] == investigator.AskAnswer.model_json_schema()
+    assert investigator.FINAL_ASK in client.calls[2]["messages"][-1]["content"]
+    assert investigator.SYSTEM_ASK != investigator.SYSTEM and "Ricevi un allarme" in investigator.SYSTEM
+
+
+@pytest.mark.parametrize("question, yes_no", [
+    ("Quale ospedale ha l'attesa più lunga?", False), ("In quali comuni i pazienti smettono?", False),
+    ("Quanti pazienti sono in ritardo?", False), ("Dove ci sono posti liberi?", False),
+    ("L'Ospedale A ha un problema di attese?", True), ("I pazienti del gruppo coop_3 ritirano meno?", True),
+])
+def test_code_tells_a_yes_no_question(question, yes_no):
+    assert investigator.yes_no(question) is yes_no
+
+
+@pytest.mark.parametrize("field, sentence, conclusion", [
+    ("No", "Sì, l'Ospedale A ha 2,1 giorni.", "No. L'Ospedale A ha 2,1 giorni."),  # the field decides, not the sentence
+    ("Sì", "il gruppo ritira meno: 52%.", "Sì. Il gruppo ritira meno: 52%."),
+])
+def test_the_yes_no_answer_comes_first(ctx, fake, field, sentence, conclusion):
+    question = {"it": "L'Ospedale A ha un problema?", "en": "Does Ospedale A have a problem?"}
+    final = {"risposta": field, "claims": [{"text": "x", "step": 1}], "conclusion": sentence}
+    wait = ("wait_by_hospital", {"pathway_id": HF.pathway_id, "step": "echo", "period_days": 7})
+    client = fake(calls(wait), text("Fine."), text(final), text({"claims": ["x"], "conclusion": "-"}))
+    inv = investigator.ask(ctx, HF, ctx.day, question, "inv_s2_agents_9", FACILITIES)
+    assert inv.conclusion["it"] == conclusion
+    assert client.calls[2]["format"] == investigator.YesNoAnswer.model_json_schema()
+    assert list(investigator.YesNoAnswer.model_fields)[0] == "risposta"  # decided before the sentences
+
+
+def test_a_missed_investigation_does_not_reuse_an_id(tmp_path, monkeypatch):
+    # Found in step 2.10: a cache miss on one alarm, then two stored investigations, gave the same id twice and
+    # stopped the tick on the primary key; a miss must leave only its alarm without an investigation (AC9).
+    from agents.monitoring import ALERT_COLUMNS
+    from engine import investigations
+    create_run("s2_agents", runs_dir=tmp_path)
+    con = open_run("s2_agents", tmp_path)
+    alert = lambda i, day: [f"al_s2_agents_{i}", day, "regional", HF.pathway_id, None, None, "echo", None, None,
+                            json.dumps(ALARM)]
+    con.executemany(f"INSERT INTO alerts ({', '.join(ALERT_COLUMNS)}) VALUES ({', '.join('?' * 10)})",
+                    [alert(1, 5), alert(2, 5), alert(3, 6)])
+    outcomes = iter([llm.LLMUnavailable("miss"), None, None])
+
+    def fake_investigate(ctx, pathway, day, alarm, investigation_id, facilities, **kw):
+        if (e := next(outcomes)) is not None:
+            raise e
+        return investigator.Investigation(investigation_id, day, pathway.pathway_id, alarm)
+
+    monkeypatch.setattr(investigator, "investigate", fake_investigate)
+    investigations.on_alarms(con, "s2_agents", HF, 5, 2, [])
+    investigations.on_alarms(con, "s2_agents", HF, 6, 2, [])
+    rows = con.execute("SELECT alert_id, investigation_id FROM alerts ORDER BY alert_id").fetchall()
+    con.close()
+    assert rows == [("al_s2_agents_1", None), ("al_s2_agents_2", "inv_s2_agents_1"), ("al_s2_agents_3", "inv_s2_agents_2")]
+
+
 def test_summary_from_the_data():
     result = {"data": {"Ospedale A": 22.5, "Ospedale B": 41, "rest_of_ats": None}}
     assert investigator.summary(result) == {"it": "Ospedale A 22,5 · Ospedale B 41 · rest_of_ats –",

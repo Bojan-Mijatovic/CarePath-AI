@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"L'Ospedale A ha un tempo di attesa per l'ecocardiogramma di 2.1 giorni.\", \"L'Ospedale B ha un tempo di attesa per l'ecocardiogramma di 16.9 giorni.\", \"L'Ospedale C ha un tempo di attesa per l'ecocardiogramma di 2.0 giorni.\"], \"conclusion\": \"Sì, l'Ospedale A ha un problema di attese per l'ecocardiogramma rispetto agli altri ospedali, poiché il suo tempo di attesa (2.1 giorni) è significativamente inferiore a quello dell'Ospedale B (16.9 giorni), mentre è simile a quello dell'Ospedale C (2.0 giorni). Pertanto, non presenta un problema di attese, anzi è tra i più veloci nell'accesso all'ecocardiogramma.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"A Hospital A has a waiting time for an echocardiogram of 2.1 days.\",\n    \"A Hospital B has a waiting time for an echocardiogram of 16.9 days.\",\n    \"A Hospital C has a waiting time for an echocardiogram of 2.0 days.\"\n  ],\n  \"conclusion\": \"Yes, Hospital A has a waiting time issue for an echocardiogram compared to the other hospitals, since its waiting time (2.1 days) is significantly lower than that of Hospital B (16.9 days), while it is similar to that of Hospital C (2.0 days). Therefore, it does not have a waiting time issue, rather it is among the fastest in accessing an echocardiogram.\"\n}"
+  }
+}

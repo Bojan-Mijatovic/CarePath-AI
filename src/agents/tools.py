@@ -579,6 +579,20 @@ def definitions() -> list[dict]:
     return out
 
 
+def _allowed(model: type[BaseModel], error: dict) -> str:
+    """For an unknown field, the fields allowed where it was: the model repeated {"mmg_group": "coop_12"} in a
+    segment three times on "Extra inputs are not permitted" alone (step 2.10)."""
+    if error["type"] != "extra_forbidden":
+        return ""
+    for part in error["loc"][:-1]:
+        annotation = model.model_fields[part].annotation
+        model = next((a for a in (annotation, *getattr(annotation, "__args__", ()))
+                      if isinstance(a, type) and issubclass(a, BaseModel)), None)
+        if model is None:
+            return ""
+    return f" (campi ammessi: {', '.join(model.model_fields)})"
+
+
 def call(ctx: Context, name: str, args: dict) -> dict:
     """Run one tool and return the SPEC §6 envelope; never raises for a bad call from the model."""
     if name not in TOOLS:
@@ -588,7 +602,7 @@ def call(ctx: Context, name: str, args: dict) -> dict:
         parsed = model.model_validate(args)
     except ValidationError as e:
         return {"error": {"code": "bad_argument", "message": "; ".join(
-            f"{'.'.join(map(str, x['loc']))}: {x['msg']}" for x in e.errors(include_url=False))}}
+            f"{'.'.join(map(str, x['loc']))}: {x['msg']}" + _allowed(model, x) for x in e.errors(include_url=False))}}
     try:
         data = fn(ctx, parsed)
     except ToolError as e:

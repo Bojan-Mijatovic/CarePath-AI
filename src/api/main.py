@@ -18,7 +18,9 @@ from typing import Any, Literal
 import uvicorn
 from fastapi import APIRouter, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from agents import llm
 
 from engine import pathway as pathway_model
 from engine import queries, story, whatif
@@ -39,6 +41,10 @@ class StreamMessage(BaseModel):
 
 class Speed(BaseModel):
     factor: int
+
+
+class Ask(BaseModel):
+    question: str = Field(min_length=3, max_length=500)
 
 
 class WhatIf(BaseModel):
@@ -230,6 +236,17 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
     @api.get("/investigations")
     def investigations(run: str | None = None) -> list[dict]:
         return live.read(run, queries.investigations)
+
+    @api.post("/ask")
+    async def ask(body: Ask) -> dict:
+        """An operator's question (Chiedi): the stored investigation; its steps go on the stream. In the demo
+        the answer comes from the cache (D14), so a question nobody warmed has no answer: 503, no template."""
+        try:
+            row, messages = await live.control(demo.ask, body.question)
+        except llm.LLMUnavailable as e:
+            raise HTTPException(503, f"no answer to this question: {e}") from None
+        live.publish(messages)
+        return queries.decode(row)
 
     @api.post("/whatif")
     def what_if(body: WhatIf) -> dict:

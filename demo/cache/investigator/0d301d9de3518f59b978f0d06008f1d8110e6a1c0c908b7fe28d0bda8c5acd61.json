@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"L'Ospedale A ha un tempo di attesa di 2.1 giorni per l'ecocardiogramma nell'ultima settimana.\", \"L'Ospedale B ha un tempo di attesa di 35.1 giorni per l'ecocardiogramma nell'ultima settimana.\", \"L'Ospedale C ha un tempo di attesa di 2.0 giorni per l'ecocardiogramma nell'ultima settimana.\"], \"conclusion\": \"L'Ospedale B ha l'attesa più lunga per l'ecocardiogramma nell'ultima settimana, con un tempo di 35.1 giorni.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"A Hospital A has a waiting time of 2.1 days for an echocardiogram in the last week.\",\n    \"A Hospital B has a waiting time of 35.1 days for an echocardiogram in the last week.\",\n    \"A Hospital C has a waiting time of 2.0 days for an echocardiogram in the last week.\"\n  ],\n  \"conclusion\": \"A Hospital B has the longest waiting time for an echocardiogram in the last week, with a time of 35.1 days.\"\n}"
+  }
+}

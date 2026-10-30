@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Nell'ATS della Val Padana, il tasso di adesione al telemonitoraggio nel periodo di 7 giorni è del 78,57%.\", \"Nel comune di Borgocarbonara, il tasso di adesione al telemonitoraggio è del 53,33%.\", \"Nel comune di Poggio Rusco, il tasso di adesione al telemonitoraggio è del 50,00%.\", \"Nel comune di Sermide e Felonica, il tasso di adesione al telemonitoraggio è del 60,00%.\", \"Nel comune di Vescovato, il tasso di adesione al telemonitoraggio è del 64,71%.\"], \"conclusion\": \"A Cremona, i pazienti non smettono il telemonitoraggio più del resto dell'ATS: i tassi di adesione nei comuni cremonesi sono inferiori alla media dell'ATS (50-65%), ma non indicano un'adesione più bassa rispetto al resto, che è del 78,57%.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"In the ATS of the Val Padana, the adherence rate to telemonitoring over a 7-day period is 78.57%.\",\n    \"In the commune of Borgocarbonara, the adherence rate to telemonitoring is 53.33%.\",\n    \"In the commune of Poggio Rusco, the adherence rate to telemonitoring is 50.00%.\",\n    \"In the communes of Sermide and Felonica, the adherence rate to telemonitoring is 60.00%.\",\n    \"In the commune of Vescovato, the adherence rate to telemonitoring is 64.71%.\"\n  ],\n  \"conclusion\": \"In Cremona, patients do not discontinue telemonitoring more than the rest of the ATS: the adherence rates in the Cremona communes are below the average of the ATS (50-65%), but do not indicate lower adherence compared to the rest, which is 78.57%.\"\n}"
+  }
+}

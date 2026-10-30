@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il gruppo MMG_082 ha una quota di pazienti che ritirano il furosemide pari a 0.8125.\", \"Il gruppo MMG_091 ha una quota di pazienti che ritirano il furosemide pari a 0.8182.\", \"Il gruppo MMG_081 ha una quota di pazienti che ritirano il furosemide pari a 0.9231.\", \"Il gruppo MMG_090 ha una quota di pazienti che ritirano il furosemide pari a 0.9333.\", \"Il gruppo MMG_092 ha una quota di pazienti che ritirano il furosemide pari a 0.8947.\", \"Il gruppo MMG_096 ha una quota di pazienti che ritirano il furosemide pari a 0.9259.\", \"Il gruppo MMG_100 ha una quota di pazienti che ritirano il furosemide pari a 0.9.\", \"Il gruppo MMG_103 ha una quota di pazienti che ritirano il furosemide pari a 0.8462.\", \"Il gruppo MMG_111 ha una quota di pazienti che ritirano il furosemide pari a 0.9167.\", \"Il gruppo rest_of_ats ha una quota di pazienti che ritirano il furosemide pari a 0.9976.\"], \"conclusion\": \"Il gruppo MMG_082 ha la quota più bassa di pazienti che ritirano il furosemide, con un valore di 0.8125.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The MMG_082 group has a patient share that withdraws furosemide equal to 0.8125.\",\n    \"The MMG_091 group has a patient share that withdraws furosemide equal to 0.8182.\",\n    \"The MMG_081 group has a patient share that withdraws furosemide equal to 0.9231.\",\n    \"The MMG_090 group has a patient share that withdraws furosemide equal to 0.9333.\",\n    \"The MMG_092 group has a patient share that withdraws furosemide equal to 0.8947.\",\n    \"The MMG_096 group has a patient share that withdraws furosemide equal to 0.9259.\",\n    \"The MMG_100 group has a patient share that withdraws furosemide equal to 0.9.\",\n    \"The MMG_103 group has a patient share that withdraws furosemide equal to 0.8462.\",\n    \"The MMG_111 group has a patient share that withdraws furosemide equal to 0.9167.\",\n    \"The rest_of_ats group has a patient share that withdraws furosemide equal to 0.9976.\"\n  ],\n  \"conclusion\": \"The MMG_082 group has the lowest patient share that withdraws furosemide, with a value of 0.8125.\"\n}"
+  }
+}

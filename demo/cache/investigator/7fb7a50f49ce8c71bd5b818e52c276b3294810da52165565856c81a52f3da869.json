@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il tempo medio di attesa per l'ecocardiogramma all'Ospedale B negli ultimi 7 giorni è di 31,0 giorni, superiore alla soglia PDTA di 30 giorni, come indicato dall'allarme regionale.\", \"L'Ospedale B ha 0 slot disponibili per l'ecocardiogramma nei prossimi 21 giorni, mentre l'Ospedale A ha 114 slot e l'Ospedale C ne ha 102, indicando un grave deficit di capacità programmabile all'Ospedale B.\", \"All'Ospedale B sono presenti 17 pazienti in ritardo per l'ecocardiogramma, con un ritardo massimo di 47 giorni (paziente p_02531), e tutti i pazienti in ritardo appartengono all'ASST Cremona.\", \"Il tasso di aderenza al telemonitoraggio nei comuni dell'ATS della Val Padana varia dal 50% a un massimo del 64,52% (Borgo Mantovano), mentre la media dell'intera ATS è del 78,81%, indicando un gap significativo in alcuni territori.\"], \"conclusion\": \"L'allarme all'Ospedale B è causato da un'assenza di slot disponibili per l'ecocardiogramma (0 slot nei prossimi 21 giorni) e da un accumulo di 17 pazienti in ritardo, tutti appartenenti all'ASST Cremona. Il margine per intervenire è nell'ottimizzazione della pianificazione dei pazienti dell'ASST Cremona, potenzialmente spostando alcune prestazioni all'Ospedale A o C, che hanno capacità disponibile. Inoltre, il basso tasso di aderenza al telemonitoraggio in alcuni comuni potrebbe contribuire a un aumento della richiesta di ecocardiogrammi in ritardo, suggerendo un intervento di monitoraggio precoce per ridurre il carico sulle strutture.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The average waiting time for an echocardiogram at Hospital B in the last 7 days is 31.0 days, exceeding the PDTA threshold of 30 days, as indicated by the regional alert.\",\n    \"Hospital B has 0 available slots for an echocardiogram in the next 21 days, while Hospital A has 114 slots and Hospital C has 102 slots, indicating a severe lack of programmable capacity at Hospital B.\",\n    \"At Hospital B, there are 17 patients delayed for an echocardiogram, with a maximum delay of 47 days (patient p_02531), and all delayed patients belong to ASST Cremona.\",\n    \"The adherence rate to telemonitoring in the municipalities of the Val Padana ATS ranges from 50% to a maximum of 64.52% (Borgo Mantovano), while the overall ATS average is 78.81%, indicating a significant gap in some areas.\"\n  ],\n  \"conclusion\": \"The alert at Hospital B is caused by the absence of available slots for an echocardiogram (0 slots in the next 21 days) and by the accumulation of 17 delayed patients, all belonging to ASST Cre- mona. The margin for intervention lies in optimizing the patient scheduling of ASST Cremona, potentially shifting some services to Hospital A or C, which have available capacity. Furthermore, the low adherence rate to telemonitoring in some municipalities might contribute to an increased demand for delayed echocardiograms, suggesting a need for early monitoring interventions to reduce the burden on healthcare facilities.\"\n}"
+  }
+}

@@ -23,6 +23,22 @@ from engine.pathway import Pathway
 log = logging.getLogger("carepath.investigations")
 
 
+def on_question(con: duckdb.DuckDBPyConnection, run_id: str, pathway: Pathway, day: int, scenario: int,
+                question: str) -> tuple[dict, list[dict]]:
+    """An operator's question (POST /api/ask, Chiedi) on the run as it is on `day`: the stored row and the
+    investigation's stream messages. Raises llm.LLMUnavailable when the model gives no answer (a cache
+    miss in cache_only): the caller says so, there is no template (Solution Plan §8)."""
+    facilities = con.execute("SELECT name, type, asst_id FROM facilities ORDER BY facility_id").fetchall()
+    done = con.execute("SELECT count(*) FROM investigations").fetchall()[0][0]
+    with tool_cursor(con) as cur:
+        ctx = tools.Context(run_id, tools.Query(cur), day)
+        inv = investigator.ask(ctx, pathway, day, {"it": question, "en": question}, f"inv_{run_id}_{done + 1}",
+                               facilities)
+    row = inv.row()
+    con.execute(f"INSERT INTO investigations BY NAME SELECT {', '.join(f'${k} AS {k}' for k in row)}", row)
+    return row, inv.messages(scenario)
+
+
 def on_alarms(con: duckdb.DuckDBPyConnection, run_id: str, pathway: Pathway, day: int, scenario: int,
               messages: list[dict]) -> list[dict]:
     """Investigates the regional alarms opened on `day`; sets investigation_id on their messages in
@@ -37,8 +53,7 @@ def on_alarms(con: duckdb.DuckDBPyConnection, run_id: str, pathway: Pathway, day
     done = con.execute("SELECT count(*) FROM investigations").fetchall()[0][0]  # fetchone() leaves the result open
     out = []
     for alert_id, step, group_alarm, text in alarms:
-        done += 1
-        investigation_id = f"inv_{run_id}_{done}"
+        investigation_id = f"inv_{run_id}_{done + 1}"  # counted when stored: a miss must not reuse an id later
         try:
             with tool_cursor(con) as cur:
                 ctx = tools.Context(run_id, tools.Query(cur), day)
@@ -49,6 +64,7 @@ def on_alarms(con: duckdb.DuckDBPyConnection, run_id: str, pathway: Pathway, day
             continue
         row = inv.row(alert_id)
         con.execute(f"INSERT INTO investigations BY NAME SELECT {', '.join(f'${k} AS {k}' for k in row)}", row)
+        done += 1
         con.execute("UPDATE alerts SET investigation_id = $i WHERE alert_id = $a", {"i": investigation_id, "a": alert_id})
         for m in messages:
             p = m["payload"]

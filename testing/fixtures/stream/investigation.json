@@ -68,14 +68,64 @@
     "payload": {
       "investigation_id": "inv_s2_agents_3",
       "step": 4,
-      "tool": "compliance_by_step",
+      "tool": "adherence_by_group",
       "args": {
         "pathway_id": "hf_lombardia_v1",
-        "asst": "asst_cremona"
+        "grouping": "comune",
+        "measure": "telemonitoring",
+        "period_days": 7
       },
       "result_summary": {
-        "it": "telemon 0,55 · cardio_visit 0,8 · echo 0,84 · lab_bnp 0,85",
-        "en": "telemon 0.55 · cardio_visit 0.8 · echo 0.84 · lab_bnp 0.85"
+        "it": "Poggio Rusco 0,5 · Redondesco 0,5 · Borgocarbonara 0,53 · Pomponesco 0,57 · Vailate 0,59 · Sermide e Felonica 0,6 · +5",
+        "en": "Poggio Rusco 0.5 · Redondesco 0.5 · Borgocarbonara 0.53 · Pomponesco 0.57 · Vailate 0.59 · Sermide e Felonica 0.6 · +5"
+      },
+      "verified": null,
+      "final": false
+    }
+  },
+  {
+    "type": "investigation",
+    "scenario": 2,
+    "day": 33,
+    "payload": {
+      "investigation_id": "inv_s2_agents_3",
+      "step": 5,
+      "tool": "compare_segments",
+      "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "a": {
+          "hospital": "Ospedale B"
+        },
+        "b": {},
+        "metric": "on_time_fraction"
+      },
+      "result_summary": {
+        "it": "nessun dato (bad_argument)",
+        "en": "no data (bad_argument)"
+      },
+      "verified": null,
+      "final": false
+    }
+  },
+  {
+    "type": "investigation",
+    "scenario": 2,
+    "day": 33,
+    "payload": {
+      "investigation_id": "inv_s2_agents_3",
+      "step": 6,
+      "tool": "compare_segments",
+      "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "a": {
+          "asst": "asst_cremona"
+        },
+        "b": {},
+        "metric": "on_time_fraction"
+      },
+      "result_summary": {
+        "it": "nessun dato (bad_argument)",
+        "en": "no data (bad_argument)"
       },
       "verified": null,
       "final": true

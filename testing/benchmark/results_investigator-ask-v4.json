@@ -1,0 +1,166 @@
+{
+ "prompt_version": "investigator-ask-v4",
+ "day": 35,
+ "scenarios": {
+  "2": {
+   "correct": 4,
+   "passed": true,
+   "answers": [
+    {
+     "id": "q01_echo_wait",
+     "correct": true,
+     "expected": {
+      "type": "facility",
+      "value": "Ospedale B"
+     },
+     "conclusion": "L'Ospedale B ha l'attesa più lunga per l'ecocardiogramma nell'ultima settimana, con un valore di 35.1 giorni.",
+     "claims": [
+      "L'attesa per l'ecocardiogramma nell'ultimo periodo di 7 giorni è di 2.1 giorni presso l'Ospedale A.",
+      "L'attesa per l'ecocardiogramma nell'ultimo periodo di 7 giorni è di 35.1 giorni presso l'Ospedale B.",
+      "L'attesa per l'ecocardiogramma nell'ultimo periodo di 7 giorni è di 2.0 giorni presso l'Ospedale C."
+     ],
+     "steps": [
+      {
+       "tool": "wait_by_hospital",
+       "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "step": "echo",
+        "period_days": 7
+       }
+      }
+     ],
+     "seconds": 0
+    },
+    {
+     "id": "q08_no_echo_problem",
+     "correct": true,
+     "expected": {
+      "type": "yes_no",
+      "value": false,
+      "rule": "yes when the wait is more than 2.0 times the median of all hospitals"
+     },
+     "conclusion": "No. L'Ospedale A ha un tempo di attesa per l'ecocardiogramma molto inferiore rispetto all'Ospedale B, che presenta un valore di 16.9 giorni, mentre Ospedale A e Ospedale C sono simili (2.1 e 2.0 giorni rispettivamente). Pertanto, l'Ospedale A non ha un problema di attese rispetto agli altri ospedali, anzi presenta i tempi più brevi tra i tre.",
+     "claims": [
+      "L'Ospedale A ha un tempo medio di attesa per l'ecocardiogramma di 2.1 giorni.",
+      "L'Ospedale B ha un tempo medio di attesa per l'ecocardiogramma di 16.9 giorni.",
+      "L'Ospedale C ha un tempo medio di attesa per l'ecocardiogramma di 2.0 giorni."
+     ],
+     "steps": [
+      {
+       "tool": "wait_by_hospital",
+       "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "step": "echo",
+        "period_days": 35
+       }
+      }
+     ],
+     "seconds": 0
+    },
+    {
+     "id": "q09_no_dispensing_problem",
+     "correct": true,
+     "expected": {
+      "type": "yes_no",
+      "value": false,
+      "rule": "yes when the difference is below -0.05"
+     },
+     "conclusion": "No. I pazienti del gruppo di MMG coop_12 non ritirano il furosemide meno degli altri, poiché entrambi i gruppi hanno un tasso di dispensazione pari a 1.0.",
+     "claims": [
+      "Il gruppo di MMG coop_12 ha un tasso di dispensazione di furosemide pari a 1.0 nel periodo di 90 giorni.",
+      "Il gruppo di MMG non appartenente a coop_12 (rest_of_ats) ha un tasso di dispensazione di furosemide pari a 1.0 nel periodo di 90 giorni."
+     ],
+     "steps": [
+      {
+       "tool": "compare_segments",
+       "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "a": {
+         "mmg_group": "coop_12"
+        },
+        "b": {
+         "mmg_group": {
+          "$ne": "coop_12"
+         }
+        },
+        "metric": "dispensing"
+       }
+      },
+      {
+       "tool": "compare_segments",
+       "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "a": {
+         "mmg_group": "coop_12"
+        },
+        "b": {
+         "mmg_group": {
+          "$ne": "coop_12"
+         }
+        },
+        "metric": "dispensing"
+       }
+      },
+      {
+       "tool": "adherence_by_group",
+       "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "grouping": "mmg_group",
+        "measure": "dispensing",
+        "period_days": 90
+       }
+      }
+     ],
+     "seconds": 0
+    },
+    {
+     "id": "q10_no_telemonitoring_problem",
+     "correct": true,
+     "expected": {
+      "type": "yes_no",
+      "value": false,
+      "rule": "yes when the difference is below -0.1"
+     },
+     "conclusion": "No. I pazienti a Cremona non smettono il telemonitoraggio più del resto dell'ATS. Il tasso di adesione a Cremona è più basso rispetto al resto dell'ATS (0.5778 vs 0.7857), il che indica una minore adesione, non un maggior abbandono. Tuttavia, non è possibile affermare che smettono più, poiché non si dispone di dati sul tasso di abbandono diretto, ma solo sull'adesione iniziale. Il confronto suggerisce una minore adesione in Cremona, non un abbandono più elevato.",
+     "claims": [
+      "Il tasso di adesione al telemonitoraggio nell'area di Cremona è del 0.5778, basato su 90 pazienti.",
+      "Il tasso di adesione al telemonitoraggio nell'area di Cremona, suddiviso per comune, varia da un minimo di 0.50 (Poggio Rusco) a un massimo di 0.6471 (Vescovato).",
+      "Il tasso di adesione al telemonitoraggio nel resto dell'ATS è del 0.7857."
+     ],
+     "steps": [
+      {
+       "tool": "adherence_by_area",
+       "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "measure": "telemonitoring",
+        "segment": {
+         "asst": "asst_cremona"
+        },
+        "period_days": 7
+       }
+      },
+      {
+       "tool": "adherence_by_area",
+       "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "measure": "telemonitoring",
+        "segment": {},
+        "period_days": 7
+       }
+      },
+      {
+       "tool": "adherence_by_group",
+       "args": {
+        "pathway_id": "hf_lombardia_v1",
+        "grouping": "comune",
+        "measure": "telemonitoring",
+        "period_days": 7
+       }
+      }
+     ],
+     "seconds": 0
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il gruppo di MMG coop_12 ha un tasso di ritiro del furosemide pari a 1.0 durante il periodo di 90 giorni.\", \"Il resto dell'ATS ha un tasso di ritiro del furosemide pari a 1.0 durante lo stesso periodo.\"], \"conclusion\": \"Sì, i pazienti del gruppo di MMG coop_12 ritirano il furosemide allo stesso tasso degli altri gruppi, con un valore di 1.0, pari al tasso del resto dell'ATS.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The MMG coop_12 group has a withdrawal rate of furosemide equal to 1.0 during the 90-day period.\",\n    \"The rest of the ATS has a withdrawal rate of furosemide equal to 1.0 during the same period.\"\n  ],\n  \"conclusion\": \"Yes, patients in the MMG coop_12 group withdraw furosemide at the same rate as the other groups, with a value of -1.0, equal to the rate of the rest of the ATS.\"\n}"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il tasso di adesione al telemonitoraggio nell'area di Cremona è del 0.5778, basato su 90 pazienti.\", \"Il tasso di adesione al telemonitoraggio nell'area di Cremona, suddiviso per comune, varia da un minimo di 0.50 (Poggio Rusco) a un massimo di 0.6471 (Vescovato).\", \"Il tasso di adesione al telemonitoraggio nel resto dell'ATS è del 0.7857.\"], \"conclusion\": \"No. I pazienti a Cremona non smettono il telemonitoraggio più del resto dell'ATS. Il tasso di adesione a Cremona è più basso rispetto al resto dell'ATS (0.5778 vs 0.7857), il che indica una minore adesione, non un maggior abbandono. Tuttavia, non è possibile affermare che smettono più, poiché non si dispone di dati sul tasso di abbandono diretto, ma solo sull'adesione iniziale. Il confronto suggerisce una minore adesione in Cremona, non un abbandono più elevato.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The adherence rate to telemonitoring in the Cremona area is 0.5778, based on 90 patients.\",\n    \"The adherence rate to telemonitoring in the Cremona area, broken down by commune, ranges from a minimum of 0.50 (Poggio Rusco) to a maximum of 0.6471 (Vescovato).\",\n    \"The adherence rate to telemonitoring in the rest of the ATS is 0.7857.\"\n  ],\n  \"conclusion\": \"No. Patients in Cremona do not discontinue telemonitoring more than the rest of the ATS. The adherence rate in Cremona is lower compared to the rest of the ATS (0.577 8 vs 0.7857), indicating lower adherence, not greater dropout. However, it is not possible to assert that they discontinue more, as there are no direct dropout data available, only initial adherence data. The comparison suggests lower adherence in Cremona, not a higher dropout rate.\"\n}"
+  }
+}

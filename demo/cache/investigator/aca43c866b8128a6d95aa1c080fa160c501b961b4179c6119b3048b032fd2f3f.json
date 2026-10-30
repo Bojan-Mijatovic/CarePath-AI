@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"L'Ospedale A ha un tempo di attesa per l'ecocardiogramma di 2.1 giorni.\", \"L'Ospedale B ha un tempo di attesa per l'ecocardiogramma di 16.9 giorni.\", \"L'Ospedale C ha un tempo di attesa per l'ecocardiogramma di 2.0 giorni.\"], \"conclusion\": \"Sì, l'Ospedale A ha un problema di attese per l'ecocardiogramma rispetto agli altri ospedali, con un tempo di attesa di 2.1 giorni, rispetto a 16.9 giorni dell'Ospedale B e 2.0 giorni dell'Ospedale C.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\"claims\": [\"A Hospital A has a waiting time for an echocardiogram of 2.1 days.\", \"A Hospital B has a waiting time for an echocardiogram of 16.9 days.\", \"A Hospital C has a waiting time for an echocardiogram of -2.0 days.\"], \"conclusion\": \"Yes, Hospital A has a problem with waiting times for an echocardiogram compared to the other hospitals, with a waiting time of 2.1 days, compared to 16.9 days at Hospital B and 2.0 days at Hospital C.\"}"
+  }
+}

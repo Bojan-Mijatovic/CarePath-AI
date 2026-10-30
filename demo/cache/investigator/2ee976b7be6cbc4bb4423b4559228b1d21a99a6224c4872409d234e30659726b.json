@@ -860,13 +860,9 @@
     "tool_calls": [
       {
         "function": {
-          "name": "adherence_by_area",
+          "name": "readmissions_by_comune",
           "arguments": {
             "pathway_id": "hf_lombardia_v1",
-            "measure": "dispensing",
-            "segment": {
-              "mmg_group": "coop_3"
-            },
             "period_days": 60
           }
         }

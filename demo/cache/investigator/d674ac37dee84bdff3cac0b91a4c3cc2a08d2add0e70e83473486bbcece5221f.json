@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il tasso di ritiro dei farmaci per il gruppo di MMG coop_3 è del 89,01%, molto al di sotto della soglia regionale di 95% (resto dell'ATS: 99,92%).\", \"Nei comuni associati a coop_3, i tassi di ritiro dei farmaci sono particolarmente bassi: Camisano (81,82%), Fiesco (76,92%), Izano (74,07%), Madignano (87,5%), Montodine (82,76%), Pianengo (90%), Ricengo (86,67%), Ripalta Arpina (85,71%), Romanengo (89,47%), Soncino (87,62%). Il resto dell'ATS ha un tasso del 99,45%.\", \"I tassi di riammissione ospedaliera per il percorso Scompenso cardiaco nei comuni associati a coop_3 sono elevati: Roverbella (50%), Moglia (42,86%), Marcaria (40%), Curtatone (37,5%), Porto Mantovano (37,5%), Offanengo (33,33%), Persico Dosimo (33,33%), Sermide e Felonica (30%), Volta Mantovana (33,33%). Il resto dell'ATS ha un tasso del 11,35%.\", \"I principali driver di rischio per i pazienti del gruppo coop_3 sono: giorni dal dimesso (peso 1,0), giorni dal ultimo ritiro del farmaco C03CA01 (peso 0,6), giorni dall'ultimo controllo (peso 0,4), vivere da solo (peso 0,4), aumento di peso in 3 giorni (peso 0,4), età (peso 0,2). Questi dati riguardano 5 pazienti identificati nel segmento.\"], \"conclusion\": \"Il gruppo coop_3 presenta un ritiro dei farmaci significativamente inferiore rispetto al resto dell'ATS (89,01% vs 99,92%), con tassi di riammissione ospedaliera molto elevati nei comuni associati (fino al 50% a Roverbella). I dati suggeriscono che il problema è legato a ritardi nel ritiro dei farmaci, in particolare C03CA01, e a fattori di rischio come la distanza dal dimesso, la solitudine e l'aumento ponderale. L'intervento deve focalizzarsi sui comuni con tassi più bassi (es. Izano, Fiesco, Camisano) e sui pazienti con più driver di rischio, con un focus su follow-up tempestivo e supporto al ritiro dei farmaci.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The medication withdrawal rate for the MMG coop_3 group is 89.01%, significantly below the regional threshold of 95% (the rest of the ATS: 99.92%).\",\n    \"In the municipalities associated with coop_3, medication withdrawal rates are particularly low: Camisano (81.82%), Fiesco (76.92%), Izano (74.07%), Madignano (87.5%), Montodine (82.76%), Pianengo (90%), Ricengo (86.67%), Ripalta Arpina (85.71%), Romanengo (89.47%), Soncino (87.62%). The rest of the ATS has a rate of 99.45%.\",\n    \"Hospital readmission rates for the Heart Failure pathway in municipalities associated with coop_3 are high: Roverbella (50%), Moglia (42.86%), Marcaria (40%), Curtatone (37.5%), Porto Mantovano (37.5%), Offanengo (33.33%), Persico Dosimo (33.33%), Sermide e Felonica (30%), Volta Mantovana (33.33%). The rest of the ATS has a rate of 11.35%.\",\n    \"The main risk drivers for patients in the coop_3 group are: days since discharge (weight 1.0), days since last withdrawal of medication C03CA01 (weight 0.6), days since last check-up (weight 0.4), living alone (weight 0.4), weight gain in 3 days (weight 0.4), age (weight 0.2). These data pertain to 5 patients identified in the segment.\"\n  ],\n  \"conclusion\": \"The coop_3 group shows a significantly lower medication withdrawal rate compared to the rest of the ATS (89.01% vs 99.92%), with very high hospital readmission rates in the associated municipalities (up to 50% in Roverbella). The data suggest that the issue is linked to delays in medication withdrawal, particularly for C03CA01, and to risk factors such as distance from discharge, loneliness, and weight gain. The intervention should focus on municipalities with lower withdrawal rates (e.g. Izano, Fiesco, Camisano) and patients with more risk drivers, with an emphasis on timely follow-up and medication withdrawal support.\"\n}"
+  }
+}

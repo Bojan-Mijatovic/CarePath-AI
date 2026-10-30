@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Nell'area di Borgocarbonara e Magnacavallo, il tasso di adesione al telemonitoraggio per pazienti che vivono da soli a più di 40 km è del 0.0%, con 5 pazienti coinvolti, mentre nel resto dell'ATS è del 87.69%.\", \"Nel comune di Borgocarbonara, il tasso di adesione al telemonitoraggio è del 57.14% su 7 pazienti, mentre in Poggio Rusco è del 54.55% su 11 pazienti; in entrambi i casi, i tassi sono significativamente inferiori alla media dell'ATS (83.08%).\", \"Sono 150 i pazienti in ritardo nel telemonitoraggio, con un ritardo massimo di 98 giorni; i pazienti più in ritardo hanno un punteggio di rischio compreso tra 0.0211 e 0.0596.\", \"Nell'ASST Mantova, il tasso di adesione al telemonitoraggio è del 66.1%, mentre per le visite cardiologiche è del 75.14%, per l'ecocardiogramma del 74.32% e per l'esame BNP del 93.87%.\"], \"conclusion\": \"Il problema principale è concentrato nell'area di Borgocarbonara e Magnacavallo, dove l'adesione al telemonitoraggio è nulla. Anche in comuni vicini come Poggio Rusco e Sermide e Felonica, i tassi sono molto bassi. Il ritardo nel telemonitoraggio è diffuso, con 150 pazienti in ritardo, e l'ASST Mantova presenta un tasso di adesione al telemonitoraggio inferiore alla media ATS. L'intervento deve focalizzarsi su Borgocarbonara e Magnacavallo, con un'azione mirata per ripristinare l'adesione al telemonitoraggio, in particolare per i pazienti più a rischio e in ritardo.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"In the area of Borgocarbonara and Magnacavallo, the adherence rate to telemonitoring for patients living alone more than 40 km away is 0.0%, involving 5 patients, while in the rest of the ATS it is 87.69%.\",\n    \"In the commune of Borgocarbonara, the telemonitoring adherence rate is 57.14% among 7 patients, while in Poggio Rusco it is 54.-55% among 11 patients; in both cases, the rates are significantly below the ATS average (83.08%).\",\n    \"There are 150 patients with delayed telemonitoring, with a maximum delay of 98 days; the patients with the greatest delay have a risk score ranging from 0.0211 to 0.0596.\",\n    \"In the ASST Mantova, the telemonitoring adherence rate is 66.1%, while for cardiology visits it is 75.14%, for echocardiography it is 74.32%, and for BNP test it is 93.87%.\"\n  ],\n  \"conclusion\": \"The main problem is concentrated in the area of Borgocarbonara and Magnacavallo, where telemonitoring adherence is zero. Even in nearby communes such as Poggio Rusco and Sermide e Felonica, the rates are very low. Delay in telemonitoring is widespread, involving 150 patients, and the ASST Mantova has a telemonitoring adherence rate below the ATS average. The intervention must focus on Borgocarbonara and Magnacavallo, with targeted actions to restore telemonitoring adherence, particularly for high-risk and delayed patients.\"\n}"
+  }
+}

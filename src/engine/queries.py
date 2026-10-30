@@ -12,11 +12,15 @@ JSON_COLUMNS = {"scope", "payload", "rationale", "evidence", "details", "reasons
                 "claims", "conclusion"}
 
 
+def decode(row: dict) -> dict:
+    """A row as written, with its JSON columns parsed, as `rows` returns it."""
+    return {n: json.loads(v) if n in JSON_COLUMNS and v is not None else v for n, v in row.items()}
+
+
 def rows(con: duckdb.DuckDBPyConnection, sql: str, params: dict | None = None) -> list[dict]:
     cur = con.execute(sql, params or {})
     names = [d[0] for d in cur.description]
-    return [{n: json.loads(v) if n in JSON_COLUMNS and v is not None else v for n, v in zip(names, r)}
-            for r in cur.fetchall()]
+    return [decode(dict(zip(names, r))) for r in cur.fetchall()]
 
 
 def kpi(con: duckdb.DuckDBPyConnection, pathway_id: str | None, level: str | None, key: str | None) -> list[dict]:

@@ -1,0 +1,94 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:30b-instruct",
+  "prompt_version": "investigator-ask-v4",
+  "request": {
+    "messages": [
+      {
+        "role": "system",
+        "content": "Sei l'Investigator di CarePath AI per l'ATS della Val Padana. Ricevi una domanda di un operatore dell'ATS e rispondi con gli strumenti, che leggono i dati fino a oggi, giorno 35.\n\nRegole:\n- Usa solo gli strumenti. Ogni numero che scrivi deve venire dal risultato di uno strumento.\n- Nessuna diagnosi e nessuna modifica di terapia.\n- Al massimo 6 chiamate di strumenti. Quando hai abbastanza dati, smetti di chiamarli.\n\nMetodo: scegli lo strumento e gli argomenti che rispondono alla domanda, per tutta l'ATS se la domanda non nomina una ASST; se la domanda confronta, chiama lo strumento che da' entrambi i valori.\n\nStrutture dell'ATS (nome, tipo, ASST):\n- Poliambulatorio 1, ambulatorio, asst_mantova\n- Poliambulatorio 2, ambulatorio, asst_mantova\n- Poliambulatorio 3, ambulatorio, asst_mantova\n- Poliambulatorio 4, ambulatorio, asst_cremona\n- Poliambulatorio 5, ambulatorio, asst_cremona\n- Poliambulatorio 6, ambulatorio, asst_crema\n- Ospedale A, ospedale, asst_mantova\n- Ospedale B, ospedale, asst_cremona\n- Ospedale C, ospedale, asst_crema\n\nPercorso hf_lombardia_v1 (Scompenso cardiaco). Step del percorso:\n- discharge: Dimissione\n- telemon: Telemonitoraggio\n- cardio_visit: Visita cardiologica (servizio cardio_visit)\n- echo: Ecocardiogramma (servizio echo)\n- lab_bnp: Esame BNP (servizio lab)"
+      },
+      {
+        "role": "user",
+        "content": "Quale gruppo di MMG ha la quota più bassa di pazienti che ritirano il furosemide?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "adherence_by_group",
+              "arguments": {
+                "pathway_id": "hf_lombardia_v1",
+                "grouping": "mmg",
+                "measure": "dispensing",
+                "period_days": 90
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_name": "adherence_by_group",
+        "content": "{\"data\":{\"mmg_081\":0.9231,\"mmg_082\":0.8125,\"mmg_086\":0.92,\"mmg_090\":0.9333,\"mmg_091\":0.8182,\"mmg_092\":0.8947,\"mmg_096\":0.9259,\"mmg_100\":0.9,\"mmg_103\":0.8462,\"mmg_111\":0.9167,\"rest_of_ats\":0.9976},\"passo\":1,\"source\":{\"args\":{\"grouping\":\"mmg\",\"measure\":\"dispensing\",\"pathway_id\":\"hf_lombardia_v1\",\"period_days\":90},\"day\":35,\"run_id\":\"s2_baseline\",\"tool\":\"adherence_by_group\"}}"
+      },
+      {
+        "role": "user",
+        "content": "Ora riassumi in JSON. Per ogni risultato utile scrivi un'affermazione con i numeri che lo strumento ha restituito e indica il numero del passo che la sostiene. Riporta i numeri come li ha restituiti lo strumento: non calcolare medie, intervalli o totali. Poi una conclusione che risponde alla domanda in una o due frasi, con il nome o il numero che la domanda chiede."
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "$defs": {
+        "Claim": {
+          "properties": {
+            "text": {
+              "description": "affermazione in italiano con i numeri restituiti dallo strumento",
+              "title": "Text",
+              "type": "string"
+            },
+            "step": {
+              "description": "numero del passo, cioe' della chiamata di strumento, che la sostiene",
+              "minimum": 1,
+              "title": "Step",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "text",
+            "step"
+          ],
+          "title": "Claim",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "claims": {
+          "items": {
+            "$ref": "#/$defs/Claim"
+          },
+          "minItems": 1,
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "description": "risposta in italiano alla domanda, con il nome o il numero chiesto",
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "AskAnswer",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    {\n      \"step\": 1,\n      \"text\": \"Il gruppo MMG_082 ha una quota di pazienti che ritirano il furosemide pari a 0.8125.\"\n    },\n    {\n      \"step\": 1,\n      \"text\": \"Il gruppo MMG_091 ha una quota di pazienti che ritirano il furosemide pari a 0.8182.\"\n    },\n    {\n      \"step\": 1,\n      \"text\": \"Il gruppo MMG_081 ha una quota di pazienti che ritirano il furosemide pari a 0.9231.\"\n    },\n    {\n      \"step\": 1,\n      \"text\": \"Il gruppo MMG_090 ha una quota di pazienti che ritirano il furosemide pari a 0.9333.\"\n    },\n    {\n      \"step\": 1,\n      \"text\": \"Il gruppo MMG_092 ha una quota di pazienti che ritirano il furosemide pari a 0.8947.\"\n    },\n    {\n      \"step\": 1,\n      \"text\": \"Il gruppo MMG_096 ha una quota di pazienti che ritirano il furosemide pari a 0.9259.\"\n    },\n    {\n      \"step\": 1,\n      \"text\": \"Il gruppo MMG_100 ha una quota di pazienti che ritirano il furosemide pari a 0.9.\"\n    },\n    {\n      \"step\": 1,\n      \"text\": \"Il gruppo MMG_103 ha una quota di pazienti che ritirano il furosemide pari a 0.8462.\"\n    },\n    {\n      \"step\": 1,\n      \"text\": \"Il gruppo MMG_111 ha una quota di pazienti che ritirano il furosemide pari a 0.9167.\"\n    },\n    {\n      \"step\": 1,\n      \"text\": \"Il gruppo rest_of_ats ha una quota di pazienti che ritirano il furosemide pari a 0.9976.\"\n    }\n  ],\n  \"conclusion\": \"Il gruppo MMG_082 ha la quota più bassa di pazienti che ritirano il furosemide, con un valore di 0.8125.\"\n}"
+  }
+}

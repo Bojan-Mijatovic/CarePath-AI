@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il gruppo di MMG coop_12 ha un tasso di somministrazione di furosemide pari a 1.0 nel periodo di 90 giorni, secondo il dato restituito dallo strumento adherence_by_group.\", \"Il gruppo di MMG rest_of_ats ha un tasso di somministrazione di furosemide pari a 1.0 nel periodo di 90 giorni, secondo il dato restituito dallo strumento adherence_by_group.\"], \"conclusion\": \"Il gruppo di MMG coop_12 non ritira il furosemide meno degli altri, poiché il suo tasso di somministrazione è pari a 1.0, identico a quello del resto dell'ATS.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The MMG coop_12 group has a furosemide administration rate of 1.0 over a 90-day period, according to the data returned by the adherence_by_group tool.\",\n    \"The MMG rest_of_ats group has a furosemide administration rate of 1.0 over a 90-day period, according to the data returned by the adherence_by_group tool.\"\n  ],\n  \"conclusion\": \"The MMG coop_12 group does not withdraw furosemide less than the others, as its administration rate is 1.0, identical to that of the rest of the ATS.\"\n}"
+  }
+}

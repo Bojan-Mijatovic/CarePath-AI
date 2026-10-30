@@ -111,6 +111,14 @@ def test_jump_back_replays_the_same_days(client):
     assert client.post(f"/api/sim/jump/{DAYS}").status_code == 422
 
 
+def test_a_question_nobody_warmed_has_no_answer(client):
+    # Step 2.10: POST /api/ask in cache_only (D14); no template stands in for the Investigator.
+    resp = client.post("/api/ask", json={"question": "Una domanda che nessuno ha mai fatto?"})
+    assert resp.status_code == 503
+    assert "no answer" in resp.json()["detail"]
+    assert client.post("/api/ask", json={"question": ""}).status_code == 422
+
+
 def test_sankey_and_map(client):
     sankey = client.get("/api/sankey").json()
     assert list(sankey[0]) == ["pathway_id", "from_step", "to_step", "status", "patients"]

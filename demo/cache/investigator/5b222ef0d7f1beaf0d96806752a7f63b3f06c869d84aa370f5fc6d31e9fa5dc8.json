@@ -873,10 +873,12 @@
     "tool_calls": [
       {
         "function": {
-          "name": "compliance_by_step",
+          "name": "adherence_by_group",
           "arguments": {
             "pathway_id": "hf_lombardia_v1",
-            "asst": "asst_cremona"
+            "grouping": "comune",
+            "measure": "telemonitoring",
+            "period_days": 7
           }
         }
       }

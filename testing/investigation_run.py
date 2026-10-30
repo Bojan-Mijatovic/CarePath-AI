@@ -4,8 +4,9 @@ simulated to the day of its echo alarm; on each regional alarm's tick the Invest
 
     uv run python testing/investigation_run.py [1 2 3] [--live]
 
---live calls the model and stores every answer in demo/cache/ (warm-up: about 5 minutes per investigation on
-the team laptops, D12, and each scenario has its group alarms' investigations before the echo's); without it the investigation is replayed from the cache and a miss leaves no
+--live calls the model for every answer the cache lacks and stores it in demo/cache/ (warm-up: about 5 minutes
+per investigation on the team laptops, D12, and each scenario has its group alarms' investigations before the
+echo's); without it the investigation is replayed from the cache and a miss leaves no
 investigation. Results go to testing/results/ (not committed).
 """
 
@@ -108,7 +109,9 @@ def pattern_3(inv: dict, scenario: int) -> dict:
 def main(argv: list[str]) -> None:
     live = "--live" in argv
     scenarios = [int(a) for a in argv if a.isdigit()] or [1, 2, 3]
-    llm.configure(mode="live" if live else "cache_only")
+    # --live fills what the cache lacks: `cache_first` with the warm-up timeout; `live` would ask again for
+    # every answer, cached or not (step 2.10: it re-ran all nine investigations to re-warm three)
+    llm.configure(**({"mode": "cache_first", "timeout_s": llm.WARMUP_TIMEOUT_S} if live else {"mode": "cache_only"}))
     population = Population()
     RESULTS_DIR.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:

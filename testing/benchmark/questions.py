@@ -162,9 +162,9 @@ def questions(n: int, runs_dir: Path) -> list[dict]:
         ctx.close()
 
 
-def build_runs(runs_dir: Path) -> None:
+def build_runs(runs_dir: Path, scenarios=SCENARIOS) -> None:
     """Each scenario's baseline arm up to the benchmark day, so capacity_slots is the state of that day."""
-    for n in SCENARIOS:
+    for n in scenarios:
         run(f"s{n}_baseline", days=DAY + 1, runs_dir=runs_dir)
 
 

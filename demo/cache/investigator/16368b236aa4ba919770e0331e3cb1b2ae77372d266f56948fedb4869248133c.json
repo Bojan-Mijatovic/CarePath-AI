@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"L'Ospedale A ha un tempo medio di attesa per l'ecocardiogramma di 2.1 giorni.\", \"L'Ospedale B ha un tempo medio di attesa per l'ecocardiogramma di 16.9 giorni.\", \"L'Ospedale C ha un tempo medio di attesa per l'ecocardiogramma di 2.0 giorni.\"], \"conclusion\": \"No. L'Ospedale A ha un tempo di attesa per l'ecocardiogramma molto inferiore rispetto all'Ospedale B, che presenta un valore di 16.9 giorni, mentre Ospedale A e Ospedale C sono simili (2.1 e 2.0 giorni rispettivamente). Pertanto, l'Ospedale A non ha un problema di attese rispetto agli altri ospedali, anzi presenta i tempi più brevi tra i tre.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"A Hospital A has an average waiting time for an echocardiogram of 2.1 days.\",\n    \"A Hospital B has an average waiting time for an echocardiogram of 16.9 days.\",\n    \"A Hospital C has an average waiting time for an echocardiogram of 2.0 days.\"\n  ],\n  \"conclusion\": \"No. A Hospital A has a significantly shorter waiting time for an echocardiogram compared to Hospital B, which has a value of 16.9 days, while Hospital A and Hospital C are similar (2.1 and 2.0 days respectively). Therefore, Hospital A does not have waiting time issues compared to the other hospitals, rather it has the shortest waiting times among the three.\"\n}"
+  }
+}

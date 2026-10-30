@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il gruppo di MMG coop_12 ha un tasso di dispensazione di furosemide pari a 1.0 nel periodo di 90 giorni.\", \"Il gruppo di MMG non appartenente a coop_12 (rest_of_ats) ha un tasso di dispensazione di furosemide pari a 1.0 nel periodo di 90 giorni.\"], \"conclusion\": \"No. I pazienti del gruppo di MMG coop_12 non ritirano il furosemide meno degli altri, poiché entrambi i gruppi hanno un tasso di dispensazione pari a 1.0.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The MMG coop_12 group has a dispensing rate of furosemide equal to 1.0 over a 90-day period.\",\n    \"The MMG group not belonging to coop_12 (rest_of_ats) has a dispensing rate of furosemide equal to 1.0 over a 90-day period.\"\n  ],\n  \"conclusion\": \"No. Patients in the MMG coop_12 group do not withdraw furosemide less than the others, as both groups have a dispensing rate equal to -1.0.\"\n}"
+  }
+}
