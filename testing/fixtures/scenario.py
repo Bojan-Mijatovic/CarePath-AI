@@ -22,7 +22,7 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
-from agents import tools
+from agents import actions, tools
 from engine import pathway as pathway_model
 from engine.db import create_run, open_run, tool_cursor
 from agents.monitoring import Monitoring
@@ -205,6 +205,7 @@ def export(runs_dir: Path, live: dict) -> dict[str, object]:
         out["api/capacity_echo_s2_agents.json"] = capacity(con, PATHWAY_ID, "echo", last)  # C28
         out["api/worklist_s2_agents.json"] = worklist_rows(con, last)[:WORKLIST_SIZE]
         out["api/investigations_s2_agents.json"] = investigations_rows(con)
+        out["api/settings_s2_agents.json"] = {"autonomy": actions.settings(con)}  # C30, the defaults
         out |= {f"stream/{name}": m for name, m in stream(con, live).items()}
         out["tools/wait_by_hospital.json"] = live["wait"]
         out["tools/free_slots.json"] = live["free"]

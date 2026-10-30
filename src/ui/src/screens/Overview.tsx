@@ -1,14 +1,27 @@
-import { type Action, type Kpi, type Pathway, useApi } from '../lib/api'
+import { useState } from 'react'
+import { type Action, type Kpi, type Pathway, send, useApi } from '../lib/api'
 import { agentName, formatNumber, formatPercent, label, useLang } from '../lib/i18n'
 
 /** Demo step 3 (prototype "Pregled"): headline numbers of the day, the approval queue, the PNE indicator. */
 export default function Overview({ day, kpi, pathway }: { day: number | null; kpi: Kpi | null; pathway: Pathway | null }) {
   const { lang, t } = useLang()
-  const { data: proposed } = useApi<Action[]>('/api/actions?status=proposed')
+  const [decisions, setDecisions] = useState(0)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const { data: proposed } = useApi<Action[]>('/api/actions?status=proposed', `${day}-${decisions}`)
   if (day === null || kpi === null || pathway === null) return <p className="placeholder">{t('overview.waiting')}</p>
   const reference = pathway.readmission_reference
   const queue = (proposed ?? []).filter((a) => a.created_day <= day)
   const n = (x: number) => formatNumber(lang, x)
+  // The manager's decision goes to the action service, which writes it to the audit log (step 2.18).
+  const decide = (id: string, decision: 'approve' | 'reject') => {
+    setBusy(id)
+    setError(null)
+    send('POST', `/api/actions/${id}/${decision}`)
+      .then(() => setDecisions((k) => k + 1))
+      .catch(() => setError(t('approvals.failed')))
+      .finally(() => setBusy(null))
+  }
 
   return (
     <div className="overview">
@@ -39,6 +52,7 @@ export default function Overview({ day, kpi, pathway }: { day: number | null; kp
         <section className="panel wide" aria-labelledby="h-approvals">
           <h2 id="h-approvals">{t('approvals.title')}</h2>
           {queue.length === 0 && <p className="placeholder">{t('approvals.empty')}</p>}
+          {error && <p className="placeholder">{error}</p>}
           {queue.map((a) => (
             <div key={a.action_id} className="approval">
               <div className="approval-text">
@@ -48,11 +62,15 @@ export default function Overview({ day, kpi, pathway }: { day: number | null; kp
                 </div>
                 <p className="approval-rationale">{a.rationale[lang]}</p>
               </div>
-              {/* Decisions are step 2.18 (POST /api/actions/{id}/approve and /reject). */}
-              <button type="button" className="primary" disabled title={t('approvals.later')}>
+              <button
+                type="button"
+                className="primary"
+                disabled={busy !== null}
+                onClick={() => decide(a.action_id, 'approve')}
+              >
                 {t('approvals.approve')}
               </button>
-              <button type="button" disabled title={t('approvals.later')}>
+              <button type="button" disabled={busy !== null} onClick={() => decide(a.action_id, 'reject')}>
                 {t('approvals.reject')}
               </button>
             </div>

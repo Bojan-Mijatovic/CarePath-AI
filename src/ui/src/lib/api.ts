@@ -32,6 +32,10 @@ export type Action = {
   decided_by: string | null
 }
 
+/** GET /api/settings (SPEC §7.2): the autonomy level per action type. 0 observe, 1 propose, 2 do with
+ * approval, 3 do alone. */
+export type Autonomy = Record<string, { level: number; default: number; fixed: boolean }>
+
 export type TimelineEvent = {
   day: number
   kind: 'event'
@@ -129,11 +133,22 @@ export function stepOf(pathway: Pathway, e: TimelineEvent): Pathway['steps'][num
   )
 }
 
+/** A decision sent to the API (POST or PUT with a JSON body); throws with the server's reason when refused. */
+export async function send<T>(method: 'POST' | 'PUT', path: string, body?: unknown): Promise<T> {
+  const r = await fetch(path, {
+    method,
+    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+  if (!r.ok) throw new Error(`${r.status} ${await r.text()}`)
+  return (await r.json()) as T
+}
+
 export type Loaded<T> = { data?: T; error?: string }
 
-/** GET a JSON path under /api; `path` null waits. A new `refresh` value (the day) fetches it again and keeps
- * the last data on screen until the new data arrives. */
-export function useApi<T>(path: string | null, refresh?: number | null): Loaded<T> {
+/** GET a JSON path under /api; `path` null waits. A new `refresh` value (the day, or the day and a decision
+ * count) fetches it again and keeps the last data on screen until the new data arrives. */
+export function useApi<T>(path: string | null, refresh?: number | string | null): Loaded<T> {
   const [state, setState] = useState<Loaded<T> & { path?: string }>({})
   useEffect(() => {
     if (path === null) return

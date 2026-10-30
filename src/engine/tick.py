@@ -22,6 +22,7 @@ from pathlib import Path
 
 import duckdb
 
+from agents import actions
 from agents.monitoring import Monitoring
 from engine import pathway as pathway_model
 from engine import investigations, queries, whatif, worklist
@@ -230,6 +231,26 @@ class Demo:
         with self.lock:
             run = self.runs[self.default_run()]
             return investigations.on_question(run.con, run.run_id, run.state.pathway, run.day, self.scenario, question)
+
+    def autonomy(self) -> dict[str, dict]:
+        """GET /api/settings: per action type the level in force on the scenario on screen, its default, and
+        whether it is fixed (SPEC §7.2)."""
+        with self.lock:
+            return actions.settings(self.runs[self.default_run()].con)
+
+    def set_autonomy(self, action_type: str, level: int) -> None:
+        """PUT /api/settings/autonomy: the manager's level holds for the ATS, so it is logged in every agents
+        run of the demo on its day. A run built again after a jump back starts from the defaults, as on reset."""
+        with self.lock:
+            for run in self.runs.values():
+                if run.agents:
+                    actions.set_level(run.con, run.day, action_type, level)
+
+    def decide(self, action_id: str, approve: bool) -> None:
+        """POST /api/actions/{id}/approve or /reject, on the agents arm of the scenario on screen."""
+        with self.lock:
+            run = self.runs[self.default_run()]
+            actions.decide(run.con, run.day, action_id, approve)
 
     def tick_message(self) -> dict:
         """SPEC §10 `tick` for the scenario on screen; `kpi` is the agents arm's."""

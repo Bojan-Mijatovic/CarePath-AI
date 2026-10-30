@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import ActivityFeed from './components/ActivityFeed'
+import Autonomy from './components/Autonomy'
 import LangSwitch from './components/LangSwitch'
 import { type Kpi, type Pathway, useApi } from './lib/api'
 import { type Key, type Lang, LangContext, translator } from './lib/i18n'
@@ -142,6 +143,12 @@ export default function App() {
                 <Flows day={day} pathwayId={pathwayId} />
               ) : screen === 'chiedi' ? (
                 <Ask day={day} />
+              ) : screen === 'confronto' ? (
+                // Prototype step 6: autonomy on top; the comparison below it is step 2.19.
+                <div className="overview">
+                  <Autonomy day={day} />
+                  <p className="placeholder">{t('compare.later')}</p>
+                </div>
               ) : screen === 'pazienti' ? (
                 <Patient day={day} scenario={scenario} pathway={pathway ?? null} />
               ) : (

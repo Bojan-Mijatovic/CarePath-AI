@@ -1,0 +1,18 @@
+{
+  "note": "LLM outputs the demo shows (D17, SPEC §8), in demo order (D44). Played by testing/cache_warmup.py; testing/test_cache_complete.py fails on any miss. Every other text is a template filled by code.",
+  "updated": "2026-10-30",
+  "minutes_per_investigation": [5, 7],
+  "scenarios": [
+    {
+      "scenario": 2,
+      "alarm_day": 33,
+      "alarm_investigations": 3,
+      "questions": [
+        "Quale ospedale ha l'attesa più lunga per l'ecocardiogramma nell'ultima settimana?",
+        "L'Ospedale A ha un problema di attese per l'ecocardiogramma rispetto agli altri ospedali?"
+      ]
+    },
+    {"scenario": 1, "alarm_day": 29, "alarm_investigations": 3, "questions": []},
+    {"scenario": 3, "alarm_day": 32, "alarm_investigations": 3, "questions": []}
+  ]
+}

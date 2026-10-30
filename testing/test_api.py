@@ -150,3 +150,51 @@ def test_patient_actions_and_story(client):
     recorded = client.get("/api/patients/p_00001", params={"run": "s2_baseline", "day": 62}).json()
     assert recorded == json.loads(story.path("p_00001", "s2_baseline", 62).read_text(encoding="utf-8"))
     assert client.get("/api/patients/p_00001", params={"run": "s2_baseline", "day": 61}).status_code == 404
+
+
+def _waiting(demo: Demo, action_id: str, day: int) -> None:
+    """A proposed action as Intervention will create it (step 2.13), written here by the test."""
+    demo.read("s2_agents", lambda cur: cur.execute("""
+        INSERT INTO actions VALUES ($id, 'intervention', 'reschedule', 'p_00001', NULL, 'hf_lombardia_v1', '{}',
+            '{"it": "x", "en": "x"}', '[{"tool": "free_slots"}]', 2, 'proposed', $d, NULL, NULL)""",
+                                                    {"id": action_id, "d": day}))
+
+
+def _audit(demo: Demo) -> list[tuple]:
+    return demo.read("s2_agents", lambda cur: cur.execute(
+        "SELECT ts_day, action_id, event, actor, details FROM audit_log ORDER BY rowid").fetchall())
+
+
+def test_approvals_and_autonomy_write_the_audit_log(client):
+    # Step 2.18: the console's decisions go through the action service and land in the audit log (SPEC §7).
+    demo = client.app.state.demo
+    day = client.post("/api/sim/pause").json()["day"]
+    settings = client.get("/api/settings").json()["autonomy"]
+    assert settings["reschedule"] == {"level": 2, "default": 2, "fixed": False}
+    assert settings["rule_proposal"] == {"level": 1, "default": 1, "fixed": True}
+
+    raised = client.put("/api/settings/autonomy", json={"type": "reschedule", "level": 3}).json()["autonomy"]
+    assert raised["reschedule"]["level"] == 3 == client.get("/api/settings").json()["autonomy"]["reschedule"]["level"]
+    assert client.put("/api/settings/autonomy", json={"type": "rule_proposal", "level": 3}).status_code == 422
+    assert client.put("/api/settings/autonomy", json={"type": "reschedule", "level": 4}).status_code == 422
+    assert client.put("/api/settings/autonomy", json={"type": "diagnosis", "level": 3}).status_code == 422
+
+    _waiting(demo, "act_test_1", day)
+    _waiting(demo, "act_test_2", day)
+    assert [a["action_id"] for a in client.get("/api/actions", params={"status": "proposed"}).json()] == [
+        "act_test_1", "act_test_2"]
+    assert client.post("/api/actions/act_test_1/approve").json()["status"] == "approved"
+    assert client.post("/api/actions/act_test_2/reject").json()["status"] == "rejected"
+    assert client.post("/api/actions/act_test_1/reject").status_code == 422  # decided already
+    assert client.post("/api/actions/act_none/approve").status_code == 404
+    assert client.post("/api/actions/act_test_1/undo").status_code == 422  # undo comes with step 2.12
+    assert client.get("/api/actions", params={"status": "proposed"}).json() == []
+    decided = {a["action_id"]: (a["status"], a["decided_by"]) for a in client.get("/api/actions").json()}
+    assert decided == {"act_test_1": ("approved", "manager"), "act_test_2": ("rejected", "manager")}
+
+    log = _audit(demo)
+    assert [(d, e, a) for d, _, e, a, _ in log] == [(day, "config_changed", "manager"), (day, "approved", "manager"),
+                                                    (day, "rejected", "manager")]
+    assert json.loads(log[0][4]) == {"setting": "autonomy", "type": "reschedule", "level": 3, "before": 2}
+    baseline = demo.read("s2_baseline", lambda cur: cur.execute("SELECT count(*) FROM audit_log").fetchall()[0][0])
+    assert baseline == 0  # the arm without CarePath has no agents and no settings

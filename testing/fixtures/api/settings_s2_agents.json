@@ -1,0 +1,44 @@
+{
+  "autonomy": {
+    "reminder": {
+      "level": 3,
+      "default": 3,
+      "fixed": false
+    },
+    "call_task": {
+      "level": 3,
+      "default": 3,
+      "fixed": false
+    },
+    "notify_mmg": {
+      "level": 2,
+      "default": 2,
+      "fixed": false
+    },
+    "reschedule": {
+      "level": 2,
+      "default": 2,
+      "fixed": false
+    },
+    "enroll_proposal": {
+      "level": 3,
+      "default": 3,
+      "fixed": false
+    },
+    "pathway_proposal": {
+      "level": 3,
+      "default": 3,
+      "fixed": false
+    },
+    "rule_proposal": {
+      "level": 1,
+      "default": 1,
+      "fixed": true
+    },
+    "bed_assignment": {
+      "level": 3,
+      "default": 3,
+      "fixed": false
+    }
+  }
+}

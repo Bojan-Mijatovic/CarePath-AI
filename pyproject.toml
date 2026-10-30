@@ -42,4 +42,5 @@ packages = ["src/sim", "src/engine", "src/agents", "src/api"]
 [tool.pytest.ini_options]
 testpaths = ["testing"]
 markers = ["acceptance: acceptance criteria AC1–AC19",
-           "timing: a timer against a performance budget; runs first in the session (testing/conftest.py)"]
+           "timing: a timer against a performance budget; runs first in the session (testing/conftest.py)",
+           "demo: plays the demo's LLM outputs from the cache (SPEC §8, C10)"]

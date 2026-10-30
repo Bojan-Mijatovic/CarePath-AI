@@ -47,6 +47,11 @@ class Ask(BaseModel):
     question: str = Field(min_length=3, max_length=500)
 
 
+class Autonomy(BaseModel):
+    type: str
+    level: int
+
+
 class WhatIf(BaseModel):
     levers: whatif.Levers = whatif.Levers()
     months: int = whatif.MONTHS
@@ -232,6 +237,25 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
     @api.get("/actions")
     def actions(run: str | None = None, status: str | None = None) -> list[dict]:
         return live.read(run, lambda con: queries.actions(con, status))
+
+    @api.post("/actions/{action_id}/{decision}")
+    async def decide(action_id: str, decision: Literal["approve", "reject"]) -> dict:
+        """The manager's decision on an action waiting in the queue (SPEC §7.3); the audit log records it."""
+        try:
+            await live.control(demo.decide, action_id, decision == "approve")
+        except KeyError:
+            raise HTTPException(404, f"no action {action_id}") from None
+        return {"action_id": action_id, "status": "approved" if decision == "approve" else "rejected"}
+
+    @api.get("/settings")
+    def settings() -> dict:
+        live.need_ready()
+        return {"autonomy": demo.autonomy()}
+
+    @api.put("/settings/autonomy")
+    async def set_autonomy(body: Autonomy) -> dict:
+        await live.control(demo.set_autonomy, body.type, body.level)
+        return {"autonomy": demo.autonomy()}
 
     @api.get("/investigations")
     def investigations(run: str | None = None) -> list[dict]:

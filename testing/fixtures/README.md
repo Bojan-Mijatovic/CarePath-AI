@@ -30,6 +30,7 @@ uv run python testing/fixtures/scenario.py   # rewrite every JSON file here (abo
 | `stream/action.json` | `action`: Maria's call | as `actions` |
 | `stream/investigation.json` | `investigation`, one message per step | real: the Investigator on the alarm's tick (step 2.17, C25), replayed from `demo/cache/`; without the cache the builder makes no investigation and `test_fixtures.py` fails |
 | `api/investigations_s2_agents.json` | `GET /api/investigations` (SPEC §6, C24, C25) | real, as above |
+| `api/settings_s2_agents.json` | `GET /api/settings` (SPEC §7.2, §10, C30): the autonomy levels | real: the defaults, since nobody changed a level |
 | `tools/wait_by_hospital.json`, `tools/free_slots.json`, `tools/error.json` | tool result envelope and error (SPEC §6) | real: `agents.tools` called on the live run on day 35 (`free_slots` sees that day's bookings, so a finished run gives other numbers for day 35) |
 
 Patient alerts name `p_00001`, not "Maria R.": the data has no names.
