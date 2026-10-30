@@ -1,7 +1,7 @@
 """Fixtures for every contract, from one scenario (delivery plan step 1.23).
 
 Scenario 2, seed 42, 10,000 patients, days 0–62 (the demo runs to about day 62, D21), both arms. In the
-agents arm two actions are written the way the action service will write them (step 2.12): the Centro
+agents arm two actions go through the action service (step 2.12) with the default levels: the Centro
 Servizi call to Maria on day 31, executed, and an echo reschedule at the bottleneck hospital on day 35,
 waiting for approval. Rationales are templates filled by code (D17); the reschedule's numbers, the alarm,
 the investigation steps and the tool fixtures come from agents.tools called on the live run (step 1.24).
@@ -88,9 +88,10 @@ def call_maria(con, sim: Simulator, day: int) -> None:
                        "Centro Servizi call to find out what stops her."}
     evidence = [source("adherence_by_group", {"pathway_id": PATHWAY_ID, "grouping": "comune", "measure": "dispensing",
                                               "period_days": 60}, day)]
-    write_action(con, CALL_ID, "call_task", MARIA, None, {"cs_id": f["cs_id"]}, rationale, evidence, 3, "executed", day)
-    append(con, "events", sim.apply_actions(day, pd.DataFrame(
-        [{"action_id": CALL_ID, "type": "call_task", "patient_id": MARIA}])))
+    row = actions.create(con, "s2_agents", day, {"agent": "intervention", "type": "call_task", "patient_id": MARIA,
+                                                 "pathway_id": PATHWAY_ID, "payload": {"cs_id": f["cs_id"]},
+                                                 "rationale": rationale, "evidence": evidence}, emit(con, sim, day))
+    assert (row["action_id"], row["status"]) == (CALL_ID, "executed")
 
 
 def propose_reschedule(con, sim: Simulator, day: int) -> dict:
@@ -112,21 +113,18 @@ def propose_reschedule(con, sim: Simulator, day: int) -> dict:
                        f"{to} ha {f[to]} posti liberi nei prossimi 21 giorni.",
                  "en": f"{slow}: mean wait for an echo {w[slow]:.1f} days, {others:.1f} at the other hospitals. "
                        f"{waiting} patients waiting at {slow}; {to} has {f[to]} free slots in the next 21 days."}
-    write_action(con, RESCHEDULE_ID, "reschedule", None, {"facility_id": ids[slow], "patients": waiting},
-                 {"from_facility": ids[slow], "to_facility": ids[to], "service": "echo"}, rationale,
-                 [wait["source"], free["source"]], 2, "proposed", day)
+    row = actions.create(con, "s2_agents", day, {
+        "agent": "intervention", "type": "reschedule", "scope": {"facility_id": ids[slow], "patients": waiting},
+        "pathway_id": PATHWAY_ID, "payload": {"from_facility": ids[slow], "to_facility": ids[to], "service": "echo"},
+        "rationale": rationale, "evidence": [wait["source"], free["source"]]}, emit(con, sim, day))
+    assert (row["action_id"], row["status"]) == (RESCHEDULE_ID, "proposed")
     return {"wait": wait, "free": free, "ids": ids}
 
 
-def write_action(con, action_id, type_, patient, scope, payload, rationale, evidence, level, status, day) -> None:
-    executed = status == "executed"
-    con.execute("INSERT INTO actions VALUES (?, 'intervention', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                [action_id, type_, patient, None if scope is None else json.dumps(scope), PATHWAY_ID,
-                 json.dumps(payload), json.dumps(rationale, ensure_ascii=False), json.dumps(evidence), level, status,
-                 day, day if executed else None, "auto" if executed else None])
-    con.execute("INSERT INTO audit_log VALUES (?, ?, 'created', 'intervention', '{}')", [day, action_id])
-    if executed:
-        con.execute("INSERT INTO audit_log VALUES (?, ?, 'executed', 'auto', '{}')", [day, action_id])
+def emit(con, sim: Simulator, day: int):
+    """The action service's feedback (SPEC §9), as engine.tick.Run.feedback does it on the live tick."""
+    return lambda rows: append(con, "events", sim.apply_actions(day, pd.DataFrame(
+        [{k: r[k] for k in ("action_id", "type", "patient_id")} for r in rows if r["patient_id"] is not None])))
 
 
 def build_runs(runs_dir: Path) -> dict:

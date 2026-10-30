@@ -112,6 +112,13 @@ class Run:
                 self.con.unregister("src")
         self.capacity = now
 
+    def feedback(self, rows: list[dict]) -> None:
+        """The action service's `emit` (SPEC §7.3, §9): executed actions on a patient become events of the
+        day through the simulator's feedback hook; an action on a scope has its effects with step 2.13."""
+        on_patients = [r for r in rows if r["patient_id"] is not None]
+        if on_patients:
+            append(self.con, "events", feedback.apply(self.run_id, on_patients))
+
     def advance_to(self, day: int) -> None:
         while self.day < day:
             self.tick()
@@ -246,11 +253,16 @@ class Demo:
                 if run.agents:
                     actions.set_level(run.con, run.day, action_type, level)
 
-    def decide(self, action_id: str, approve: bool) -> None:
-        """POST /api/actions/{id}/approve or /reject, on the agents arm of the scenario on screen."""
+    def decide(self, action_id: str, decision: str) -> list[dict]:
+        """POST /api/actions/{id}/approve, /reject or /undo, on the agents arm of the scenario on screen.
+        Returns the `action` message of the changed action (SPEC §10)."""
         with self.lock:
             run = self.runs[self.default_run()]
-            actions.decide(run.con, run.day, action_id, approve)
+            if decision == "undo":
+                row = actions.undo(run.con, run.day, action_id)
+            else:
+                row = actions.decide(run.con, run.day, action_id, decision == "approve", run.feedback)
+            return [{"type": "action", "scenario": self.scenario, "day": run.day, "payload": row}]
 
     def tick_message(self) -> dict:
         """SPEC §10 `tick` for the scenario on screen; `kpi` is the agents arm's."""

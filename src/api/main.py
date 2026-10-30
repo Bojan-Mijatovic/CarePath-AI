@@ -239,13 +239,15 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
         return live.read(run, lambda con: queries.actions(con, status))
 
     @api.post("/actions/{action_id}/{decision}")
-    async def decide(action_id: str, decision: Literal["approve", "reject"]) -> dict:
-        """The manager's decision on an action waiting in the queue (SPEC §7.3); the audit log records it."""
+    async def decide(action_id: str, decision: Literal["approve", "reject", "undo"]) -> dict:
+        """The manager's decision (SPEC §7.3): approve executes the action at once, reject closes it, undo
+        reverses an executed one; the audit log records each, and the feed gets the changed action."""
         try:
-            await live.control(demo.decide, action_id, decision == "approve")
+            messages = await live.control(demo.decide, action_id, decision)
         except KeyError:
             raise HTTPException(404, f"no action {action_id}") from None
-        return {"action_id": action_id, "status": "approved" if decision == "approve" else "rejected"}
+        live.publish(messages)
+        return {"action_id": action_id, "status": messages[0]["payload"]["status"]}
 
     @api.get("/settings")
     def settings() -> dict:

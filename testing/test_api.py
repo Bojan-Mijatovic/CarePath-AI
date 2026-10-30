@@ -166,7 +166,8 @@ def _audit(demo: Demo) -> list[tuple]:
 
 
 def test_approvals_and_autonomy_write_the_audit_log(client):
-    # Step 2.18: the console's decisions go through the action service and land in the audit log (SPEC §7).
+    # Steps 2.18 and 2.12: the console's decisions go through the action service and land in the audit log
+    # (SPEC §7); an approved action is executed at once and pushed on the stream.
     demo = client.app.state.demo
     day = client.post("/api/sim/pause").json()["day"]
     settings = client.get("/api/settings").json()["autonomy"]
@@ -183,18 +184,24 @@ def test_approvals_and_autonomy_write_the_audit_log(client):
     _waiting(demo, "act_test_2", day)
     assert [a["action_id"] for a in client.get("/api/actions", params={"status": "proposed"}).json()] == [
         "act_test_1", "act_test_2"]
-    assert client.post("/api/actions/act_test_1/approve").json()["status"] == "approved"
+    with client.websocket_connect("/api/stream") as ws:
+        ws.receive_json()  # the opening tick
+        assert client.post("/api/actions/act_test_1/approve").json()["status"] == "executed"  # step 2.12: at once
+        pushed = ws.receive_json()
+    assert (pushed["type"], pushed["payload"]["action_id"], pushed["payload"]["status"]) == ("action", "act_test_1", "executed")
     assert client.post("/api/actions/act_test_2/reject").json()["status"] == "rejected"
     assert client.post("/api/actions/act_test_1/reject").status_code == 422  # decided already
     assert client.post("/api/actions/act_none/approve").status_code == 404
-    assert client.post("/api/actions/act_test_1/undo").status_code == 422  # undo comes with step 2.12
+    assert client.post("/api/actions/act_test_2/undo").status_code == 422  # only an executed action
     assert client.get("/api/actions", params={"status": "proposed"}).json() == []
     decided = {a["action_id"]: (a["status"], a["decided_by"]) for a in client.get("/api/actions").json()}
-    assert decided == {"act_test_1": ("approved", "manager"), "act_test_2": ("rejected", "manager")}
+    assert decided == {"act_test_1": ("executed", "manager"), "act_test_2": ("rejected", "manager")}
+    assert client.post("/api/actions/act_test_1/undo").json()["status"] == "undone"
 
     log = _audit(demo)
-    assert [(d, e, a) for d, _, e, a, _ in log] == [(day, "config_changed", "manager"), (day, "approved", "manager"),
-                                                    (day, "rejected", "manager")]
+    assert [(d, e, a) for d, _, e, a, _ in log] == [
+        (day, "config_changed", "manager"), (day, "approved", "manager"), (day, "executed", "action_service"),
+        (day, "rejected", "manager"), (day, "undone", "manager")]
     assert json.loads(log[0][4]) == {"setting": "autonomy", "type": "reschedule", "level": 3, "before": 2}
     baseline = demo.read("s2_baseline", lambda cur: cur.execute("SELECT count(*) FROM audit_log").fetchall()[0][0])
     assert baseline == 0  # the arm without CarePath has no agents and no settings
