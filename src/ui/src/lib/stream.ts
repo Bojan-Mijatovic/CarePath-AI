@@ -5,7 +5,8 @@ import type { Bilingual } from './i18n'
 /** Envelope of every message on /api/stream and its payloads (spec/SPEC.md §10). */
 type Envelope<T extends string, P> = { type: T; scenario: number; day: number; payload: P }
 
-export type TickPayload = { speed?: number; kpi?: Kpi }
+/** `lever_run` (C28): the agents arm with the proposed lever, and how far it has caught up */
+export type TickPayload = { speed?: number; kpi?: Kpi; lever_run?: { run_id: string; day: number } }
 export type AlertPayload = {
   alert_id: string
   level: 'patient' | 'regional'

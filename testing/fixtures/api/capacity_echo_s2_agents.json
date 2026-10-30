@@ -1,0 +1,38 @@
+[
+  {
+    "day": 62,
+    "facility_id": "osp_A",
+    "name": "Ospedale A",
+    "slots_total": 42,
+    "slots_booked": 23,
+    "use_pct": 0.5476,
+    "bookings": 21,
+    "wait_mean": 2.0,
+    "wait_median": 2,
+    "wait_p90": 2
+  },
+  {
+    "day": 62,
+    "facility_id": "osp_B",
+    "name": "Ospedale B",
+    "slots_total": 7,
+    "slots_booked": 7,
+    "use_pct": 1.0,
+    "bookings": 7,
+    "wait_mean": 59.9,
+    "wait_median": 60,
+    "wait_p90": 60
+  },
+  {
+    "day": 62,
+    "facility_id": "osp_C",
+    "name": "Ospedale C",
+    "slots_total": 35,
+    "slots_booked": 12,
+    "use_pct": 0.3429,
+    "bookings": 15,
+    "wait_mean": 2.0,
+    "wait_median": 2,
+    "wait_p90": 2
+  }
+]

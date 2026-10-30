@@ -21,18 +21,21 @@ def ats(demo, run_id):
 
 
 def test_start_replays_every_run_to_the_start_day(demo):
-    assert sorted(demo.runs) == ["s1_agents", "s1_baseline", "s2_agents", "s2_baseline"]
+    # Both arms of each scenario, and the lever run of its what-if grid (step 2.28, C28).
+    assert sorted(demo.runs) == ["s1_agents", "s1_agents_echo+2", "s1_baseline",
+                                 "s2_agents", "s2_agents_echo+1", "s2_baseline"]
     assert {r.day for r in demo.runs.values()} == {START}
     assert demo.speed == 0
 
 
 def test_only_the_scenario_on_screen_advances(demo):
     demo.choose(2)
-    msgs = demo.advance()
+    msgs = demo.advance()  # not at ×1, so the lever run waits for catch_up (C28)
     assert (msgs[0]["type"], msgs[0]["scenario"], msgs[0]["day"]) == ("tick", 2, START + 1)
     assert {(m["type"], m["day"]) for m in msgs[1:]} <= {("alert", START + 1)}  # Monitoring's, agents arm
     assert {k: r.day for k, r in demo.runs.items()} == {"s1_agents": START, "s1_baseline": START,
-                                                        "s2_agents": START + 1, "s2_baseline": START + 1}
+                                                        "s1_agents_echo+2": START, "s2_agents": START + 1,
+                                                        "s2_baseline": START + 1, "s2_agents_echo+1": START}
     demo.choose(1)
     assert demo.tick_message()["day"] == START
     demo.choose(2)

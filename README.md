@@ -76,7 +76,7 @@ Takes about 15 minutes plus model downloads. No admin rights needed.
    uv run carepath-api
    ```
 
-   Open <http://127.0.0.1:8000>: the console opens on Maria's story; "Avvia la simulazione", then an envelope, leads to Panoramica, where "Giorno N" goes up every 2 seconds from day 23 and "connesso" shows in the top bar. The API needs about 30 s after start-up to prepare the runs; an envelope chosen earlier shows a 503.
+   Open <http://127.0.0.1:8000>: the console opens on Maria's story; "Avvia la simulazione", then an envelope, leads to Panoramica, where "Giorno N" goes up every 2 seconds from day 23 and "connesso" shows in the top bar. The API needs about 30–70 s after start-up to prepare the runs (nine with the lever runs of step 2.28); an envelope chosen earlier shows a 503.
 
 ## Commands
 

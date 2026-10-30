@@ -7,9 +7,10 @@ map_comuni, sankey_flows), 6 (worklist_today, agents arm only), 7 (the Investiga
 agents arm only, engine.investigations) and 8 (the agents arm's alerts and investigation steps), and the
 two arms differ only in the worklist and the investigations.
 
-Demo holds the six runs (3 scenarios × 2 arms): `start()` replays them to the start day and leaves them
-paused (D21); afterwards only the two runs of the scenario on screen advance (C9). A jump forward
-continues; a jump backward rebuilds those two runs from the warm-up, which gives the same days again
+Demo holds the six runs (3 scenarios × 2 arms) and, per scenario, the agents arm with the lever the
+what-if grid proposes (D45, step 2.28; `s<n>_agents_<service>+<k>`): `start()` replays them to the start
+day and leaves them paused (D21); afterwards only the runs of the scenario on screen advance (C9). A jump
+forward continues; a jump backward rebuilds those runs from the warm-up, which gives the same days again
 (AC14). Every method takes the lock, so the API's reads never meet a run being rebuilt.
 """
 
@@ -23,7 +24,7 @@ import duckdb
 
 from agents.monitoring import Monitoring
 from engine import pathway as pathway_model
-from engine import investigations, queries, worklist
+from engine import investigations, queries, whatif, worklist
 from engine.db import RUNS_DIR, create_run, open_run
 from engine.risk import HIGH_RISK, RiskModel
 from engine.state import StateEngine
@@ -121,20 +122,39 @@ class Run:
 
 class Demo:
     def __init__(self, runs_dir: Path = RUNS_DIR, scenarios: tuple[int, ...] = (1, 2, 3), start_day: int = START_DAY,
-                 days: int = HORIZON_DAYS, seed: int = SEED):
+                 days: int = HORIZON_DAYS, seed: int = SEED, whatif_dir: Path | None = whatif.WHATIF_DIR):
+        """`whatif_dir` holds the grids the lever runs come from; None leaves them out."""
         self.runs_dir, self.scenarios, self.start_day, self.days, self.seed = runs_dir, scenarios, start_day, days, seed
+        self.whatif_dir = whatif_dir
         self.lock = threading.RLock()
         self.population: Population | None = None
         self.runs: dict[str, Run] = {}
+        self.levers: dict[int, dict] = {}  # scenario -> whatif.proposed_lever(...)
         self.scenario = scenarios[0]
         self.speed = 0
         self.ready = False
         # Runs share nothing they write (own database, simulator, engine and model), and DuckDB, numpy and
         # XGBoost release the GIL, so the runs of a scenario advance in parallel threads (SPEC §9 budget).
-        self.pool = ThreadPoolExecutor(max_workers=len(scenarios) * len(ARMS))
+        self.pool = ThreadPoolExecutor(max_workers=len(scenarios) * (len(ARMS) + 1))
 
     def run_ids(self, scenario: int) -> list[str]:
-        return [f"s{scenario}_{arm}" for arm in ARMS]
+        lever = self.levers.get(scenario)
+        return [f"s{scenario}_{arm}" for arm in ARMS] + ([lever["run_id"]] if lever else [])
+
+    def lever_run(self) -> Run | None:
+        lever = self.levers.get(self.scenario)
+        return self.runs.get(lever["run_id"]) if lever else None
+
+    def catch_up(self) -> bool:
+        """One day of the lever run of the scenario on screen if it is behind; True if it did one. The clock
+        calls it while paused, so at ×4, where three runs do not fit the 500 ms budget (step 2.28: both-arms
+        p95 646–662 ms with it), the lever run falls behind and catches up during the next pause (D21)."""
+        with self.lock:
+            run = self.lever_run()
+            if run is None or run.day >= self.day:
+                return False
+            run.tick()
+            return True
 
     def _parallel(self, work: Callable[[str], object], run_ids: list[str]) -> dict[str, object]:
         futures = {run_id: self.pool.submit(work, run_id) for run_id in run_ids}
@@ -144,7 +164,9 @@ class Demo:
         old = self.runs.pop(run_id, None)
         if old is not None:
             old.close()
-        run = Run(run_id, self.population, self.runs_dir, self.days)
+        lever = self.levers.get(int(run_id[1]))
+        levers = (lever["lever"],) if lever and lever["run_id"] == run_id else ()
+        run = Run(run_id, self.population, self.runs_dir, self.days, levers)
         run.advance_to(day)
         self.runs[run_id] = run
 
@@ -154,6 +176,9 @@ class Demo:
             self.ready, self.speed = False, 0
             if self.population is None:
                 self.population = Population(self.seed)
+            if self.whatif_dir is not None:
+                self.levers = {n: lever for n in self.scenarios
+                               if (lever := whatif.proposed_lever(n, self.population.pathway, self.whatif_dir))}
             self._parallel(lambda run_id: self._build(run_id, self.start_day),
                            [run_id for n in self.scenarios for run_id in self.run_ids(n)])
             self.ready = True
@@ -179,7 +204,11 @@ class Demo:
             if self.day + 1 >= self.days:
                 self.speed = 0
                 return []
-            messages = self._parallel(lambda run_id: self.runs[run_id].tick(), self.run_ids(self.scenario))
+            ids = [f"s{self.scenario}_{arm}" for arm in ARMS]
+            lever = self.lever_run()  # at ×1 it keeps up; at ×4, or once behind, it waits for catch_up
+            if lever is not None and self.speed == 1 and lever.day == self.day:
+                ids.append(lever.run_id)
+            messages = self._parallel(lambda run_id: self.runs[run_id].tick(), ids)
             return [self.tick_message()] + messages[self.default_run()]  # the screen shows the agents arm
 
     def jump(self, day: int) -> list[dict]:
@@ -202,7 +231,10 @@ class Demo:
             run = self.runs[f"s{self.scenario}_agents"]
             with run.con.cursor() as cur:
                 kpi = queries.kpi_headline(cur, run.day, run.pathway_id)
-            return {"type": "tick", "scenario": self.scenario, "day": run.day, "payload": {"speed": self.speed, "kpi": kpi}}
+            payload = {"speed": self.speed, "kpi": kpi}
+            if (lever := self.lever_run()) is not None:  # C28: the console shows whether it has caught up
+                payload["lever_run"] = {"run_id": lever.run_id, "day": lever.day}
+            return {"type": "tick", "scenario": self.scenario, "day": run.day, "payload": payload}
 
     def default_run(self) -> str:
         return f"s{self.scenario}_agents"  # SPEC §10: the scenario on screen, agents arm

@@ -26,7 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from agents import tools
 from engine.db import tool_cursor
-from engine.tick import HORIZON_DAYS, Population, Run
+from engine.pathway import Pathway
 from sim.step import CapacityChange
 
 WHATIF_DIR = Path(__file__).resolve().parents[2] / "demo" / "whatif"
@@ -47,14 +47,33 @@ def path(scenario: int, directory: Path = WHATIF_DIR) -> Path:
     return directory / f"scenario_{scenario}.json"
 
 
-def _first_wait_alarm(run: Run) -> tuple[str, str, int] | None:
+def proposed_lever(scenario: int, pathway: Pathway, directory: Path = WHATIF_DIR) -> dict | None:
+    """The smallest lever whose mean wait over the 6 months is within the step's `max_wait_days` (D45): the
+    run id, the extra slots and the capacity change, or None without a grid or a lever that is enough. Code
+    picks it; the LLM may only phrase it (CLAUDE.md rule 1). Step 2.27 makes it a proposal to approve."""
+    if not path(scenario, directory).is_file():
+        return None
+    grid = json.loads(path(scenario, directory).read_text(encoding="utf-8"))
+    limit = next(s.max_wait_days for s in pathway.steps if s.id == grid["step"])
+    for r in sorted((r for r in grid["runs"] if r["arm"] == "agents" and r["levers"]["extra_slots"]),
+                    key=lambda r: r["levers"]["extra_slots"]):
+        if r["wait_days"] is not None and r["wait_days"] <= limit:
+            k = r["levers"]["extra_slots"]
+            change = CapacityChange(facility_id=grid["facility_id"], service=grid["service"],
+                                    slots_per_day=grid["base_slots"] + k, from_day=grid["lever_day"])
+            return {"run_id": r["run_id"], "extra_slots": k, "wait_days": r["wait_days"], "limit": limit,
+                    "facility": grid["facility"], "lever": change}
+    return None
+
+
+def _first_wait_alarm(run) -> tuple[str, str, int] | None:
     rows = run.con.execute("""
         SELECT facility_id, step, day FROM alerts
         WHERE level = 'regional' AND facility_id IS NOT NULL ORDER BY day, alert_id LIMIT 1""").fetchall()
     return rows[0] if rows else None
 
 
-def _summary(run: Run, lever_day: int, service: str, facility: str) -> dict:
+def _summary(run, lever_day: int, service: str, facility: str) -> dict:
     """What the What-if screen shows for one run, on its last day, and its daily ATS KPIs."""
     kpi = run.con.execute(f"""
         SELECT {', '.join(KPI_COLUMNS)} FROM kpi_daily
@@ -73,8 +92,10 @@ def _summary(run: Run, lever_day: int, service: str, facility: str) -> dict:
             "overdue": last["overdue"], "wait_days": wait.get(facility), "wait_by_facility": wait, "kpi": rows}
 
 
-def compute(scenario: int, population: Population, runs_dir: Path, directory: Path = WHATIF_DIR) -> dict:
+def compute(scenario: int, population, runs_dir: Path, directory: Path = WHATIF_DIR) -> dict:
     """The grid of one scenario (see the module docstring), written to `path(scenario, directory)`."""
+    from engine.tick import HORIZON_DAYS, Run  # engine.tick reads the grid (proposed_lever), so not at the top
+
     agents = Run(f"s{scenario}_agents", population, runs_dir, HORIZON_DAYS)
     try:
         while (alarm := _first_wait_alarm(agents)) is None:
@@ -118,7 +139,8 @@ def compute(scenario: int, population: Population, runs_dir: Path, directory: Pa
            "service": service, "step": step_id, "alarm_day": alarm_day, "lever_day": lever_day, "last_day": last_day,
            "months": MONTHS, "base_slots": base, "runs": [runs[0], mine, *runs[1:]]}
     directory.mkdir(parents=True, exist_ok=True)
-    path(scenario, directory).write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    path(scenario, directory).write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8",
+                                         newline="\n")
     return out
 
 
@@ -140,6 +162,8 @@ def result(scenario: int, levers: Levers, months: int = MONTHS, directory: Path 
 
 
 def main(argv: list[str]) -> None:
+    from engine.tick import Population
+
     scenarios = [int(a) for a in argv if a.isdigit()] or [1, 2, 3]
     population = Population()
     with tempfile.TemporaryDirectory() as tmp:

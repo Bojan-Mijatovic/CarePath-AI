@@ -28,7 +28,7 @@ from engine.db import create_run, open_run, tool_cursor
 from agents.monitoring import Monitoring
 from engine import investigations, worklist
 from engine.queries import investigations as investigations_rows
-from engine.queries import kpi_headline, map_comuni, patient_360, rows, sankey
+from engine.queries import capacity, kpi_headline, map_comuni, patient_360, rows, sankey
 from engine.queries import worklist as worklist_rows
 from engine.risk import HIGH_RISK, RiskModel
 from engine.state import StateEngine
@@ -202,6 +202,7 @@ def export(runs_dir: Path, live: dict) -> dict[str, object]:
         out["api/actions_s2_agents.json"] = rows(con, "SELECT * FROM actions ORDER BY created_day, action_id")
         out["api/sankey_s2_agents.json"] = sankey(con, None)
         out["api/map_s2_agents.json"] = map_comuni(con, None)
+        out["api/capacity_echo_s2_agents.json"] = capacity(con, PATHWAY_ID, "echo", last)  # C28
         out["api/worklist_s2_agents.json"] = worklist_rows(con, last)[:WORKLIST_SIZE]
         out["api/investigations_s2_agents.json"] = investigations_rows(con)
         out |= {f"stream/{name}": m for name, m in stream(con, live).items()}

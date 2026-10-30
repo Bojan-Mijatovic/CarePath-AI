@@ -34,6 +34,35 @@ def kpi_headline(con: duckdb.DuckDBPyConnection, day: int, pathway_id: str) -> d
     return found[0] if found else None
 
 
+CAPACITY_WINDOW_DAYS = 7  # as the wait alarm (agents.monitoring.WAIT_WINDOW_DAYS)
+
+
+def capacity(con: duckdb.DuckDBPyConnection, pathway_id: str, service: str, day: int | None) -> list[dict]:
+    """GET /api/capacity (C28): per facility of a service, over the 7 days up to `day` (the run's last day by
+    default), the share of slots used and the wait from booking to booked day of the pathway's patients.
+    The mean is wait_by_hospital's with period_days 7, the number the alarm and the agents see; median and
+    p90 are of integer days, so exact (SPEC §2)."""
+    return rows(con, f"""
+        WITH d AS (SELECT coalesce($d, (SELECT max(day) FROM kpi_daily)) AS day),
+        slots AS (
+            SELECT c.facility_id, sum(c.slots_total)::BIGINT AS slots_total, sum(c.slots_booked)::BIGINT AS slots_booked
+            FROM capacity_slots c, d WHERE c.service = $s AND c.day BETWEEN d.day - {CAPACITY_WINDOW_DAYS - 1} AND d.day
+            GROUP BY 1),
+        waits AS (
+            SELECT e.facility_id, count(*)::BIGINT AS bookings, round(avg(e.value - e.day), 1) AS wait_mean,
+                   quantile_disc(e.value - e.day, 0.5)::INTEGER AS wait_median,
+                   quantile_disc(e.value - e.day, 0.9)::INTEGER AS wait_p90
+            FROM events e, d
+            WHERE e.event_type = 'BOOKING' AND e.code = $s AND e.day BETWEEN d.day - {CAPACITY_WINDOW_DAYS - 1} AND d.day
+              AND e.patient_id IN (SELECT patient_id FROM pathway_state WHERE pathway_id = $pw AND enrolled_day <= d.day)
+            GROUP BY 1)
+        SELECT (SELECT day FROM d) AS day, f.facility_id, f.name, s.slots_total, s.slots_booked,
+               round(s.slots_booked / nullif(s.slots_total, 0), 4) AS use_pct,
+               coalesce(w.bookings, 0) AS bookings, w.wait_mean, w.wait_median, w.wait_p90
+        FROM slots s JOIN facilities f USING (facility_id) LEFT JOIN waits w USING (facility_id)
+        ORDER BY f.facility_id""", {"pw": pathway_id, "s": service, "d": day})
+
+
 def sankey(con: duckdb.DuckDBPyConnection, pathway_id: str | None) -> list[dict]:
     """GET /api/sankey: sankey_flows (SPEC §5.2, C15)."""
     return rows(con, "SELECT * FROM sankey_flows WHERE $pw IS NULL OR pathway_id = $pw ORDER BY ALL",

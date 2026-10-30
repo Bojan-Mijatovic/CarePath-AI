@@ -18,6 +18,7 @@ CALLS = {
     "kpi by comune, every day": lambda con: queries.kpi(con, PATHWAY_ID, "comune", None),
     "sankey": lambda con: queries.sankey(con, PATHWAY_ID),
     "map": lambda con: queries.map_comuni(con, PATHWAY_ID),
+    "capacity": lambda con: queries.capacity(con, PATHWAY_ID, "echo", None),  # C28, step 2.28
 }
 
 
