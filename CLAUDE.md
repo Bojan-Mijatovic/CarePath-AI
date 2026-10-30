@@ -87,4 +87,5 @@ Everything serves the demo running 10 out of 10 times (AC9). In practice:
 - After a live LLM run, unload the models (`ollama stop qwen3:30b-instruct`, `ollama stop qwen3:4b-instruct`) before timing tests or the full suite: they stay in RAM 30 min (`keep_alive`), about 22 GB, and the suite then swaps (2 h 9 min instead of 10 min on 29 Oct 2026, AC2 failed at 599 ms; 347–362 ms after unloading).
 - From a non-interactive shell, `fnm exec` finds npm only as `npm.cmd` (`fnm exec --using=24 npm.cmd run dev`).
 - PowerShell is 5.1: no `&&`, no `?:`. Write files with an explicit `-Encoding utf8`.
+- I run PowerShell and Bash commands and scripts without asking: the lead allowed both tools in `.claude/settings.local.json` (per laptop, not committed). Destructive or hard-to-reverse actions still need confirmation first (§7).
 - No GPU (D12). The demo machine and the backup laptop have identical models and a hash-checked copy of the cache.

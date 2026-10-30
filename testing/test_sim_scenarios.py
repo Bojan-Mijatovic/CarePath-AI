@@ -1,10 +1,11 @@
+import numpy as np
 import pandas as pd
 import pytest
 from pydantic import ValidationError
 
 from engine import pathway as pathway_model
 from sim.population import generate_patients, load_reference
-from sim.step import SCENARIOS_DIR, Scenario, Simulator, load_scenario
+from sim.step import SCENARIOS_DIR, CapacityChange, CapacityEvent, Scenario, Simulator, load_scenario
 
 SCENARIOS = [load_scenario(n) for n in (1, 2, 3)]
 
@@ -83,3 +84,49 @@ def test_unknown_places_are_rejected(world):
     bad = SCENARIOS[0].model_copy(update={"echo_bottleneck": SCENARIOS[0].echo_bottleneck.model_copy(update={"facility_id": "osp_Z"})})
     with pytest.raises(ValueError, match="osp_Z"):
         Simulator(42, patients, ref, hf, days=10).apply_scenario(bad, mmg)
+
+
+def test_the_demo_scenarios_have_no_events():
+    # D44: the three scenarios of the demo carry only their patterns; events come with what-if (step 2.5).
+    assert all(not s.events for s in SCENARIOS)
+
+
+def test_a_capacity_change_holds_on_its_window_only(world):
+    # Step 2.26 (D46): from_day to to_day, both included; open-ended without to_day; a later change wins.
+    ref, patients, _, hf = world
+    sim = Simulator(42, patients, ref, hf, days=60)
+    row = np.flatnonzero((sim.fac_id[sim.res_fac] == "osp_A") & (sim.res_service == "echo"))[0]
+    col = lambda day: day - sim.first_day
+    base = sim.cap.copy()
+    sim.apply_capacity([CapacityChange(facility_id="osp_A", service="echo", slots_per_day=0, from_day=10, to_day=20),
+                        CapacityChange(facility_id="osp_A", service="echo", slots_per_day=7, from_day=20)])
+    assert (sim.cap[row, col(10):col(20)] == 0).all()
+    assert (sim.cap[row, col(20):] == 7).all()
+    assert (sim.cap[row, :col(10)] == base[row, :col(10)]).all()
+    others = np.arange(len(sim.cap)) != row
+    assert (sim.cap[others] == base[others]).all()
+
+
+def test_events_validate():
+    event = {"type": "capacity", "facility_id": "osp_A", "service": "echo", "slots_per_day": 0, "from_day": 10}
+    assert CapacityEvent.model_validate(event).to_day is None
+    for bad in ({**event, "to_day": 9}, {**event, "slots_per_day": -1}, {k: v for k, v in event.items() if k != "type"},
+                {**event, "type": "influenza"}):
+        with pytest.raises(ValidationError):
+            CapacityEvent.model_validate(bad)
+
+
+def test_a_renovation_moves_bookings_after_it(world):
+    # A renovation is an event of 0 slots for a period: no echo is booked into it at that hospital, and
+    # patients book after it instead. Scenario 2's bottleneck is Ospedale B, so Ospedale A's echo is free.
+    ref, patients, mmg, hf = world
+    closed = CapacityEvent(type="capacity", facility_id="osp_A", service="echo", slots_per_day=0, from_day=5, to_day=25)
+    sim = Simulator(42, patients, ref, hf, days=60)
+    sim.apply_scenario(SCENARIOS[1].model_copy(update={"events": [closed]}), mmg)
+    ev = pd.concat(sim.warm_up() + [sim.step(d) for d in range(60)], ignore_index=True)
+    at_a = ev[(ev.event_type == "BOOKING") & (ev.code == "echo") & (ev.facility_id == "osp_A") & (ev.day >= 5)]
+    assert not at_a.value.between(5, 25).any()
+    assert (at_a.value > 25).sum() > 0
+    slots = sim.capacity_slots()
+    window = slots[(slots.facility_id == "osp_A") & (slots.service == "echo") & slots.day.between(5, 25)]
+    assert (window.slots_total == 0).all()  # tools see it through capacity_slots: the event is no secret

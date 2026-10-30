@@ -195,6 +195,14 @@ Simulation time with the outcome model: 6.2 ms per day.
 | Pattern 2: cooperative collecting the drug less (×0.15 daily chance) | `coop_6` (ASST Cremona) | `coop_3` (ASST Crema) | `coop_11` (ASST Mantova) |
 | Pattern 3: rural comuni where patients aged 70+, living alone, over 40 km away leave telemonitoring (dropout ×15, start ×0.3) | Casalasco: Martignana di Po, Tornata, Calvatone, Casalmaggiore, Rivarolo del Re ed Uniti, Spineda | Oltrepò: Poggio Rusco, Magnacavallo, Borgocarbonara, Sermide e Felonica | Alto Mantovano: Casalromano, Canneto sull'Oglio, Casalmoro, Solferino |
 
+**Events** (step 2.26, D46). Besides its patterns, a scenario file may list `events`: known changes of the world, applied after the patterns in their order, so a later one wins where two overlap. The only type so far is `capacity`, the same shape as pattern 1 (`sim.step.CapacityChange`) with an optional `to_day`, the last day of the change; outside its window the capacity stays what it was. A renovation is 0 slots for a period; new devices are more slots from a day on.
+
+```json
+"events": [{"type": "capacity", "facility_id": "osp_A", "service": "echo", "slots_per_day": 0, "from_day": 40, "to_day": 60}]
+```
+
+Patterns are the hidden truth that `sim.truth` copies to `demo/truth/`; events are not, and `capacity_slots` shows them to the tools. The three demo scenarios have no events (D44), so their runs are unchanged byte for byte. What-if levers (step 2.5) reuse `Simulator.apply_capacity`.
+
 The start days are set so the bottleneck's echo wait reaches about six weeks around day 35, when the alarm should fire (delivery plan step 2.8). Measured, seed 42, bookings made on days 30–40:
 
 | | Scenario 1 | Scenario 2 | Scenario 3 |

@@ -16,10 +16,11 @@ an admission. That window is where agents can act (step 1.20).
 """
 
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from engine.pathway import Pathway
 from sim import maria as maria_script
@@ -87,10 +88,26 @@ def load_params(name: str = "baseline") -> SimParams:
 
 
 class CapacityChange(Frozen):
+    """Slots per day of one facility's service from `from_day` to `to_day`, its last day; without `to_day`
+    to the end of the run. Outside the window the capacity stays what it was. Pattern 1 and a scenario's
+    events use it (D46), and so will what-if levers (step 2.5)."""
     facility_id: str
     service: str
-    slots_per_day: int
+    slots_per_day: int = Field(ge=0)
     from_day: int
+    to_day: int | None = None
+
+    @model_validator(mode="after")
+    def window(self):
+        if self.to_day is not None and self.to_day < self.from_day:
+            raise ValueError(f"to_day {self.to_day} is before from_day {self.from_day}")
+        return self
+
+
+class CapacityEvent(CapacityChange):
+    """A known change of the world, such as a renovation (0 slots for a period) or new devices (D46).
+    Unlike the patterns it is no secret: it is not part of scenario_truth, and capacity_slots shows it."""
+    type: Literal["capacity"]
 
 
 class LowAdherence(Frozen):
@@ -115,6 +132,7 @@ class Scenario(Frozen):
     echo_free_capacity: CapacityChange  # ... and spare slots at another
     low_adherence: LowAdherence
     rural_dropout: RuralDropout
+    events: list[CapacityEvent] = Field(default_factory=list)  # applied after the patterns, in order
 
 
 def load_scenario(n: int) -> Scenario:
@@ -229,13 +247,19 @@ class Simulator:
                 chunks.append((idx, "REMINDER", "sms", None, None, a.action_id))
         return self._frame(day, chunks)
 
-    def apply_scenario(self, scenario: Scenario, mmg: pd.DataFrame) -> None:
-        """Inject the three patterns of one envelope (step 1.17). Call before the warm-up."""
-        for change in (scenario.echo_bottleneck, scenario.echo_free_capacity):
+    def apply_capacity(self, changes: list[CapacityChange]) -> None:
+        """Set each change's slots over its window, in order, so a later change wins where two overlap."""
+        for change in changes:
             r = np.flatnonzero((self.fac_id[self.res_fac] == change.facility_id) & (self.res_service == change.service))
             if len(r) != 1:
                 raise ValueError(f"no capacity row for {change.facility_id} {change.service}")
-            self.cap[r[0], max(change.from_day - self.first_day, 0):] = change.slots_per_day
+            end = None if change.to_day is None else max(change.to_day + 1 - self.first_day, 0)
+            self.cap[r[0], max(change.from_day - self.first_day, 0):end] = change.slots_per_day
+
+    def apply_scenario(self, scenario: Scenario, mmg: pd.DataFrame) -> None:
+        """Inject the three patterns of one scenario (step 1.17), then its events (D46). Call before the
+        warm-up."""
+        self.apply_capacity([scenario.echo_bottleneck, scenario.echo_free_capacity, *scenario.events])
         low = scenario.low_adherence
         coop = pd.Series(self.mmg_id).map(mmg.set_index("mmg_id").coop_id).to_numpy()
         if not (coop == low.coop_id).any():
