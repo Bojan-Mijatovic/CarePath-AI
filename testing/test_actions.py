@@ -7,6 +7,7 @@ import pytest
 from agents import actions
 from engine.db import create_run, open_run
 
+MOVE = {"from_facility": "osp_B", "to_facility": "osp_C", "service": "echo"}
 SOURCE = {"tool": "wait_by_hospital", "args": {"step": "echo"}, "day": 35, "run_id": "s2_agents"}
 
 
@@ -48,7 +49,7 @@ def test_level_3_executes_at_once_and_feeds_the_simulator(con):
 
 def test_below_level_3_waits_and_approval_executes(con):
     emit = Emit()
-    row = actions.create(con, "s2_agents", 35, action("reschedule", payload={"from_facility": "osp_B"}), emit)
+    row = actions.create(con, "s2_agents", 35, action("reschedule", payload=MOVE), emit)
     assert (row["status"], row["autonomy_level"], emit.rows) == ("proposed", 2, [])
     done = actions.decide(con, 36, row["action_id"], True, emit)
     assert (done["status"], done["executed_day"], done["decided_by"]) == ("executed", 36, "manager")
@@ -102,5 +103,5 @@ def test_daily_limit_per_facility_sends_the_rest_to_the_queue(con):
 def test_a_raised_level_holds_for_new_actions(con):
     emit = Emit()
     actions.set_level(con, 40, "reschedule", 3)
-    row = actions.create(con, "s2_agents", 40, action("reschedule", payload={"from_facility": "osp_B"}), emit)
+    row = actions.create(con, "s2_agents", 40, action("reschedule", payload=MOVE), emit)
     assert (row["status"], row["autonomy_level"]) == ("executed", 3)

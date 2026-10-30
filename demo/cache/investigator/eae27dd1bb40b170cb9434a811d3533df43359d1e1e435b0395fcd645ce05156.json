@@ -1,0 +1,104 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:30b-instruct",
+  "prompt_version": "investigator-ask-v4",
+  "request": {
+    "messages": [
+      {
+        "role": "system",
+        "content": "Sei l'Investigator di CarePath AI per l'ATS della Val Padana. Ricevi una domanda di un operatore dell'ATS e rispondi con gli strumenti, che leggono i dati fino a oggi, giorno 33.\n\nRegole:\n- Usa solo gli strumenti. Ogni numero che scrivi deve venire dal risultato di uno strumento.\n- Nessuna diagnosi e nessuna modifica di terapia.\n- Al massimo 6 chiamate di strumenti. Quando hai abbastanza dati, smetti di chiamarli.\n\nMetodo: scegli lo strumento e gli argomenti che rispondono alla domanda, per tutta l'ATS se la domanda non nomina una ASST; se la domanda confronta, chiama lo strumento che da' entrambi i valori.\n\nStrutture dell'ATS (nome, tipo, ASST):\n- Poliambulatorio 1, ambulatorio, asst_mantova\n- Poliambulatorio 2, ambulatorio, asst_mantova\n- Poliambulatorio 3, ambulatorio, asst_mantova\n- Poliambulatorio 4, ambulatorio, asst_cremona\n- Poliambulatorio 5, ambulatorio, asst_cremona\n- Poliambulatorio 6, ambulatorio, asst_crema\n- Ospedale A, ospedale, asst_mantova\n- Ospedale B, ospedale, asst_cremona\n- Ospedale C, ospedale, asst_crema\n\nPercorso hf_lombardia_v1 (Scompenso cardiaco). Step del percorso:\n- discharge: Dimissione\n- telemon: Telemonitoraggio\n- cardio_visit: Visita cardiologica (servizio cardio_visit)\n- echo: Ecocardiogramma (servizio echo)\n- lab_bnp: Esame BNP (servizio lab)"
+      },
+      {
+        "role": "user",
+        "content": "L'Ospedale A ha un problema di attese per l'ecocardiogramma rispetto agli altri ospedali?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "wait_by_hospital",
+              "arguments": {
+                "pathway_id": "hf_lombardia_v1",
+                "step": "echo",
+                "period_days": 33
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_name": "wait_by_hospital",
+        "content": "{\"data\":{\"Ospedale A\":2.2,\"Ospedale B\":13.9,\"Ospedale C\":2.0},\"passo\":1,\"source\":{\"args\":{\"pathway_id\":\"hf_lombardia_v1\",\"period_days\":33,\"step\":\"echo\"},\"day\":33,\"run_id\":\"s2_agents\",\"tool\":\"wait_by_hospital\"}}"
+      },
+      {
+        "role": "user",
+        "content": "Ora rispondi in JSON. Prima la risposta alla domanda, Sì o No: Sì solo se i numeri degli strumenti confermano quello che la domanda afferma, No se non lo confermano. Poi per ogni risultato utile un'affermazione con i numeri che lo strumento ha restituito e il numero del passo che la sostiene, senza calcolare medie o totali. Infine una conclusione di una o due frasi con i due valori confrontati."
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "$defs": {
+        "Claim": {
+          "properties": {
+            "text": {
+              "description": "affermazione in italiano con i numeri restituiti dallo strumento",
+              "title": "Text",
+              "type": "string"
+            },
+            "step": {
+              "description": "numero del passo, cioe' della chiamata di strumento, che la sostiene",
+              "minimum": 1,
+              "title": "Step",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "text",
+            "step"
+          ],
+          "title": "Claim",
+          "type": "object"
+        }
+      },
+      "description": "A yes/no question (QUESTION_WORDS): the decision first, before the sentences that could lean on \"Sì\".",
+      "properties": {
+        "risposta": {
+          "description": "Sì solo se i numeri degli strumenti confermano quello che la domanda afferma; altrimenti No",
+          "enum": [
+            "Sì",
+            "No"
+          ],
+          "title": "Risposta",
+          "type": "string"
+        },
+        "claims": {
+          "items": {
+            "$ref": "#/$defs/Claim"
+          },
+          "minItems": 1,
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "description": "conclusione in italiano con i due valori confrontati",
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "risposta",
+        "claims",
+        "conclusion"
+      ],
+      "title": "YesNoAnswer",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    {\n      \"step\": 1,\n      \"text\": \"L'Ospedale A ha un tempo di attesa per l'ecocardiogramma di 2.2 giorni.\"\n    },\n    {\n      \"step\": 1,\n      \"text\": \"L'Ospedale B ha un tempo di attesa per l'ecocardiogramma di 13.9 giorni.\"\n    },\n    {\n      \"step\": 1,\n      \"text\": \"L'Ospedale C ha un tempo di attesa per l'ecocardiogramma di 2.0 giorni.\"\n    }\n  ],\n  \"conclusion\": \"L'Ospedale A ha un tempo di attesa per l'ecocardiogramma di 2.2 giorni, molto inferiore rispetto all'Ospedale B (13.9 giorni), quindi non ha un problema di attese rispetto agli altri ospedali. L'Ospedale C ha un tempo simile a quello dell'Ospedale A, con 2.0 giorni.\",\n  \"risposta\": \"No\"\n}"
+  }
+}

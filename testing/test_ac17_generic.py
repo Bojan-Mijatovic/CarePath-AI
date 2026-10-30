@@ -8,6 +8,7 @@ it must give the HF numbers with only the names changed. The console must name n
 names; Maria's story, a scripted narrative about one patient, is exempt (D41).
 """
 
+import json
 import re
 import shutil
 from pathlib import Path
@@ -16,6 +17,7 @@ import duckdb
 import pytest
 
 from agents import tools
+from agents.intervention import Intervention
 from agents.monitoring import Monitoring
 from engine import pathway as pathway_model
 from engine import worklist
@@ -94,6 +96,7 @@ def replay(fixture_runs: Path, directory: Path, p: pathway_model.Pathway) -> duc
     state = StateEngine(con, p)
     risk = RiskModel(p, MODELS_DIR / "risk_hf_lombardia_v1.json")  # features are named from codes, not ids
     monitoring = Monitoring(p, RUN, dict(con.execute("SELECT name, facility_id FROM facilities").fetchall()))
+    agent = Intervention(p, RUN, dict(con.execute("SELECT facility_id, name FROM facilities").fetchall()), len(state.ids))
     for day in range(LAST_DAY + 1):
         state.update(con, day)
         risk.update(con, state, day)
@@ -101,6 +104,7 @@ def replay(fixture_runs: Path, directory: Path, p: pathway_model.Pathway) -> duc
         state.refresh_kpi(con, day)
         state.refresh_map(con, day, risk.risk, HIGH_RISK)
         worklist.refresh(con, state, risk, day, monitoring.fired)
+        agent.run(con, state, risk.risk, monitoring, day, lambda rows: None)  # no simulator: the events are the fixture's
     return con
 
 
@@ -145,6 +149,20 @@ def test_ac17_engine_views_and_monitoring(runs, table):
     for r in rows(other, TABLES[table]):  # no HF name reached the other pathway's rows
         for v in r:
             assert not (isinstance(v, str) and any(old in v for old in TEXT_BACK.values() if len(old) > 3)), (table, v)
+
+
+@pytest.mark.acceptance
+def test_ac17_intervention(runs):
+    # Step 2.13: the actions Intervention chose for each pathway, ids and names mapped back, are HF's.
+    hf, other = runs
+    sql = "SELECT * EXCLUDE (pathway_id) FROM actions WHERE agent = 'intervention' ORDER BY action_id"
+    decode = lambda con: [{k: json.loads(v) if k in ("scope", "payload", "rationale", "evidence") and v else v
+                           for k, v in zip([d[0] for d in con.execute(sql).description], r)} for r in con.execute(sql).fetchall()]
+    expected, got = decode(hf), decode(other)
+    assert len(expected) > 100
+    assert {a["type"] for a in expected} >= {"reminder", "call_task", "notify_mmg"}
+    got = [back(a) | {"rationale": {k: text_back(v) for k, v in a["rationale"].items()}} for a in got]
+    assert got == expected
 
 
 CALLS = [

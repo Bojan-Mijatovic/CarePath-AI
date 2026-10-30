@@ -50,6 +50,14 @@ class Risk(Frozen):
     per_10_years_over_75: float
 
 
+class Effect(Frozen):
+    """The chance that one action of a type changes what a patient does from the next day (step 2.13)."""
+    collect: float  # collects the drug whose supply ran out
+    book: float     # asks for a slot of an overdue booked step
+    start: float    # starts telemonitoring
+    review: float   # a decompensation caught early is treated without an admission
+
+
 class SimParams(Frozen):
     """Behaviour of synthetic patients; values in src/sim/config/*.json, documented in src/sim/README.md §9."""
     warmup_days: int
@@ -81,6 +89,7 @@ class SimParams(Frozen):
     reading_noise_kg: float
     lab_log_mean: float               # lognormal lab value, median about 400
     lab_log_sd: float
+    effects: dict[str, Effect]        # per action type of SPEC §7.2 that reaches a patient (step 2.13)
 
 
 def load_params(name: str = "baseline") -> SimParams:
@@ -150,6 +159,7 @@ class Simulator:
 
         # Static patient attributes.
         self.patient_id = patients.patient_id.to_numpy(object)
+        self.index = {pid: i for i, pid in enumerate(self.patient_id)}  # patient id -> position, for actions
         self.mmg_id = patients.mmg_id.to_numpy(object)
         self.comune = patients.comune_istat.to_numpy(object)
         self.age = patients.age.to_numpy()
@@ -201,6 +211,8 @@ class Simulator:
         self.last_discharge = np.full(n, NO_DAY)
         self.book_on = {s.id: np.full(n, NO_DAY) for s in cap_steps}
         self.appt_day = {s.id: np.full(n, NO_DAY) for s in cap_steps}
+        self.appt_res = {s.id: np.full(n, -1) for s in cap_steps}  # the resource booked; a reschedule moves it
+        self.nudge_collect = np.full(n, NO_DAY)  # an action asked to collect the drug on this day (step 2.13)
         self.last_done = {s.id: np.full(n, NO_DAY) for s in self.post_steps}  # for overdue post-discharge steps
         self.decomp_start = np.full(n, NO_DAY)
         self.decomp_admit = np.full(n, NO_DAY)
@@ -229,23 +241,89 @@ class Simulator:
         """Actions the action service executed on `day`, after step(day) (SPEC §9 tick order). Returns the
         events that record them on `day`; their effects appear from day + 1 in step().
 
-        Step 1.20 records calls and reminders and runs Maria's script; every other effect is a no-op until
-        the Intervention agent (step 2.13) gives them probabilities in the config."""
-        index = {pid: i for i, pid in enumerate(self.patient_id)}
-        chunks = []
+        Calls and reminders are recorded as events (step 1.20), and a call runs Maria's script. From step
+        2.13 an action also changes what its patients do, with the chance `effects` gives its type: the
+        payload names the effect (`collect`, `book` with its `step`, `start`, `review`). An action on a scope
+        lists its patients in `payload.patients`, as ids that share the payload's effect or as objects with
+        their own; a `reschedule` moves their bookings (`_reschedule`).
+        Maria is scripted, so no effect reaches her."""
+        index = self.index
+        chunks, targets = [], []  # targets: (action_id, type, patient, effect, step), one per patient reached
         for a in actions.itertuples():
-            if a.patient_id not in index:
-                raise ValueError(f"action {a.action_id}: unknown patient {a.patient_id}")
-            idx = np.array([index[a.patient_id]])
-            if a.type == "call_task":
-                outcome = "completed"
-                if self.maria is not None and a.patient_id == maria_script.PATIENT_ID \
-                        and self.maria.receive_call(day, a.action_id):
-                    outcome = maria_script.CALL_OUTCOME
-                chunks.append((idx, "CALL", outcome, None, None, a.action_id))
-            elif a.type == "reminder":
-                chunks.append((idx, "REMINDER", "sms", None, None, a.action_id))
+            payload = getattr(a, "payload", None) or {}
+            if a.type == "reschedule":
+                chunks += self._reschedule(day, a.action_id, payload, index)
+                continue
+            if isinstance(a.patient_id, str):
+                listed = [{"patient_id": a.patient_id, **payload}]
+            else:  # ids share the action's effect; a dict carries its own (an MMG notice covers several problems)
+                shared = {k: payload[k] for k in ("effect", "step") if k in payload}
+                listed = [p if isinstance(p, dict) else {"patient_id": p, **shared} for p in payload.get("patients", [])]
+            targets += [(a.action_id, a.type, t["patient_id"], t.get("effect"), t.get("step") or "") for t in listed]
+        unknown = [(aid, pid) for aid, _, pid, _, _ in targets if pid not in index]
+        if unknown:
+            raise ValueError(f"action {unknown[0][0]}: unknown patient {unknown[0][1]}")
+        if targets:
+            t = pd.DataFrame(targets, columns=["action_id", "type", "patient", "effect", "step"])
+            t["i"] = t.patient.map(index)
+            for type_, event, code in (("call_task", "CALL", "completed"), ("reminder", "REMINDER", "sms")):
+                rec = t[t.type == type_].drop_duplicates(["action_id", "i"])
+                codes = np.full(len(rec), code, object)
+                if type_ == "call_task" and self.maria is not None:  # her script decides what a call changes
+                    for k in np.flatnonzero(rec.patient.to_numpy() == maria_script.PATIENT_ID):
+                        if self.maria.receive_call(day, rec.action_id.iloc[k]):
+                            codes[k] = maria_script.CALL_OUTCOME
+                if len(rec):
+                    chunks.append((rec.i.to_numpy(), event, codes, None, None, rec.action_id.to_numpy(object)))
+            for (type_, effect, step), group in t.dropna(subset=["effect"]).groupby(["type", "effect", "step"]):
+                self._effect(day, type_, group.i.to_numpy(), effect, step)
         return self._frame(day, chunks)
+
+    def _effect(self, day: int, action_type: str, idx: np.ndarray, effect: str, step: str) -> None:
+        """One effect of one action type on patients `idx`, drawn per patient with common random numbers."""
+        e = self.p.effects.get(action_type)
+        if e is None:
+            return
+        idx = idx[~self.in_hosp[idx]]
+        if self.maria is not None:
+            idx = idx[idx != 0]
+        hit = idx[self._u(f"effect:{action_type}:{effect}", day)[idx] < getattr(e, effect)]
+        if effect == "collect":
+            self.nudge_collect[hit] = day + 1
+        elif effect == "book":
+            if step not in self.book_on:
+                raise ValueError(f"step {step!r} is not booked")
+            free = hit[(self.book_on[step][hit] == NO_DAY) & (self.appt_day[step][hit] <= day)]
+            self.book_on[step][free] = day + 1
+        elif effect == "start":
+            free = hit[~self.telemon_on[hit] & (self.telemon_start_on[hit] == NO_DAY)]
+            self.telemon_start_on[free] = day + 1
+        elif effect == "review":
+            caught = hit[(self.decomp_start[hit] > NO_DAY) & (self.decomp_admit[hit] > day)]
+            self.decomp_start[caught] = self.decomp_admit[caught] = NO_DAY
+        else:
+            raise ValueError(f"unknown effect {effect!r}")
+
+    def _reschedule(self, day: int, action_id: str, payload: dict, index: dict) -> list[tuple]:
+        """Move the listed patients' bookings for `payload.service` from one facility to the first free slot of
+        another, where that slot is earlier. Returns the BOOKING events of the moves."""
+        step = next(s for s in self.cap_steps if s.service == payload["service"])
+        res = {f: r for r in np.flatnonzero(self.res_service == payload["service"]) for f in [self.fac_id[self.res_fac[r]]]}
+        r_from, r_to = res[payload["from_facility"]], res[payload["to_facility"]]
+        idx = np.array([index[p] for p in payload.get("patients", []) if p in index], int)
+        idx = idx[(self.appt_res[step.id][idx] == r_from) & (self.appt_day[step.id][idx] > day)]
+        if not len(idx):
+            return []
+        old = self.appt_day[step.id][idx]
+        new = self._book(day, np.full(len(idx), r_to))
+        better = (new != NO_DAY) & (new < old)
+        np.add.at(self.booked[r_to], new[(new != NO_DAY) & ~better] - self.first_day, -1)  # no gain: give it back
+        np.add.at(self.booked[r_from], old[better] - self.first_day, -1)
+        moved = idx[better]
+        self.appt_day[step.id][moved] = new[better]
+        self.appt_res[step.id][moved] = r_to
+        return [(moved, "BOOKING", step.service, new[better].astype(float), np.full(len(moved), self.res_fac[r_to]),
+                 action_id)]
 
     def apply_capacity(self, changes: list[CapacityChange]) -> None:
         """Set each change's slots over its window, in order, so a later change wins where two overlap."""
@@ -363,6 +441,7 @@ class Simulator:
                 self.book_on[s.id][idx] = NO_DAY
                 ok = slots != NO_DAY
                 self.appt_day[s.id][idx[ok]] = slots[ok]
+                self.appt_res[s.id][idx[ok]] = res[ok]
                 if s.every_days:
                     self.next_due[s.id][idx[~ok]] += s.every_days  # gave up on this cycle
                 emit(idx[ok], "BOOKING", self.res_service[res[ok]], slots[ok].astype(float), self.res_fac[res[ok]])
@@ -372,7 +451,7 @@ class Simulator:
             today = np.flatnonzero(self.appt_day[s.id] == day)
             self.appt_day[s.id][today] = NO_DAY
             came = today[~self.in_hosp[today] & (self._u(f"attend:{s.id}", day)[today] < p.p_attend)]
-            fac = self.res_fac[self.step_res[s.id][came]]
+            fac = self.res_fac[self.appt_res[s.id][came]]
             if s.event == "LAB":
                 v = np.exp(p.lab_log_mean + p.lab_log_sd * component_rng(self.seed, f"labval:{day}").standard_normal(n))
                 emit(came, "LAB", (s.loinc or [None])[0], np.round(v[came]), fac)
@@ -403,7 +482,8 @@ class Simulator:
         self.telemon_on &= ~(self._u("dropout", day) < self.telemon_dropout_p)
 
         # 7. Pharmacy: once the supply has run out, a patient collects with their own daily chance.
-        coll = np.flatnonzero(~self.in_hosp & (day >= self.supply_end) & (self._u("collect", day) < self.collect_q))
+        coll = np.flatnonzero(~self.in_hosp & (day >= self.supply_end)
+                              & ((self._u("collect", day) < self.collect_q) | (self.nudge_collect == day)))
         self.supply_end[coll] = day + p.supply_days
         emit(coll, "DISPENSE", self.drug_atc, np.full(len(coll), float(p.supply_days)))
 

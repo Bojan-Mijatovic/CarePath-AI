@@ -14,6 +14,7 @@ decision. The compensating event of an undo is type-specific and comes with the 
 import json
 
 import duckdb
+import pandas as pd
 
 # SPEC §7.2: the default level per type, and the types whose level is fixed. bed_proposal is not in the
 # table, so it has no level of its own.
@@ -63,28 +64,50 @@ def set_level(con: duckdb.DuckDBPyConnection, day: int, action_type: str, level:
 def create(con: duckdb.DuckDBPyConnection, run_id: str, day: int, action: dict, emit) -> dict:
     """An agent's action ({agent, type, patient_id, scope, pathway_id, payload, rationale, evidence}) through
     the checks of SPEC §7.3, in the order above. Returns the stored row: `rejected`, `proposed` or `executed`."""
+    return create_many(con, run_id, day, [action], emit)[0]
+
+
+def create_many(con: duckdb.DuckDBPyConnection, run_id: str, day: int, items: list[dict], emit) -> list[dict]:
+    """`create` for a day's actions of one agent at once (Intervention, step 2.13: a few hundred a day), with
+    one read of the levels and of the day's automatic actions and one write, so the tick stays in budget."""
+    if not items:
+        return []
     n = con.execute("SELECT count(*) FROM actions").fetchall()[0][0]
-    level = levels(con).get(action["type"])
-    row = {"action_id": f"act_{run_id}_{n + 1}", "agent": action["agent"], "type": action["type"],
-           "patient_id": action.get("patient_id"), "scope": action.get("scope"), "pathway_id": action.get("pathway_id"),
-           "payload": action.get("payload") or {}, "rationale": action["rationale"], "evidence": action.get("evidence") or [],
-           "autonomy_level": 0 if level is None else level, "status": "proposed", "created_day": day,
-           "executed_day": None, "decided_by": None}
-    reason = _guardrail(row) or (None if row["evidence"] else "no tool source as evidence")
-    queued = None
-    if reason:
-        row.update(status="rejected", decided_by=SERVICE)
-    elif level < 3:
-        queued = f"autonomy level {level}"
-    elif _automatic_today(con, day, _facility(row)) >= DAILY_LIMIT:
-        queued = f"daily limit of {DAILY_LIMIT} automatic actions reached"
-    _insert(con, row)
-    _audit(con, day, row["action_id"], "created", row["agent"], {"queued": queued} if queued else {})
-    if reason:
-        _audit(con, day, row["action_id"], "rejected", SERVICE, {"reason": reason})
-    elif not queued:
-        _execute(con, day, row, "auto", emit)
-    return row
+    now = levels(con)
+    automatic = dict(con.execute(f"SELECT {FACILITY_SQL}, count(*) FROM actions WHERE decided_by = 'auto' "
+                                 "AND executed_day = $d GROUP BY 1", {"d": day}).fetchall())
+    rows, log, executed = [], [], []
+    for k, action in enumerate(items):
+        level = now.get(action["type"])
+        row = {"action_id": f"act_{run_id}_{n + k + 1}", "agent": action["agent"], "type": action["type"],
+               "patient_id": action.get("patient_id"), "scope": action.get("scope"),
+               "pathway_id": action.get("pathway_id"), "payload": action.get("payload") or {},
+               "rationale": action["rationale"], "evidence": action.get("evidence") or [],
+               "autonomy_level": 0 if level is None else level, "status": "proposed", "created_day": day,
+               "executed_day": None, "decided_by": None}
+        reason = _guardrail(row) or (None if row["evidence"] else "no tool source as evidence")
+        facility, queued = _facility(row), None
+        if reason:
+            row.update(status="rejected", decided_by=SERVICE)
+        elif level < 3:
+            queued = f"autonomy level {level}"
+        elif facility is not None and automatic.get(facility, 0) >= DAILY_LIMIT:
+            queued = f"daily limit of {DAILY_LIMIT} automatic actions reached"
+        else:
+            automatic[facility] = automatic.get(facility, 0) + 1
+            row.update(status="executed", executed_day=day, decided_by="auto")
+            executed.append(row)
+        log.append((row["action_id"], "created", row["agent"], {"queued": queued} if queued else {}))
+        if reason:
+            log.append((row["action_id"], "rejected", SERVICE, {"reason": reason}))
+        elif row["status"] == "executed":
+            log.append((row["action_id"], "executed", "auto", {}))
+        rows.append(row)
+    _insert(con, rows)
+    _audit_many(con, day, log)
+    if executed:
+        emit(executed)
+    return rows
 
 
 def decide(con: duckdb.DuckDBPyConnection, day: int, action_id: str, approve: bool, emit,
@@ -123,23 +146,18 @@ def _guardrail(row: dict) -> str | None:
     fields = set(row["payload"]) | set(row["scope"] or {})
     if fields & CLINICAL_FIELDS:
         return f"clinical fields {sorted(fields & CLINICAL_FIELDS)}: no therapy and no diagnosis"
-    if row["type"] == "reschedule" and "from_facility" not in row["payload"]:
-        return "a reschedule moves an existing booking and names where it was"
+    if row["type"] == "reschedule" and not {"from_facility", "to_facility", "service"} <= set(row["payload"]):
+        return "a reschedule moves existing bookings of a service and names where they were and where they go"
     return None
 
 
 def _facility(row: dict) -> str | None:
+    """The facility the daily limit counts the action for; an action without one has no limit."""
     return (row["scope"] or {}).get("facility_id") or row["payload"].get("from_facility") or row["payload"].get("facility_id")
 
 
-def _automatic_today(con: duckdb.DuckDBPyConnection, day: int, facility: str | None) -> int:
-    """Actions executed without a person today for the facility; an action without a facility has no limit."""
-    if facility is None:
-        return 0
-    return con.execute("""
-        SELECT count(*) FROM actions WHERE decided_by = 'auto' AND executed_day = $d
-          AND coalesce(json_extract_string(scope, '$.facility_id'), json_extract_string(payload, '$.from_facility'),
-                       json_extract_string(payload, '$.facility_id')) = $f""", {"d": day, "f": facility}).fetchall()[0][0]
+FACILITY_SQL = """coalesce(json_extract_string(scope, '$.facility_id'), json_extract_string(payload, '$.from_facility'),
+                           json_extract_string(payload, '$.facility_id'))"""  # _facility in SQL
 
 
 def _execute(con: duckdb.DuckDBPyConnection, day: int, row: dict, decided_by: str, emit) -> None:
@@ -150,9 +168,20 @@ def _execute(con: duckdb.DuckDBPyConnection, day: int, row: dict, decided_by: st
     emit([row])
 
 
-def _insert(con: duckdb.DuckDBPyConnection, row: dict) -> None:
-    values = {k: json.dumps(v, ensure_ascii=False) if k in JSON_FIELDS and v is not None else v for k, v in row.items()}
-    con.execute(f"INSERT INTO actions BY NAME SELECT {', '.join(f'${k} AS {k}' for k in values)}", values)
+def _insert(con: duckdb.DuckDBPyConnection, rows: list[dict]) -> None:
+    frame = pd.DataFrame([{k: json.dumps(v, ensure_ascii=False) if k in JSON_FIELDS and v is not None else v
+                           for k, v in row.items()} for row in rows]).astype({"executed_day": "Int32"})
+    con.register("action_rows", frame)
+    con.execute("INSERT INTO actions BY NAME SELECT * FROM action_rows")
+    con.unregister("action_rows")
+
+
+def _audit_many(con: duckdb.DuckDBPyConnection, day: int, log: list[tuple]) -> None:
+    con.register("audit_rows", pd.DataFrame({"ts_day": day, "action_id": [a for a, _, _, _ in log],
+                                             "event": [e for _, e, _, _ in log], "actor": [w for _, _, w, _ in log],
+                                             "details": [json.dumps(d) for _, _, _, d in log]}))
+    con.execute("INSERT INTO audit_log BY NAME SELECT * FROM audit_rows")
+    con.unregister("audit_rows")
 
 
 def _row(con: duckdb.DuckDBPyConnection, action_id: str) -> dict:

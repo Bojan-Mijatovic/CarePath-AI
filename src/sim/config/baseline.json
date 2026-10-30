@@ -37,5 +37,10 @@
   "weight_sd_kg": 12.0,
   "reading_noise_kg": 0.4,
   "lab_log_mean": 6.0,
-  "lab_log_sd": 0.6
+  "lab_log_sd": 0.6,
+  "effects": {
+    "reminder": {"collect": 0.2, "book": 0.2, "start": 0.15, "review": 0.0},
+    "call_task": {"collect": 0.35, "book": 0.35, "start": 0.3, "review": 0.25},
+    "notify_mmg": {"collect": 0.3, "book": 0.3, "start": 0.2, "review": 0.0}
+  }
 }

@@ -1,0 +1,39 @@
+{
+  "agent": "investigator",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "investigator-translate-v1",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo JSON. Mantieni la struttura, i numeri e i nomi propri (ospedali, comuni, cooperative) esattamente come sono.\n\n{\"claims\": [\"Il tempo medio di attesa per l'ecocardiogramma all'Ospedale C negli ultimi 7 giorni è di 30.3 giorni, superiore alla soglia PDTA di 30 giorni.\", \"L'Ospedale C non ha slot disponibili per l'ecocardiogramma nei prossimi 21 giorni, mentre l'Ospedale A ha 116 slot e l'Ospedale B ne ha 102.\", \"All'Ospedale C ci sono 7 pazienti in ritardo per l'ecocardiogramma, con un massimo di 38 giorni di ritardo, e tutti i pazienti hanno un punteggio di rischio inferiore a 0.05.\", \"La compliance all'Ospedale C per il percorso Scompenso cardiaco è del 83.05% per l'ecocardiogramma, inferiore alla media del 77.52% per la visita cardiologica e al 79.02% per il BNP, indicando un potenziale colpo di coda nel percorso.\"], \"conclusion\": \"L'allarme è causato da un'assenza di disponibilità di slot per l'ecocardiogramma all'Ospedale C, con 7 pazienti in ritardo fino a 38 giorni. Il margine per intervenire è nell'ottimizzazione della pianificazione dei turni, con possibilità di redistribuire pazienti verso Ospedale A (116 slot) o Ospedale B (102 slot), che hanno disponibilità e performance complessivamente più elevate.\"}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claims",
+        "conclusion"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{\n  \"claims\": [\n    \"The average waiting time for an echocardiogram at Hospital C in the last 7 days is 30.3 days, exceeding the PDTA threshold of 30 days.\",\n    \"Hospital C has no available slots for an echocardiogram in the next 21 days, while Hospital A has 116 slots and Hospital B has 102 slots.\",\n    \"At Hospital C, there are 7 patients delayed for an echocardiogram, with a maximum delay of 38 days, and all patients have a risk score below 0.05.\",\n    \"Compliance at Hospital C for the Heart Failure pathway is 83.05% for echocardiogram, below the average of 77.52% for cardiology visit and 79.02% for BNP, indicating a potential backlog in the pathway.\"\n  ],\n  \"conclusion\": \"The alert is caused by the absence of available slots for an echocardiogram at Hospital C, with 7 patients delayed up to 38 days. The margin for intervention lies in optimizing shift planning, with the possibility of redistributing patients toward Hospital A (116 slots) or Hospital B (10-than slots), which have overall higher availability and performance.\"\n}"
+  }
+}

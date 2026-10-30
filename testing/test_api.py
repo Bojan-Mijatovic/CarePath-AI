@@ -146,7 +146,9 @@ def test_patient_actions_and_story(client):
     assert max(i["day"] for i in maria["timeline"]) <= client.post("/api/sim/pause").json()["day"]
     assert client.get("/api/patients/p_99999").status_code == 404
     assert client.get("/api/kpi", params={"run": "s3_agents"}).status_code == 404
-    assert client.get("/api/actions", params={"status": "proposed"}).json() == []  # no agents until 2.12
+    waiting = client.get("/api/actions", params={"status": "proposed"}).json()
+    assert {a["agent"] for a in waiting} <= {"intervention"}  # only Intervention's proposals (step 2.13)
+    assert client.get("/api/actions", params={"run": "s2_baseline"}).json() == []  # no agents without CarePath
     recorded = client.get("/api/patients/p_00001", params={"run": "s2_baseline", "day": 62}).json()
     assert recorded == json.loads(story.path("p_00001", "s2_baseline", 62).read_text(encoding="utf-8"))
     assert client.get("/api/patients/p_00001", params={"run": "s2_baseline", "day": 61}).status_code == 404
@@ -155,14 +157,25 @@ def test_patient_actions_and_story(client):
 def _waiting(demo: Demo, action_id: str, day: int) -> None:
     """A proposed action as Intervention will create it (step 2.13), written here by the test."""
     demo.read("s2_agents", lambda cur: cur.execute("""
-        INSERT INTO actions VALUES ($id, 'intervention', 'reschedule', 'p_00001', NULL, 'hf_lombardia_v1', '{}',
+        INSERT INTO actions VALUES ($id, 'intervention', 'reschedule', NULL, '{"facility_id": "osp_B", "patients": 0}',
+            'hf_lombardia_v1', '{"from_facility": "osp_B", "to_facility": "osp_C", "service": "echo", "patients": []}',
             '{"it": "x", "en": "x"}', '[{"tool": "free_slots"}]', 2, 'proposed', $d, NULL, NULL)""",
                                                     {"id": action_id, "d": day}))
 
 
+TEST_IDS = ("act_test_1", "act_test_2")
+
+
+def ours(rows: list[dict]) -> list[str]:
+    """The test's actions among Intervention's (step 2.13)."""
+    return [a["action_id"] for a in rows if a["action_id"] in TEST_IDS]
+
+
 def _audit(demo: Demo) -> list[tuple]:
+    """The audit entries of the test's actions and of the settings."""
     return demo.read("s2_agents", lambda cur: cur.execute(
-        "SELECT ts_day, action_id, event, actor, details FROM audit_log ORDER BY rowid").fetchall())
+        "SELECT ts_day, action_id, event, actor, details FROM audit_log "
+        "WHERE action_id IN ('act_test_1', 'act_test_2') OR event = 'config_changed' ORDER BY rowid").fetchall())
 
 
 def test_approvals_and_autonomy_write_the_audit_log(client):
@@ -182,8 +195,7 @@ def test_approvals_and_autonomy_write_the_audit_log(client):
 
     _waiting(demo, "act_test_1", day)
     _waiting(demo, "act_test_2", day)
-    assert [a["action_id"] for a in client.get("/api/actions", params={"status": "proposed"}).json()] == [
-        "act_test_1", "act_test_2"]
+    assert ours(client.get("/api/actions", params={"status": "proposed"}).json()) == ["act_test_1", "act_test_2"]
     with client.websocket_connect("/api/stream") as ws:
         ws.receive_json()  # the opening tick
         assert client.post("/api/actions/act_test_1/approve").json()["status"] == "executed"  # step 2.12: at once
@@ -193,8 +205,9 @@ def test_approvals_and_autonomy_write_the_audit_log(client):
     assert client.post("/api/actions/act_test_1/reject").status_code == 422  # decided already
     assert client.post("/api/actions/act_none/approve").status_code == 404
     assert client.post("/api/actions/act_test_2/undo").status_code == 422  # only an executed action
-    assert client.get("/api/actions", params={"status": "proposed"}).json() == []
-    decided = {a["action_id"]: (a["status"], a["decided_by"]) for a in client.get("/api/actions").json()}
+    assert ours(client.get("/api/actions", params={"status": "proposed"}).json()) == []
+    decided = {a["action_id"]: (a["status"], a["decided_by"]) for a in client.get("/api/actions").json()
+               if a["action_id"] in TEST_IDS}
     assert decided == {"act_test_1": ("executed", "manager"), "act_test_2": ("rejected", "manager")}
     assert client.post("/api/actions/act_test_1/undo").json()["status"] == "undone"
 

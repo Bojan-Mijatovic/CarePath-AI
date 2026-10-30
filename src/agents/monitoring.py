@@ -63,6 +63,8 @@ class Monitoring:
         self.pathway, self.run_id, self.facility_ids = pathway, run_id, facility_ids
         self.flags = sorted({r.then.flag for r in pathway.rules if r.then.flag})
         self.fired: dict[str, np.ndarray] = {}      # who meets each rule today
+        self.new_rules: dict[str, np.ndarray] = {}  # ... and who started to meet it today
+        self.waits: dict[str, dict] = {}            # the day's wait_by_hospital result per step with a max wait
         self.flags_written: np.ndarray | None = None  # flag bit mask per patient, as last written
         self.late_before: np.ndarray | None = None
         self.open: dict[tuple[str, str], str] = {}    # (facility_id, step) or ("group", id) -> open alarm's alert_id
@@ -82,6 +84,7 @@ class Monitoring:
         late = (state.due < day) & (state.due < NEVER) & enrolled
         new_late = late & ~(self.late_before if self.late_before is not None else np.zeros_like(late))
         self.late_before = late
+        self.new_rules = new_rules  # the day's deviations, which Intervention acts on (step 2.13)
         self._write_deviations(con, state, day, new_rules, new_late)
         return (self._patient_alerts(con, state, risk, day, scenario, new_rules, new_late)
                 + self._regional_alarms(con, day, scenario) + self._group_alarms(con, day, scenario))
@@ -174,6 +177,7 @@ class Monitoring:
                 if result.get("error", {}).get("code", "empty_result") != "empty_result":
                     # A pathway the tools cannot read must not silence the alarm (found by the AC17 test).
                     raise RuntimeError(f"wait_by_hospital for {s.id}: {result['error']}")
+                self.waits[s.id] = result  # Intervention's evidence for a reschedule (step 2.13)
                 for name, wait in sorted(result.get("data", {}).items()):
                     key = (self.facility_ids[name], s.id)
                     if wait > s.max_wait_days and key not in self.open:

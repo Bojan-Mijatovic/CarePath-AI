@@ -184,6 +184,17 @@ All inside the 10–16% range. Admissions per patient-year rise with each factor
 
 Simulation time with the outcome model: 6.2 ms per day.
 
+**Effects of actions** (step 2.13, `effects` in `config/baseline.json`). An action the action service executed on day D changes what its patients do from day D + 1, each patient with the chance its type gives (drawn with common random numbers, so both arms see the same draws). The payload names the effect (SPEC §9, C32). Maria is scripted and never reached.
+
+| Effect | What changes | Reminder | Call | MMG notice |
+|---|---|---|---|---|
+| `collect` | collects the drug the next day | 0.20 | 0.35 | 0.30 |
+| `book` | asks for a slot of the overdue step the next day | 0.20 | 0.35 | 0.30 |
+| `start` | starts telemonitoring the next day | 0.15 | 0.30 | 0.20 |
+| `review` | a decompensation under way ends without an admission | — | 0.25 | — |
+
+A `reschedule` lists patients and moves each one's booking for the service from one facility to the first free slot of another when that slot is earlier, giving the old slot back. The values are assumptions, chosen so the agents arm lands in the range published for structured follow-up in heart failure. Measured over 120 days, seed 42, both arms on the same draws: 30-day readmissions −27% (scenario 1, 147 → 107), −25% (2, 150 → 112), −26% (3, 147 → 109); admissions −11% in each. A first set (reminder 0.3, call 0.6, review 0.6) gave −45%, too strong to be credible.
+
 ## 10. Scenarios (step 1.17)
 
 `scenarios/{1,2,3}.json`, validated by `sim.step.Scenario`, applied with `Simulator.apply_scenario` before the warm-up. `uv run carepath-sim s2_baseline` reads scenario 2 from the run id. The population is the same in all three; only the places of the patterns change. JSON instead of the planned YAML: same format and validation as `config/baseline.json`, no new dependency.

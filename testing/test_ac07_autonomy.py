@@ -26,7 +26,8 @@ def test_ac07_autonomy(tmp_path):
                 actions.set_level(con, day, type_, level)
                 row = actions.create(con, "s2_agents", day, {
                     "agent": "intervention", "type": type_, "patient_id": None, "pathway_id": "hf_lombardia_v1",
-                    "scope": {"facility_id": "osp_B", "patients": 3}, "payload": {"from_facility": "osp_B"},
+                    "scope": {"facility_id": "osp_B", "patients": 3},
+                    "payload": {"from_facility": "osp_B", "to_facility": "osp_C", "service": "echo"},
                     "rationale": {"it": "x", "en": "x"}, "evidence": [SOURCE]}, emitted.extend)
                 assert row["status"] == ("executed" if level == 3 else "proposed"), (type_, level, row["status"])
                 if level < 3 and day % 2:  # half of the waiting ones are approved, the rest stay waiting

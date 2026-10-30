@@ -22,7 +22,8 @@ from pathlib import Path
 
 import duckdb
 
-from agents import actions
+from agents import actions, intervention
+from agents.intervention import Intervention
 from agents.monitoring import Monitoring
 from engine import pathway as pathway_model
 from engine import investigations, queries, whatif, worklist
@@ -72,6 +73,8 @@ class Run:
         self.state = StateEngine(self.con, p.pathway)
         self.risk = RiskModel(p.pathway)
         self.monitoring = Monitoring(p.pathway, run_id, dict(self.con.execute("SELECT name, facility_id FROM facilities").fetchall()))
+        names = dict(self.con.execute("SELECT facility_id, name FROM facilities").fetchall())
+        self.intervention = Intervention(p.pathway, run_id, names, len(p.patients))
         feedback.register(run_id, self.sim)
         self.day = -1  # the last day done
         self.last_ms = 0.0
@@ -93,6 +96,14 @@ class Run:
         self._write_capacity()
         if self.agents:  # 7: after capacity_slots, so the Investigator's tools see the alarm's day (C25)
             messages += investigations.on_alarms(self.con, self.run_id, self.state.pathway, d, self.scenario, messages)
+            # 8: Intervention after the investigation: the alarm is explained on the day as it was, then agents
+            # act (D53), and the cached investigation keeps its inputs
+            rows = self.intervention.run(self.con, self.state, self.risk.risk, self.monitoring, d, self.feedback)
+            if any(r["type"] == "reschedule" and r["status"] == "executed" for r in rows):
+                self._write_capacity()
+            shown = sorted(rows, key=lambda r: (intervention.PRIORITY.get(r["type"], 9), -self._risk_of(r)))
+            messages += [{"type": "action", "scenario": self.scenario, "day": d, "payload": r}
+                         for r in shown[:intervention.STREAM_ACTIONS] if r["status"] != "rejected"]
         self.day = d
         self.last_ms = (time.perf_counter() - t) * 1000
         return messages
@@ -112,12 +123,17 @@ class Run:
                 self.con.unregister("src")
         self.capacity = now
 
+    def _risk_of(self, row: dict) -> float:
+        """A patient action's risk score, so the stream shows the riskiest first; 0 for an action on a scope."""
+        if row["patient_id"] is None:
+            return 0.0
+        return float(self.risk.risk[self.state.ids.get_loc(row["patient_id"])])
+
     def feedback(self, rows: list[dict]) -> None:
-        """The action service's `emit` (SPEC §7.3, §9): executed actions on a patient become events of the
-        day through the simulator's feedback hook; an action on a scope has its effects with step 2.13."""
-        on_patients = [r for r in rows if r["patient_id"] is not None]
-        if on_patients:
-            append(self.con, "events", feedback.apply(self.run_id, on_patients))
+        """The action service's `emit` (SPEC §7.3, §9): executed actions become events of the day, and
+        their effects start the next day, through the simulator's feedback hook."""
+        if rows:
+            append(self.con, "events", feedback.apply(self.run_id, rows))
 
     def advance_to(self, day: int) -> None:
         while self.day < day:

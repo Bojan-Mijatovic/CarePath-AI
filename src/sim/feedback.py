@@ -1,9 +1,9 @@
 """Action feedback hook: actions executed on day D become simulation events (delivery plan step 1.20).
 
 The action service (step 2.12) calls `apply(run_id, actions)` once a day with the rows of SPEC §7.1 it
-executed that day. The returned events record the actions themselves on day D (CALL, REMINDER) and go
-into `events` like the simulator's own; their effects appear from day D + 1 through `Simulator.step`.
-Effects other than Maria's script are a no-op until step 2.13.
+executed that day. The returned events record the actions themselves on day D (CALL, REMINDER, and the
+BOOKING of a reschedule) and go into `events` like the simulator's own; their effects appear from day D + 1
+through `Simulator.step`, with the chances of `effects` in the simulator config (step 2.13).
 
 The process that runs the simulation registers each run's Simulator under its run id.
 """

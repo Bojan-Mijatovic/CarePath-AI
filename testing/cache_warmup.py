@@ -21,10 +21,11 @@ from api.main import create_app
 from engine.tick import Demo
 
 MANIFEST = Path(__file__).resolve().parents[1] / "demo" / "cache" / "manifest.json"
-READY_S = 300  # the start replay of every run (9 with the lever runs, step 2.28) takes about 70 s
+READY_S = 300  # the start replay of every run (9 with the lever runs, step 2.28) takes about 70 s ...
+WARM_READY_S = 3600  # ... and in a warm-up it also runs the investigations of alarms before the start day
 
 
-def play(runs_dir: Path, ui_dir: Path) -> dict:
+def play(runs_dir: Path, ui_dir: Path, ready_s: int = READY_S) -> dict:
     """{scenario: {"investigations": [rows of the alarm day and before], "answers": [(question, status,
     seconds, row or detail)]}} for the manifest, in its order, with the gateway as it is configured."""
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
@@ -34,9 +35,9 @@ def play(runs_dir: Path, ui_dir: Path) -> dict:
     # keys of their own (the run id is in the tools' results), so a warm-up with them would fill six more.
     demo = Demo(runs_dir, whatif_dir=None)
     with TestClient(create_app(demo=demo, tick_seconds=0.05, ui_dir=ui_dir)) as c:
-        deadline = time.monotonic() + READY_S
+        deadline = time.monotonic() + ready_s
         while c.get("/api/kpi").status_code == 503:
-            assert time.monotonic() < deadline, f"the demo runs were not ready in {READY_S} s"
+            assert time.monotonic() < deadline, f"the demo runs were not ready in {ready_s} s"
             time.sleep(0.5)
         for s in manifest["scenarios"]:
             n = s["scenario"]
@@ -71,7 +72,7 @@ def main(argv: list[str]) -> None:
     live = "--live" in argv
     llm.configure(**({"mode": "cache_first", "timeout_s": llm.WARMUP_TIMEOUT_S} if live else {"mode": "cache_only"}))
     with tempfile.TemporaryDirectory() as tmp:
-        played = play(Path(tmp) / "runs", Path(tmp))
+        played = play(Path(tmp) / "runs", Path(tmp), WARM_READY_S if live else READY_S)
     for n, got in played.items():
         for i in got["investigations"]:
             print(f"s{n} day {i['day']:>2} {i['investigation_id']:<18} {i['conclusion']['it'][:100]}")

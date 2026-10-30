@@ -32,7 +32,7 @@ def test_only_the_scenario_on_screen_advances(demo):
     demo.choose(2)
     msgs = demo.advance()  # not at ×1, so the lever run waits for catch_up (C28)
     assert (msgs[0]["type"], msgs[0]["scenario"], msgs[0]["day"]) == ("tick", 2, START + 1)
-    assert {(m["type"], m["day"]) for m in msgs[1:]} <= {("alert", START + 1)}  # Monitoring's, agents arm
+    assert {(m["type"], m["day"]) for m in msgs[1:]} <= {("alert", START + 1), ("action", START + 1)}  # agents arm
     assert {k: r.day for k, r in demo.runs.items()} == {"s1_agents": START, "s1_baseline": START,
                                                         "s1_agents_echo+2": START, "s2_agents": START + 1,
                                                         "s2_baseline": START + 1, "s2_agents_echo+1": START}
@@ -42,9 +42,13 @@ def test_only_the_scenario_on_screen_advances(demo):
 
 
 def test_arms_match_until_agents_act(demo):
-    # Steps 3–7 of the tick come with Risk, Monitoring and Intervention; until then the arms are equal.
+    # Intervention acts last in the tick (step 2.13), after the day's KPIs, and its effects start the next day:
+    # day 0 is the same in both arms, and from day 1 the agents arm is its own.
     demo.jump(START + 3)
-    assert ats(demo, "s2_agents") == ats(demo, "s2_baseline")
+    agents, baseline = ats(demo, "s2_agents"), ats(demo, "s2_baseline")
+    assert agents[0] == baseline[0]
+    assert agents[1][10] > 0  # actions_executed, counted the day after
+    assert agents[1:] != baseline[1:]
 
 
 def test_jump_back_gives_the_same_days(demo):

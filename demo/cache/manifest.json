@@ -12,7 +12,7 @@
         "L'Ospedale A ha un problema di attese per l'ecocardiogramma rispetto agli altri ospedali?"
       ]
     },
-    {"scenario": 1, "alarm_day": 29, "alarm_investigations": 3, "questions": []},
-    {"scenario": 3, "alarm_day": 32, "alarm_investigations": 3, "questions": []}
+    {"scenario": 1, "alarm_day": 19, "alarm_investigations": 3, "questions": []},
+    {"scenario": 3, "alarm_day": 29, "alarm_investigations": 3, "questions": []}
   ]
 }

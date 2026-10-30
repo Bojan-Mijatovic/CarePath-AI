@@ -1,7 +1,7 @@
 """worklist_today: who the Centro Servizi calls today, and why (SPEC §5.2, C20; delivery plan step 2.4).
 
 One row per patient who is out of hospital and has an overdue step, a high risk or a pathway rule that
-holds (Monitoring, step 2.8), ranked by risk. The reasons are texts filled by code from the pathway's step
+holds (Monitoring, step 2.8), ranked by risk; the top KEPT of the ranking are kept (C32, step 2.13). The reasons are texts filled by code from the pathway's step
 and drug names (AC17), in Italian and English: every overdue step with its days, every rule that holds
 with its values, and for a high-risk patient the chance of admission with the drivers Risk found. Rows are kept for every day, so the console can go back to the list of
 day 31 (demo step 9a). The escalation step comes from pathway_state (the action service owns it);
@@ -21,6 +21,10 @@ from engine.risk import HIGH_RISK, RiskModel, features
 from engine.state import NEVER, StateEngine
 
 SKIPPED_DRIVERS = {"overdue_steps", "days_overdue"}  # the overdue steps are reasons of their own
+# The top of the day's ranking is kept (C32): the Centro Servizi calls from the top and AC12 reads the top 20,
+# while the texts of all ~2,400 patients cost the agents arm about 40 ms a tick, which AC2 has no room for
+# once Intervention acts (step 2.13).
+KEPT = 200
 COLUMNS = ["day", "rank", "patient_id", "risk_score", "reasons_it", "reasons_en", "pathway_id"]
 
 
@@ -100,7 +104,7 @@ def build(state: StateEngine, risk: RiskModel, day: int, fired: dict[str, np.nda
     on_list = e & (late.any(axis=0) | (risk.risk >= HIGH_RISK) | ruled)
     idx = np.flatnonzero(on_list)
     order = np.lexsort((idx, -risk.risk[idx]))  # highest risk first; patient_id breaks ties
-    idx = idx[order]
+    idx = idx[order][:KEPT]
     if not len(idx):
         return pd.DataFrame(columns=COLUMNS)
     parts = {lang: [s] for lang, s in _risk_reasons(state, risk, day, idx).items()}
