@@ -19,8 +19,9 @@ import pandas as pd
 # SPEC §7.2: the default level per type, and the types whose level is fixed. bed_proposal is not in the
 # table, so it has no level of its own.
 DEFAULT_LEVELS = {"reminder": 3, "call_task": 3, "notify_mmg": 2, "reschedule": 2, "enroll_proposal": 3,
-                  "pathway_proposal": 3, "rule_proposal": 1, "bed_assignment": 3}
-FIXED = {"rule_proposal"}  # the manager always approves a rule
+                  "pathway_proposal": 3, "rule_proposal": 1, "bed_assignment": 3, "capacity_proposal": 1}
+# the manager always approves a rule, and buying capacity is a human decision outside the system (D45, C34)
+FIXED = {"rule_proposal", "capacity_proposal"}
 MANAGER = "manager"  # the demo has no login; the prototype's "Menadžment"
 SERVICE = "action_service"
 DAILY_LIMIT = 50  # automatic actions per facility and day (SPEC §7.3)

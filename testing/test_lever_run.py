@@ -70,7 +70,8 @@ def test_the_lever_run_waits_at_x4_and_catches_up(demo):
     day = demo.lever_run().day
     demo.advance()
     assert demo.lever_run().day == day < demo.day
-    assert demo.tick_message()["payload"]["lever_run"] == {"run_id": demo.lever_run().run_id, "day": day}
+    assert demo.tick_message()["payload"]["lever_run"] == {"run_id": demo.lever_run().run_id, "day": day,
+                                                           "approved": False}
     demo.set_speed(0)
     while demo.catch_up():
         pass

@@ -55,9 +55,11 @@ class Population:
 
 class Run:
     def __init__(self, run_id: str, population: Population, runs_dir: Path = RUNS_DIR, days: int = HORIZON_DAYS,
-                 levers: tuple[CapacityChange, ...] = ()):
+                 levers: tuple[CapacityChange, ...] = (), proposal: dict | None = None):
         """`levers` are capacity changes on top of the scenario (what-if, step 2.5): before their first day
-        the run is the same as without them, day by day, since every random draw is per day (AC14)."""
+        the run is the same as without them, day by day, since every random draw is per day (AC14).
+        `proposal` is the lever Intervention proposes on the wait alarm (`whatif.proposed_lever`, step 2.27);
+        it changes no event of the run, only its actions."""
         p = population
         self.run_id, self.scenario = run_id, int(run_id[1])
         self.agents = run_id.split("_")[1] == "agents"
@@ -74,7 +76,7 @@ class Run:
         self.risk = RiskModel(p.pathway)
         self.monitoring = Monitoring(p.pathway, run_id, dict(self.con.execute("SELECT name, facility_id FROM facilities").fetchall()))
         names = dict(self.con.execute("SELECT facility_id, name FROM facilities").fetchall())
-        self.intervention = Intervention(p.pathway, run_id, names, len(p.patients))
+        self.intervention = Intervention(p.pathway, run_id, names, len(p.patients), proposal)
         feedback.register(run_id, self.sim)
         self.day = -1  # the last day done
         self.last_ms = 0.0
@@ -146,14 +148,17 @@ class Run:
 
 class Demo:
     def __init__(self, runs_dir: Path = RUNS_DIR, scenarios: tuple[int, ...] = (1, 2, 3), start_day: int = START_DAY,
-                 days: int = HORIZON_DAYS, seed: int = SEED, whatif_dir: Path | None = whatif.WHATIF_DIR):
-        """`whatif_dir` holds the grids the lever runs come from; None leaves them out."""
+                 days: int = HORIZON_DAYS, seed: int = SEED, whatif_dir: Path | None = whatif.WHATIF_DIR,
+                 lever_runs: bool = True):
+        """`whatif_dir` holds the grids the proposed levers and lever runs come from; None leaves both out.
+        `lever_runs=False` keeps the proposals but builds no lever run (the cache warm-up, step 2.11)."""
         self.runs_dir, self.scenarios, self.start_day, self.days, self.seed = runs_dir, scenarios, start_day, days, seed
-        self.whatif_dir = whatif_dir
+        self.whatif_dir, self.with_lever_runs = whatif_dir, lever_runs
         self.lock = threading.RLock()
         self.population: Population | None = None
         self.runs: dict[str, Run] = {}
         self.levers: dict[int, dict] = {}  # scenario -> whatif.proposed_lever(...)
+        self.approved: set[int] = set()  # scenarios whose capacity proposal the manager approved (C34)
         self.scenario = scenarios[0]
         self.speed = 0
         self.ready = False
@@ -163,7 +168,7 @@ class Demo:
 
     def run_ids(self, scenario: int) -> list[str]:
         lever = self.levers.get(scenario)
-        return [f"s{scenario}_{arm}" for arm in ARMS] + ([lever["run_id"]] if lever else [])
+        return [f"s{scenario}_{arm}" for arm in ARMS] + ([lever["run_id"]] if lever and self.with_lever_runs else [])
 
     def lever_run(self) -> Run | None:
         lever = self.levers.get(self.scenario)
@@ -188,9 +193,15 @@ class Demo:
         old = self.runs.pop(run_id, None)
         if old is not None:
             old.close()
-        lever = self.levers.get(int(run_id[1]))
+        scenario = int(run_id[1])
+        lever = self.levers.get(scenario)
         levers = (lever["lever"],) if lever and lever["run_id"] == run_id else ()
-        run = Run(run_id, self.population, self.runs_dir, self.days, levers)
+        # The agents arm proposes the lever on its alarm day, and so does the lever run, which stays the agents
+        # run action for action until the lever (C28)
+        agents = run_id != f"s{scenario}_baseline"
+        if run_id == f"s{scenario}_agents":
+            self.approved.discard(scenario)  # a rebuilt run starts from the defaults (C9, D51)
+        run = Run(run_id, self.population, self.runs_dir, self.days, levers, lever if agents else None)
         run.advance_to(day)
         self.runs[run_id] = run
 
@@ -278,7 +289,10 @@ class Demo:
                 row = actions.undo(run.con, run.day, action_id)
             else:
                 row = actions.decide(run.con, run.day, action_id, decision == "approve", run.feedback)
-            return [{"type": "action", "scenario": self.scenario, "day": run.day, "payload": row}]
+                if row["type"] == "capacity_proposal" and row["status"] == "executed":
+                    self.approved.add(self.scenario)  # the console turns to the lever run (D45, C34)
+            return [{"type": "action", "scenario": self.scenario, "day": run.day, "payload": row},
+                    *([self.tick_message()] if row["type"] == "capacity_proposal" else [])]
 
     def tick_message(self) -> dict:
         """SPEC §10 `tick` for the scenario on screen; `kpi` is the agents arm's."""
@@ -288,7 +302,8 @@ class Demo:
                 kpi = queries.kpi_headline(cur, run.day, run.pathway_id)
             payload = {"speed": self.speed, "kpi": kpi}
             if (lever := self.lever_run()) is not None:  # C28: the console shows whether it has caught up
-                payload["lever_run"] = {"run_id": lever.run_id, "day": lever.day}
+                payload["lever_run"] = {"run_id": lever.run_id, "day": lever.day,
+                                        "approved": self.scenario in self.approved}  # C34
             return {"type": "tick", "scenario": self.scenario, "day": run.day, "payload": payload}
 
     def default_run(self) -> str:

@@ -12,15 +12,26 @@ Each day, on the agents arm, after Monitoring and the worklist:
 - **Warning sign**: a step rule that starts to hold (a weight gain that pulls a visit) gets a call that day.
 - **Wait alarm** (D53): only after Monitoring has opened a regional wait alarm, one proposal a day to move
   the facility's patients booked beyond the step's `max_wait_days` to the hospital with the most free slots.
+- **Capacity** (D45, step 2.27): on the day the wait alarm of the engine's proposed lever opens, one proposal
+  to add that many slots a day at the facility. The lever is code's choice over the what-if grid
+  (`whatif.proposed_lever`), handed in by the engine; buying is the manager's decision outside the system,
+  so the proposal always waits (fixed level 1) and changes nothing in the run when approved (C34). Its
+  rationale is a template; the demo shows the 30B model's sentence from the cache when every number and
+  the facility in it are the template's (D17), and the template otherwise.
 
 Each action's payload names the effect the simulator gives it (`collect`, `book`, `start`, `review`, SPEC §7.1,
 C32). `escalation_step` in pathway_state follows the ladder: 1 reminder, 2 call, 3 MMG notified.
 """
 
+import json
+import logging
+import re
+
 import numpy as np
 import pandas as pd
+from pydantic import BaseModel
 
-from agents import actions, tools
+from agents import actions, llm, tools, verifier
 from engine import rules
 from engine.db import tool_cursor
 from engine.pathway import Pathway
@@ -28,6 +39,24 @@ from engine.risk import HIGH_RISK
 from engine.state import NEVER, NO_DAY, StateEngine
 
 AGENT = "intervention"
+log = logging.getLogger("carepath.intervention")
+# v1, measured on the 3 scenarios (2 Nov 2026): all 3 failed the check and fell to the template; the Italian
+# of scenario 1 left out the hospital, and the translation of 2 and 3 wrote "Hospital B" for "Ospedale B".
+# v2: the sentence opens with the facility's name, and the translation keeps facility names in Italian: the
+# Italian passed in all 3, the translation still wrote "Hospital A/B/C" in all 3. Translate v3: code puts a
+# placeholder for the name before the 4B model and the name back after it.
+CAPACITY_VERSION = "capacity-proposal-v2"
+TRANSLATE_VERSION = "capacity-translate-v3"
+PLACEHOLDER = "OSP_1"
+CAPACITY_SYSTEM = """Sei l'agente Intervention di CarePath AI per l'ATS della Val Padana. Scrivi per il \
+management una proposta di due frasi in italiano: il problema di attesa e l'aumento di capacità che la \
+simulazione indica. La prima parola è il nome della struttura, scritto come nei dati. Usa solo i nomi e i \
+numeri dei dati, scritti come sono; non aggiungere numeri, cause, costi o diagnosi. Chiudi dicendo che la \
+decisione spetta al management."""
+CAPACITY_TRANSLATE = f"""Traduci in inglese questo testo. Mantieni i numeri e la sigla {PLACEHOLDER} \
+esattamente come sono.
+
+{{text}}"""
 FREE_DAYS = 21  # free_slots' default horizon, the "next three weeks" of the proposal
 # A booking further ahead than this is moved after a wait alarm: only those beyond the step's max_wait_days
 # were 3 a day in scenario 2, too few to shorten the queue (step 2.13)
@@ -41,6 +70,14 @@ PHRASE = {
                   "en": "Still open {n} days after the reminder: Centro Servizi call."},
     "call_sign": {"it": "Chiamata del Centro Servizi oggi.", "en": "Centro Servizi call today."},
 }
+
+
+class Wording(BaseModel):
+    testo: str
+
+
+class Translation(BaseModel):
+    text: str
 
 
 class Reason:
@@ -60,8 +97,11 @@ class Reason:
 
 
 class Intervention:
-    def __init__(self, pathway: Pathway, run_id: str, facility_names: dict[str, str], n: int):
+    def __init__(self, pathway: Pathway, run_id: str, facility_names: dict[str, str], n: int,
+                 proposal: dict | None = None):
+        """`proposal` is the engine's proposed lever (`whatif.proposed_lever`), None without one."""
         self.pathway, self.run_id, self.names = pathway, run_id, facility_names
+        self.proposal = proposal
         self.esc = pathway.escalation
         self.reasons: list[Reason] = []
         for r in pathway.rules:
@@ -103,6 +143,7 @@ class Intervention:
             items += self._patient_actions(state, risk, day, Reason(f"rule:{rule.id}", "review", rule=rule), idx, "call_sign")
         items += self._mmg_proposal(con, state, day, mmg)
         items += self._reschedules(con, monitoring, day)
+        items += self._capacity_proposal(con, monitoring, day)
         rows = actions.create_many(con, self.run_id, day, items, emit)
         self._write_escalation(con, state)
         return rows
@@ -209,6 +250,65 @@ class Intervention:
                           f"where {to_name} has an earlier slot."},
                 "evidence": [wait["source"], free["source"]]})
         return out
+
+    def _capacity_proposal(self, con, monitoring, day: int) -> list[dict]:
+        """Once a run, while the proposed lever's wait alarm is open: add its slots at the facility (D45)."""
+        p = self.proposal
+        if p is None or (p["lever"].facility_id, p["step"]) not in monitoring.open or "data" not in monitoring.waits.get(p["step"], {}):
+            return []
+        if con.execute("SELECT count(*) FROM actions WHERE type = 'capacity_proposal'").fetchall()[0][0]:
+            return []
+        s = next(x for x in self.pathway.steps if x.id == p["step"])
+        wait, lever, k = monitoring.waits[p["step"]], p["lever"], p["extra_slots"]
+        name, w, b = p["facility"], wait["data"][p["facility"]], p["base_slots"]
+        it = lambda x: f"{x:.1f}".replace(".", ",")
+        one = k == 1
+        slots = {"it": "posto" if one else "posti", "en": "slot" if one else "slots"}
+        verb = {"it": "porta" if one else "portano", "en": "brings" if one else "bring"}
+        template = {
+            "it": f"{name}: attesa media per {s.label.it} {it(w)} giorni, oltre i {p['limit']} del PDTA. Nella "
+                  f"simulazione a {p['months']} mesi con gli agenti, {k} {slots['it']} in più al giorno (da {b} a "
+                  f"{b + k}) dal giorno {lever.from_day} {verb['it']} l'attesa media da {it(p['wait_days_without'])} a "
+                  f"{it(p['wait_days'])} giorni. La decisione di aggiungere la capacità spetta al management.",
+            "en": f"{name}: mean wait for {s.label.en} {w:.1f} days, over the PDTA's {p['limit']}. In the "
+                  f"{p['months']}-month simulation with agents, {k} more {slots['en']} a day (from {b} to {b + k}) "
+                  f"from day {lever.from_day} {verb['en']} the mean wait from {p['wait_days_without']:.1f} to "
+                  f"{p['wait_days']:.1f} days. Adding the capacity is the management's decision."}
+        facts = {"struttura": name, "esame": s.label.it, "attesa_media_ultimi_7_giorni": w, "soglia_PDTA_giorni": p["limit"],
+                 "posti_in_piu_al_giorno": k, "posti_al_giorno_oggi": b, "posti_al_giorno_dopo": b + k,
+                 "dal_giorno": lever.from_day, "mesi_simulati": p["months"],
+                 "attesa_media_nei_mesi_senza": p["wait_days_without"], "attesa_media_nei_mesi_con": p["wait_days"]}
+        rationale, wording = self._wording(facts, template)
+        return [{"agent": AGENT, "type": "capacity_proposal", "pathway_id": self.pathway.pathway_id,
+                 "scope": {"facility_id": lever.facility_id},
+                 "payload": {"facility_id": lever.facility_id, "service": lever.service, "extra_slots": k,
+                             "slots_per_day": lever.slots_per_day, "from_day": lever.from_day, "lever_run": p["run_id"],
+                             "wait_days": p["wait_days"], "wait_days_without": p["wait_days_without"],
+                             "months": p["months"], "wording": wording},
+                 "rationale": rationale,
+                 "evidence": [wait["source"], {"whatif": p["run_id"], "levers": {"extra_slots": k}, "months": p["months"],
+                                               "run_id": self.run_id, "day": day}]}]
+
+    def _wording(self, facts: dict, template: dict) -> tuple[dict, str]:
+        """The 30B model's sentence and the 4B translation (D31), from the cache in the demo, when every number
+        in both is one of the facts' and both name the facility; the template otherwise (CLAUDE.md rule 1)."""
+        messages = [{"role": "system", "content": CAPACITY_SYSTEM},
+                    {"role": "user", "content": json.dumps(facts, ensure_ascii=False)}]
+        try:
+            text = llm.complete(AGENT, CAPACITY_VERSION, messages, schema=Wording, model=llm.LARGE).data.testo
+            prompt = CAPACITY_TRANSLATE.format(text=text.replace(facts["struttura"], PLACEHOLDER))
+            english = llm.complete(AGENT, TRANSLATE_VERSION, [{"role": "user", "content": prompt}],
+                                   schema=Translation, model=llm.SMALL).data.text.replace(PLACEHOLDER, facts["struttura"])
+        except llm.LLMUnavailable as e:
+            log.info("capacity proposal from the template: %s", e)
+            return template, "template"
+        values = verifier.leaves(facts) + [float(n) for n in re.findall(r"\d+", " ".join(facts))]  # "ultimi_7_giorni"
+        wrong = [t for t in (text, english) if facts["struttura"] not in t or verifier.unsupported(t, values)]
+        if wrong:
+            log.warning("capacity proposal from the template: the model's sentence %r has a number or a name "
+                        "that is not in the facts", wrong[0])
+            return template, "template"
+        return {"it": text, "en": english}, "model"
 
     def _write_escalation(self, con, state: StateEngine) -> None:
         """escalation_step (SPEC §5.1): the highest rung any open problem of the patient has reached."""

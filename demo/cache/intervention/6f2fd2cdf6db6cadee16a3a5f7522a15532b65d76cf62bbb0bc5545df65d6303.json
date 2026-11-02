@@ -1,0 +1,32 @@
+{
+  "agent": "intervention",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "capacity-translate-v3",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo testo. Mantieni i numeri e la sigla OSP_1 esattamente come sono.\n\nOSP_1 ha un'attesa media di 30,3 giorni per l'ecocardiogramma, superiore alla soglia PDTA di 30 giorni. La simulazione indica che aumentando da 1 a 2 posti al giorno si riduce l'attesa media da 56,1 a 7,7 giorni nei prossimi 6 mesi. La decisione spetta al management."
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{ \"text\": \"OSP_1 has an average wait time of 30.3 days for echocardiogram, exceeding the PDTA threshold of 30 days. The simulation indicates that increasing from 1 to 2 positions per day reduces the average wait time from 56.1 to 7.7 days over the next 6 months. The decision rests with management.\" }",
+    "thinking": "I need to translate the provided Italian text into English while preserving the numbers and the acronym OSP_1 exactly as they appear in the original text. I will ensure that all numerical values and the specific label OSP_1 remain unchanged and are correctly placed in the English version. I will also maintain the structure and meaning of the original message, especially the logical flow about waiting times and the decision-making responsibility.\n"
+  }
+}

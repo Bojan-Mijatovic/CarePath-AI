@@ -55,6 +55,7 @@ def proposed_lever(scenario: int, pathway: Pathway, directory: Path = WHATIF_DIR
         return None
     grid = json.loads(path(scenario, directory).read_text(encoding="utf-8"))
     limit = next(s.max_wait_days for s in pathway.steps if s.id == grid["step"])
+    without = next(r["wait_days"] for r in grid["runs"] if r["arm"] == "agents" and not r["levers"]["extra_slots"])
     for r in sorted((r for r in grid["runs"] if r["arm"] == "agents" and r["levers"]["extra_slots"]),
                     key=lambda r: r["levers"]["extra_slots"]):
         if r["wait_days"] is not None and r["wait_days"] <= limit:
@@ -62,7 +63,8 @@ def proposed_lever(scenario: int, pathway: Pathway, directory: Path = WHATIF_DIR
             change = CapacityChange(facility_id=grid["facility_id"], service=grid["service"],
                                     slots_per_day=grid["base_slots"] + k, from_day=grid["lever_day"])
             return {"run_id": r["run_id"], "extra_slots": k, "wait_days": r["wait_days"], "limit": limit,
-                    "facility": grid["facility"], "lever": change}
+                    "facility": grid["facility"], "lever": change, "step": grid["step"],
+                    "wait_days_without": without, "base_slots": grid["base_slots"], "months": grid["months"]}
     return None
 
 

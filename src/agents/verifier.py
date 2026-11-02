@@ -252,6 +252,13 @@ def _string_numbers(obj) -> list[float]:
     return []
 
 
+def unsupported(text: str, values: list[float]) -> list[str]:
+    """The numbers of a text that are none of `values`, rounded or cut as `matches` allows: the check of a
+    model's sentence around numbers code gave it (Intervention's capacity proposal, step 2.27)."""
+    return [t.group() for t in NUMBER.finditer(text)
+            if not any(matches(x, d, v) for x, d in readings(t.group()) for v in values)]
+
+
 def check(text: dict, result: dict, question: dict, pathway: Pathway,
           facilities: list[tuple[str, str, str]]) -> list[dict]:
     """The issues of one claim ({"it", "en"}) against its tool's result; none means verified."""

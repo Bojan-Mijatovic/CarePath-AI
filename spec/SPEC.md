@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **v1.20**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), v1.13 adds C26 (D47, step 2.30), proposed 29 Oct 2026; v1.14 adds C27 (D48, step 2.5), v1.15 adds C28 (D49, step 2.28), v1.16 adds C29 (D50, step 2.10), v1.17 adds C30 (D51, step 2.18), v1.18 adds C31 (D52, step 2.12), v1.19 adds C32 (D54, step 2.13), proposed 30 Oct 2026; v1.20 adds C33 (D55, Verifier), proposed 2 Nov 2026. Changes follow §0 |
+| Status | **v1.21**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), v1.13 adds C26 (D47, step 2.30), proposed 29 Oct 2026; v1.14 adds C27 (D48, step 2.5), v1.15 adds C28 (D49, step 2.28), v1.16 adds C29 (D50, step 2.10), v1.17 adds C30 (D51, step 2.18), v1.18 adds C31 (D52, step 2.12), v1.19 adds C32 (D54, step 2.13), proposed 30 Oct 2026; v1.20 adds C33 (D55, Verifier), v1.21 adds C34 (D56, step 2.27), proposed 2 Nov 2026. Changes follow §0 |
 | Last updated | 2 Nov 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C33 proposed in v1.1–v1.20)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C34 proposed in v1.1–v1.21)
 
 | # | Change | Why |
 |---|---|---|
@@ -63,6 +63,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C31 (D52) | The action service's order of checks, guardrail test, daily-limit facility, execution on approval, feedback hand-in and undo (§7.3, §10) | §7.3 listed the checks but not how code applies them; a rejected action should not wait in the queue first, and agent code may not import the simulator (CLAUDE.md rule 5) |
 | C32 (D54) | Intervention (§9): tick order (after the Investigator), escalation ladder, warning-sign call, reschedule after a wait alarm, `payload` effects and patient lists (§7.1), rule evidence for patient actions, reminders as one action per problem a day, at most 10 `action` messages a tick; `worklist_today` keeps the top 200 a day (§5.2); a reschedule names `from_facility`, `to_facility` and `service` (guardrail, §7.3) | The SPEC named Intervention's job, not its rules; one action row per SMS cost about 40 ms a tick, and the full worklist's texts another 40, which AC2 had no room for; an action before the Investigator would change the cached alarm investigation |
 | C33 (D55) | The Verifier (§6): code only, on the investigation's tick and on `POST /ask`; each claim of `investigations.claims` gets `verified` and `issues`; a step's `verified` on the stream (§10) is all its claims' | The SPEC had the `verified` slot and C5's repeatable call, not the checks. In the 5 answers Chiedi shows, the model's numbers were right but 6 claims gave an ASST's figure as one hospital's and 2 stated a comparison backwards ("83,65% … inferiore al 79,8%"); the 4B translation wrote "4-than" for "40 giorni". An LLM check would need its own cache and could slip the same way |
+| C34 (D56) | Action type `capacity_proposal` (§7.2, fixed level 1), Intervention's capacity proposal on the wait alarm (§9), `approved` in the tick's `lever_run` (§10), `capacity_proposal` in the cache manifest (§8) | Step 2.27 needs D45's structural fix as an action to approve; §7.2 had no type for it. Buying capacity is a decision outside the system, so no level lets an agent do it, and approval changes no event: the console turns to the lever run computed in advance (C28) |
 
 ## 1. Scope
 
@@ -414,6 +415,7 @@ Levels (Solution Plan §8): 0 observe, 1 propose, 2 do with approval, 3 do alone
 | `enroll_proposal` | Enrollment Advisor | 3, MMG notified, MMG can undo | — |
 | `pathway_proposal` | Pathway Builder | 3 after automatic checks, clinical board notified | — |
 | `rule_proposal` | Rule Advisor | **1, fixed**: the manager always approves | no |
+| `capacity_proposal` (C34) | Intervention | **1, fixed**: buying capacity is the manager's decision outside the system | no |
 | `bed_assignment` | Bed Finder | 3 (alternative mode: 2 with doctor confirmation) | — |
 
 ### 7.3 Action service
@@ -479,6 +481,8 @@ The baseline arm skips steps 6, 7 and 8.
 
 **Intervention** (C32, `src/agents/intervention.py`, step 2.13), rules only. *Escalation ladder* (the pathway's `escalation`, §4) for every open problem: a flag rule that holds, or a step with a service or a telemonitoring start that is overdue and not booked for a coming day. When it opens, a reminder, or at once a call for a high-risk patient when `high_risk_skips_reminder`; still open `call_after_days` later, a `call_task`; still open `mmg_after_days` later, the patient joins one `notify_mmg` proposal a day (a new one only when none is waiting). *Warning sign*: a step rule that starts to hold gets a `call_task` that day. *Wait alarm* (D53): only while Monitoring has a regional wait alarm open, one `reschedule` a day for the facility (a new one only when none is waiting) moving its patients booked more than 14 days ahead to the hospital with the most free slots in 21 days (`free_slots`), as many as it has. Reminders are one action a day per kind of problem, listing the patients; calls are one action per patient. `payload` names the problem (`rule` or `step` id) and the `effect` the simulator gives it: `collect` (a no-dispense flag rule), `book` (a step with a service), `start` (telemonitoring), `review` (a warning sign); an action on a scope lists `payload.patients`, as ids sharing the effect or as objects with their own. A patient action's `evidence` is Monitoring's rule or deadline, `{"rule" or "step": id, run_id, day}`, since no tool answers for one patient; a reschedule's is the `wait_by_hospital` and `free_slots` sources. `escalation_step` is the highest rung reached by an open problem: 1 reminder, 2 call, 3 MMG notified. The stream carries at most 10 `action` messages a tick, proposals first, then calls by risk; `GET /actions` has every one.
 
+*Capacity* (C34, step 2.27, D45): the engine hands the agents arm and its lever run the scenario's proposed lever (`whatif.proposed_lever`: the smallest of +1 to +4 slots a day at the first wait alarm's facility whose 6-month mean wait in the what-if grid is within the step's `max_wait_days`; +2 in scenario 1, +1 in 2 and 3). On the first day that facility's wait alarm is open, Intervention creates one `capacity_proposal` per run, `scope` `{"facility_id"}`, `payload` `{"facility_id", "service", "extra_slots", "slots_per_day", "from_day", "lever_run", "wait_days", "wait_days_without", "months", "wording"}`, `evidence` the alarm's `wait_by_hospital` source and `{"whatif": lever_run, "levers", "months", "run_id", "day"}`. Its level is fixed at 1, so it always waits; approved, it is executed and changes nothing in the run (no event: no agent changes capacity, CLAUDE.md rule 3), and the demo marks the lever run `approved` (§10). The rationale is a template filled by code; the demo shows `qwen3:30b-instruct`'s two sentences (`capacity-proposal-v1`) and `qwen3:4b-instruct`'s translation from the cache (D17, listed in the manifest) when both name the facility and every number in them is one of the facts code gave (`verifier.unsupported`), the template otherwise; `wording` says which (`model`, `template`), and the cache check (§8) fails on a `template` where the manifest lists the model's. The what-if grid stores no action counts, so the proposal leaves it unchanged.
+
 **Speed:** ×1 = 1 simulated day per 2 s, ×4 = 2 days per s; operator controls pause, ×1, ×4, and jump to a day. Jump forward continues from the current day; jump backward replays deterministically from day 0 up to the target day (C9).
 
 **Performance budgets** (C9, delivery plan D22). AC2 measures one run; the demo needs more:
@@ -530,7 +534,7 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 
 | `type` | `payload` |
 |---|---|
-| `tick` | `{"speed": 4, "kpi": {...}}`: headline numbers for the cards; with a lever run (C28) also `"lever_run": {"run_id", "day"}`, its day behind the tick's while it catches up |
+| `tick` | `{"speed": 4, "kpi": {...}}`: headline numbers for the cards; with a lever run (C28) also `"lever_run": {"run_id", "day", "approved"}`, its day behind the tick's while it catches up, and `approved` true once the manager approved the scenario's `capacity_proposal`, until a jump back or a reset rebuilds the runs (C34). Approving one also pushes a `tick` |
 | `alert` | `{"alert_id": "al_s2_agents_338", "level": "patient" \| "regional", "text": {"it": "...", "en": "..."}, "facility_id": "osp_B", "group_key": null, "investigation_id": "..."}`; `group_key` names the group of a group alarm (C26), and `alert_id` links the investigation to its alarm |
 | `action` | one row of `actions` |
 | `investigation` | `{"investigation_id", "step": n, "tool", "args", "result_summary": {"it", "en"}, "verified": true \| false \| null, "final": false}`; `verified` is true when the Verifier passed every claim of the step, false when one has an issue, null without a checked claim (C33) |

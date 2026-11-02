@@ -199,6 +199,7 @@ const STRINGS = {
   'action.reschedule': { it: 'Riprogrammazione', en: 'Rescheduling' },
   'action.enroll_proposal': { it: 'Proposta di arruolamento', en: 'Enrolment proposal' },
   'action.rule_proposal': { it: 'Proposta di regola', en: 'Rule proposal' },
+  'action.capacity_proposal': { it: 'Proposta di capacità', en: 'Capacity proposal' },
   'action.pathway_proposal': { it: 'Proposta di percorso', en: 'Pathway proposal' },
   'action.bed_proposal': { it: 'Proposta di posto letto', en: 'Bed proposal' },
   'action.bed_assignment': { it: 'Assegnazione del posto letto', en: 'Bed assignment' },

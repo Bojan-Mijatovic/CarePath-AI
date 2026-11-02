@@ -39,6 +39,11 @@
       "level": 3,
       "default": 3,
       "fixed": false
+    },
+    "capacity_proposal": {
+      "level": 1,
+      "default": 1,
+      "fixed": true
     }
   }
 }

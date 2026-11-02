@@ -1,0 +1,35 @@
+{
+  "agent": "intervention",
+  "model": "qwen3:30b-instruct",
+  "prompt_version": "capacity-proposal-v2",
+  "request": {
+    "messages": [
+      {
+        "role": "system",
+        "content": "Sei l'agente Intervention di CarePath AI per l'ATS della Val Padana. Scrivi per il management una proposta di due frasi in italiano: il problema di attesa e l'aumento di capacità che la simulazione indica. La prima parola è il nome della struttura, scritto come nei dati. Usa solo i nomi e i numeri dei dati, scritti come sono; non aggiungere numeri, cause, costi o diagnosi. Chiudi dicendo che la decisione spetta al management."
+      },
+      {
+        "role": "user",
+        "content": "{\"struttura\": \"Ospedale A\", \"esame\": \"Ecocardiogramma\", \"attesa_media_ultimi_7_giorni\": 30.1, \"soglia_PDTA_giorni\": 30, \"posti_in_piu_al_giorno\": 2, \"posti_al_giorno_oggi\": 2, \"posti_al_giorno_dopo\": 4, \"dal_giorno\": 20, \"mesi_simulati\": 6, \"attesa_media_nei_mesi_senza\": 56.3, \"attesa_media_nei_mesi_con\": 13.7}"
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "testo": {
+          "title": "Testo",
+          "type": "string"
+        }
+      },
+      "required": [
+        "testo"
+      ],
+      "title": "Wording",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{ \"testo\": \"Ospedale A ha un'attesa media di 30,1 giorni per l'ecocardiogramma, superiore alla soglia di 30 giorni. La simulazione indica che con l'aumento di 2 posti al giorno, la capacità cresce da 2 a 4 posti al giorno, riducendo l'attesa media da 56,3 a 13,7 giorni nei prossimi 6 mesi. La decisione spetta al management.\" }"
+  }
+}

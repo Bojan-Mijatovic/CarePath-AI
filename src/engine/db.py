@@ -24,7 +24,7 @@ EVENT_TYPES = ("DISCHARGE", "ADMISSION", "VISIT", "IMAGING", "LAB", "DISPENSE", 
 PATHWAY_STATUSES = ("on_track", "due_soon", "overdue", "dropped")
 KPI_LEVELS = ("ats", "asst", "comune")
 ACTION_TYPES = ("reminder", "call_task", "notify_mmg", "reschedule", "enroll_proposal", "rule_proposal",
-                "pathway_proposal", "bed_proposal", "bed_assignment")
+                "pathway_proposal", "bed_proposal", "bed_assignment", "capacity_proposal")
 ACTION_STATUSES = ("proposed", "approved", "executed", "rejected", "undone")
 DEVIATION_KINDS = ("rule", "overdue")
 ALERT_LEVELS = ("patient", "regional")
