@@ -91,3 +91,4 @@ Run on 2 Nov 2026, commit `eba59c0`, team laptop on mains power, no model loaded
 | Scenario 1, ×4 for 20 days | 10.9 s; catch-up 3.0 s |
 | Scenario 3, ×1 day 23 → 29 | 11.0 s; ×4 for 20 days 10.3 s; catch-up 5.1 s |
 | Approve, autonomy, what-if, Maria, Chiedi from the cache | under 0.3 s each |
+| Step 4.2, the same walk with the proposal approved and "Da sola" (commit `c704460`) | start 75 s; lever run catch-up 12.5 s (scenario 2), 7.1 s (1), 9.4 s (3); app at most 2.12 GB, no swap |
