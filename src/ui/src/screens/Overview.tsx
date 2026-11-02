@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { type Action, type Kpi, type Pathway, type Report, send, useApi } from '../lib/api'
-import { agentName, formatNumber, formatPercent, label, useLang } from '../lib/i18n'
+import { agentName, formatEuro, formatNumber, formatPercent, label, useLang } from '../lib/i18n'
 
 /** Demo step 3 (prototype "Pregled"): headline numbers of the day, the approval queue, the PNE indicator, and
  * the Reporter's latest monthly report (step 2.14). */
@@ -91,6 +91,15 @@ export default function Overview({ day, kpi, pathway }: { day: number | null; kp
           {reference && (
             <div className="card-sub">
               {t('pne.reference', { source: reference.label[lang], rate: formatPercent(lang, reference.rate, 2) })}
+            </div>
+          )}
+          {kpi.est_readmission_cost_eur !== null && pathway.readmission_cost && (
+            <div className="card-sub" title={pathway.readmission_cost.label[lang]}>
+              {t('pne.cost', { eur: formatEuro(lang, kpi.est_readmission_cost_eur) })} ·{' '}
+              {t('cost.note', {
+                eur: formatEuro(lang, pathway.readmission_cost.eur),
+                source: pathway.readmission_cost.label[lang],
+              })}
             </div>
           )}
         </section>

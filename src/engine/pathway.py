@@ -143,11 +143,18 @@ class Reference(Strict):
     label: Bilingual = Field(description="where the rate comes from, for example Italia, PNE 2025")
 
 
+class ReadmissionCost(Strict):
+    """C39: the cost of one readmission, which kpi_daily multiplies by the readmissions (SPEC §5.2)."""
+    eur: int = Field(gt=0, description="euros per readmission")
+    label: Bilingual = Field(description="where the cost comes from, shown next to every euro figure")
+
+
 class Pathway(Strict):
     pathway_id: str = Field(pattern=ID)
     name: str = Field(description="Italian name of the PDTA document")
     label: Bilingual = Field(description="the pathway as the console names it, for example in the top bar")
     readmission_reference: Reference | None = Field(None, description="a published rate the console shows next to the run's")
+    readmission_cost: ReadmissionCost | None = Field(None, description="euros per readmission; without it no euros")
     eligibility: Eligibility
     status_thresholds: StatusThresholds
     steps: list[Step] = Field(min_length=1)

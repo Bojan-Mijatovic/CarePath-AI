@@ -12,7 +12,7 @@
     "readmission_rate_30d": 0.625,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 17500
   },
   {
     "day": 1,
@@ -27,7 +27,7 @@
     "readmission_rate_30d": 0.3529,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 21000
   },
   {
     "day": 2,
@@ -42,7 +42,7 @@
     "readmission_rate_30d": 0.2692,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 24500
   },
   {
     "day": 3,
@@ -57,7 +57,7 @@
     "readmission_rate_30d": 0.2105,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 28000
   },
   {
     "day": 4,
@@ -72,7 +72,7 @@
     "readmission_rate_30d": 0.1607,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 31500
   },
   {
     "day": 5,
@@ -87,7 +87,7 @@
     "readmission_rate_30d": 0.1538,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 35000
   },
   {
     "day": 6,
@@ -102,7 +102,7 @@
     "readmission_rate_30d": 0.1622,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 42000
   },
   {
     "day": 7,
@@ -117,7 +117,7 @@
     "readmission_rate_30d": 0.1512,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 45500
   },
   {
     "day": 8,
@@ -132,7 +132,7 @@
     "readmission_rate_30d": 0.1444,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 45500
   },
   {
     "day": 9,
@@ -147,7 +147,7 @@
     "readmission_rate_30d": 0.1327,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 45500
   },
   {
     "day": 10,
@@ -162,7 +162,7 @@
     "readmission_rate_30d": 0.1226,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 45500
   },
   {
     "day": 11,
@@ -177,7 +177,7 @@
     "readmission_rate_30d": 0.1167,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 49000
   },
   {
     "day": 12,
@@ -192,7 +192,7 @@
     "readmission_rate_30d": 0.1154,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 52500
   },
   {
     "day": 13,
@@ -207,7 +207,7 @@
     "readmission_rate_30d": 0.1079,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 52500
   },
   {
     "day": 14,
@@ -222,7 +222,7 @@
     "readmission_rate_30d": 0.0949,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 52500
   },
   {
     "day": 15,
@@ -237,7 +237,7 @@
     "readmission_rate_30d": 0.1037,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 59500
   },
   {
     "day": 16,
@@ -252,7 +252,7 @@
     "readmission_rate_30d": 0.1163,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 70000
   },
   {
     "day": 17,
@@ -267,7 +267,7 @@
     "readmission_rate_30d": 0.1379,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 84000
   },
   {
     "day": 18,
@@ -282,7 +282,7 @@
     "readmission_rate_30d": 0.1374,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 87500
   },
   {
     "day": 19,
@@ -297,7 +297,7 @@
     "readmission_rate_30d": 0.1429,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 94500
   },
   {
     "day": 20,
@@ -312,7 +312,7 @@
     "readmission_rate_30d": 0.151,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 101500
   },
   {
     "day": 21,
@@ -327,7 +327,7 @@
     "readmission_rate_30d": 0.1485,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 105000
   },
   {
     "day": 22,
@@ -342,7 +342,7 @@
     "readmission_rate_30d": 0.1542,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 115500
   },
   {
     "day": 23,
@@ -357,7 +357,7 @@
     "readmission_rate_30d": 0.1713,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 129500
   },
   {
     "day": 24,
@@ -372,7 +372,7 @@
     "readmission_rate_30d": 0.1602,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 129500
   },
   {
     "day": 25,
@@ -387,7 +387,7 @@
     "readmission_rate_30d": 0.1551,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 133000
   },
   {
     "day": 26,
@@ -402,7 +402,7 @@
     "readmission_rate_30d": 0.1518,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 136500
   },
   {
     "day": 27,
@@ -417,7 +417,7 @@
     "readmission_rate_30d": 0.1429,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 136500
   },
   {
     "day": 28,
@@ -432,7 +432,7 @@
     "readmission_rate_30d": 0.1495,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 147000
   },
   {
     "day": 29,
@@ -447,7 +447,7 @@
     "readmission_rate_30d": 0.1453,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 150500
   },
   {
     "day": 30,
@@ -462,7 +462,7 @@
     "readmission_rate_30d": 0.1508,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 161000
   },
   {
     "day": 31,
@@ -477,7 +477,7 @@
     "readmission_rate_30d": 0.1497,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 164500
   },
   {
     "day": 32,
@@ -492,7 +492,7 @@
     "readmission_rate_30d": 0.1437,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 164500
   },
   {
     "day": 33,
@@ -507,7 +507,7 @@
     "readmission_rate_30d": 0.1391,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 164500
   },
   {
     "day": 34,
@@ -522,7 +522,7 @@
     "readmission_rate_30d": 0.1371,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 168000
   },
   {
     "day": 35,
@@ -537,7 +537,7 @@
     "readmission_rate_30d": 0.1361,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 171500
   },
   {
     "day": 36,
@@ -552,7 +552,7 @@
     "readmission_rate_30d": 0.134,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 175000
   },
   {
     "day": 37,
@@ -567,7 +567,7 @@
     "readmission_rate_30d": 0.1289,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 175000
   },
   {
     "day": 38,
@@ -582,7 +582,7 @@
     "readmission_rate_30d": 0.1285,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 178500
   },
   {
     "day": 39,
@@ -597,7 +597,7 @@
     "readmission_rate_30d": 0.125,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 178500
   },
   {
     "day": 40,
@@ -612,7 +612,7 @@
     "readmission_rate_30d": 0.1223,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 178500
   },
   {
     "day": 41,
@@ -627,7 +627,7 @@
     "readmission_rate_30d": 0.1247,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 185500
   },
   {
     "day": 42,
@@ -642,7 +642,7 @@
     "readmission_rate_30d": 0.1326,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 199500
   },
   {
     "day": 43,
@@ -657,7 +657,7 @@
     "readmission_rate_30d": 0.1293,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 199500
   },
   {
     "day": 44,
@@ -672,7 +672,7 @@
     "readmission_rate_30d": 0.13,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 203000
   },
   {
     "day": 45,
@@ -687,7 +687,7 @@
     "readmission_rate_30d": 0.1294,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 206500
   },
   {
     "day": 46,
@@ -702,7 +702,7 @@
     "readmission_rate_30d": 0.1315,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 213500
   },
   {
     "day": 47,
@@ -717,7 +717,7 @@
     "readmission_rate_30d": 0.1347,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 224000
   },
   {
     "day": 48,
@@ -732,7 +732,7 @@
     "readmission_rate_30d": 0.1364,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 231000
   },
   {
     "day": 49,
@@ -747,7 +747,7 @@
     "readmission_rate_30d": 0.1341,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 231000
   },
   {
     "day": 50,
@@ -762,7 +762,7 @@
     "readmission_rate_30d": 0.1386,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 241500
   },
   {
     "day": 51,
@@ -777,7 +777,7 @@
     "readmission_rate_30d": 0.1369,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 241500
   },
   {
     "day": 52,
@@ -792,7 +792,7 @@
     "readmission_rate_30d": 0.1342,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 241500
   },
   {
     "day": 53,
@@ -807,7 +807,7 @@
     "readmission_rate_30d": 0.1314,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 241500
   },
   {
     "day": 54,
@@ -822,7 +822,7 @@
     "readmission_rate_30d": 0.1337,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 248500
   },
   {
     "day": 55,
@@ -837,7 +837,7 @@
     "readmission_rate_30d": 0.131,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 248500
   },
   {
     "day": 56,
@@ -852,7 +852,7 @@
     "readmission_rate_30d": 0.1336,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 259000
   },
   {
     "day": 57,
@@ -867,7 +867,7 @@
     "readmission_rate_30d": 0.1324,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 259000
   },
   {
     "day": 58,
@@ -882,7 +882,7 @@
     "readmission_rate_30d": 0.1324,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 266000
   },
   {
     "day": 59,
@@ -897,7 +897,7 @@
     "readmission_rate_30d": 0.1304,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 266000
   },
   {
     "day": 60,
@@ -912,7 +912,7 @@
     "readmission_rate_30d": 0.1277,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 266000
   },
   {
     "day": 61,
@@ -927,7 +927,7 @@
     "readmission_rate_30d": 0.1266,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 269500
   },
   {
     "day": 62,
@@ -942,6 +942,6 @@
     "readmission_rate_30d": 0.1272,
     "actions_executed": 0,
     "actions_pending": 0,
-    "est_readmission_cost_eur": null
+    "est_readmission_cost_eur": 273000
   }
 ]

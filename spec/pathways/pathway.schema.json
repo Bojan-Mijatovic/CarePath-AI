@@ -130,6 +130,28 @@
       "title": "GroupAlarm",
       "type": "object"
     },
+    "ReadmissionCost": {
+      "additionalProperties": false,
+      "description": "C39: the cost of one readmission, which kpi_daily multiplies by the readmissions (SPEC §5.2).",
+      "properties": {
+        "eur": {
+          "description": "euros per readmission",
+          "exclusiveMinimum": 0,
+          "title": "Eur",
+          "type": "integer"
+        },
+        "label": {
+          "$ref": "#/$defs/Bilingual",
+          "description": "where the cost comes from, shown next to every euro figure"
+        }
+      },
+      "required": [
+        "eur",
+        "label"
+      ],
+      "title": "ReadmissionCost",
+      "type": "object"
+    },
     "Reference": {
       "additionalProperties": false,
       "properties": {
@@ -427,6 +449,18 @@
       ],
       "default": null,
       "description": "a published rate the console shows next to the run's"
+    },
+    "readmission_cost": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ReadmissionCost"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "euros per readmission; without it no euros"
     },
     "eligibility": {
       "$ref": "#/$defs/Eligibility"

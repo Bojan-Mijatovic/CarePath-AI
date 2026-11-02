@@ -174,6 +174,10 @@ const STRINGS = {
   'compare.onTrack': { it: 'In linea con il PAI', en: 'On track with the PAI' },
   'compare.points': { it: '{points} punti', en: '{points} points' },
   'compare.overdue': { it: 'Passi in ritardo', en: 'Overdue steps' },
+  'compare.cost': { it: 'Costo stimato delle riammissioni', en: 'Estimated cost of readmissions' },
+  'cost.note': { it: '{eur} a riammissione: {source}', en: '{eur} per readmission: {source}' },
+  'whatif.saving': { it: 'Risparmio stimato in {months} mesi', en: 'Estimated saving in {months} months' },
+  'pne.cost': { it: 'Costo stimato: {eur}', en: 'Estimated cost: {eur}' },
   'compare.waits': { it: '{step}: attesa media e posti usati, ultimi 7 giorni', en: '{step}: mean wait and slots used, last 7 days' },
   'compare.facility': { it: 'Struttura', en: 'Facility' },
   'compare.wait': { it: 'Attesa media', en: 'Mean wait' },
@@ -257,6 +261,15 @@ const STRINGS = {
   'ask.steps': { it: 'Passi dell’indagine', en: 'Investigation steps' },
   'ask.step': { it: 'Passo {step}', en: 'Step {step}' },
   'ask.unverified': { it: 'da verificare', en: 'not yet verified' },
+  'ask.kickerQuestion': { it: 'Domanda dell’operatore · Investigator', en: 'Operator’s question · Investigator' },
+  'ask.box': { it: 'Chiedete agli agenti', en: 'Ask the agents' },
+  'ask.placeholder': { it: 'Una domanda sui dati del percorso…', en: 'A question about the pathway’s data…' },
+  'ask.send': { it: 'Chiedi', en: 'Ask' },
+  'ask.noAnswer': {
+    it: 'Per questa domanda non c’è una risposta preparata oggi: in questa demo le risposte sono generate in anticipo.',
+    en: 'There is no answer prepared for this question today: in this demo the answers are generated in advance.',
+  },
+  'ask.suggestionsDay': { it: 'Risposte preparate per il giorno {day}.', en: 'Answers prepared for day {day}.' },
   'ask.verified': { it: 'verificato', en: 'verified' },
   'ask.corrected': { it: 'corretto', en: 'corrected' },
   'ask.correction': { it: 'Verifier', en: 'Verifier' },
@@ -366,6 +379,11 @@ const LOCALE: Record<Lang, string> = { it: 'it-IT', en: 'en-GB' }
 
 export function formatNumber(lang: Lang, value: number, digits = 0): string {
   return new Intl.NumberFormat(LOCALE[lang], { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value)
+}
+
+/** Euros, whole (C39: the pathway's assumed cost per readmission times readmissions). */
+export function formatEuro(lang: Lang, value: number): string {
+  return new Intl.NumberFormat(LOCALE[lang], { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value)
 }
 
 /** A fraction 0–1 from the data as a percentage (SPEC §2: percentages only in the UI). */

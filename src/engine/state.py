@@ -23,7 +23,6 @@ from engine.pathway import Pathway, Step
 NO_DAY = -(10**6)  # has not happened
 NEVER = 10**9      # not enrolled yet; nothing due
 READMISSION_DAYS = 30
-READMISSION_COST_EUR: int | None = None  # SPEC §5.2; value and source are open question Q2, so cost is NULL
 DIAGNOSIS_EVENTS = ("DISCHARGE", "ADMISSION")
 ON_TRACK, DUE_SOON, OVERDUE, DROPPED = range(4)  # positions in PATHWAY_STATUSES
 ENGINE_COLUMNS = ("current_step", "next_step", "next_due_day", "next_booked_day", "status", "overdue_steps",
@@ -341,11 +340,13 @@ class StateEngine:
             frames.append(g[g.patients > 0])
         kpi = pd.concat(frames, ignore_index=True)
         rate = (kpi.readmissions_30d / kpi.discharges.where(kpi.discharges > 0)).round(4)
+        cost = self.pathway.readmission_cost
         kpi = kpi.assign(day=np.int32(day), pathway_id=self.pathway.pathway_id,
                          on_track_pct=(kpi.on_track / kpi.patients).round(4),
                          readmission_rate_30d=rate.astype("Float64"),
-                         est_readmission_cost_eur=(pd.array([pd.NA] * len(kpi), dtype="Int64") if READMISSION_COST_EUR is None
-                                                   else kpi.readmissions_30d * READMISSION_COST_EUR))
+                         # C39: the pathway's cost per readmission; a pathway without one has no euros
+                         est_readmission_cost_eur=(pd.array([pd.NA] * len(kpi), dtype="Int64") if cost is None
+                                                   else (kpi.readmissions_30d * cost.eur).astype("Int64")))
         kpi = kpi.drop(columns=["on_track", "discharges"]).astype({"actions_executed": np.int64, "actions_pending": np.int64})
         self._replace(con, "kpi_daily", kpi, day)
 

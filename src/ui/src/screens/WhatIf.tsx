@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { type Pathway, type PneYearEnd, type WhatIf as Result, type WhatIfRun, send } from '../lib/api'
-import { formatNumber, formatPercent, useLang } from '../lib/i18n'
+import { formatEuro, formatNumber, formatPercent, useLang } from '../lib/i18n'
 
 const MAX_EXTRA_SLOTS = 4 // the grid's levers, SPEC §10 (C27)
 const MONTHS = 6
@@ -86,6 +86,15 @@ export default function WhatIf({ scenario, pathway }: { scenario: number | null;
               <div className="card-value">{n(result.avoided_readmissions)}</div>
               <div className="card-sub">{t('whatif.avoidedSub')}</div>
             </div>
+            {result.saving_eur !== undefined && result.cost && (
+              <div className="card accent">
+                <div className="card-label">{t('whatif.saving', { months: MONTHS })}</div>
+                <div className="card-value">{formatEuro(lang, result.saving_eur)}</div>
+                <div className="card-sub">
+                  {t('cost.note', { eur: formatEuro(lang, result.cost.eur), source: result.cost.label[lang] })}
+                </div>
+              </div>
+            )}
             <div className="card">
               <div className="card-label">{t('whatif.wait', { facility: result.facility })}</div>
               <div className="card-value">{wait(result.lever)}</div>

@@ -14,7 +14,7 @@
       "readmission_rate_30d": 0.1361,
       "actions_executed": 1,
       "actions_pending": 0,
-      "est_readmission_cost_eur": null
+      "est_readmission_cost_eur": 171500
     }
   }
 }

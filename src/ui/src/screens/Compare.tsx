@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { type CapacityRow, type KpiRow, type Pathway, useApi } from '../lib/api'
-import { formatNumber, formatPercent, useLang } from '../lib/i18n'
+import { formatEuro, formatNumber, formatPercent, useLang } from '../lib/i18n'
 import type { LeverRun } from '../lib/stream'
 
 type Mode = 'arms' | 'lever'
@@ -56,6 +56,8 @@ export default function Compare({
     : [t('compare.without'), t('compare.with')]
   const readmissionsDelta = a && b ? b.readmissions_30d - a.readmissions_30d : 0
   const pointsDelta = a && b ? Math.round(100 * (b.on_track_pct - a.on_track_pct)) : 0
+  const costDelta = (b?.est_readmission_cost_eur ?? 0) - (a?.est_readmission_cost_eur ?? 0)
+  const cost = pathway.readmission_cost
 
   const column = (k: 0 | 1, row: KpiRow | undefined, cap: CapacityRow[] | undefined) => (
     <section className={k === 1 ? 'panel compare-col accent' : 'panel compare-col'} aria-labelledby={`h-compare-${k}`}>
@@ -80,6 +82,17 @@ export default function Compare({
             </dd>
             <dt>{t('compare.overdue')}</dt>
             <dd>{n(row.overdue)}</dd>
+            {row.est_readmission_cost_eur !== null && (
+              <>
+                <dt>{t('compare.cost')}</dt>
+                <dd>
+                  {formatEuro(lang, row.est_readmission_cost_eur)}
+                  {k === 1 && costDelta !== 0 && (
+                    <span className="compare-delta">{`${costDelta > 0 ? '+' : '−'}${formatEuro(lang, Math.abs(costDelta))}`}</span>
+                  )}
+                </dd>
+              </>
+            )}
           </dl>
           {step && (
             <table className="compare-table">
@@ -127,6 +140,7 @@ export default function Compare({
         {column(0, a, capA.data)}
         {column(1, b, capB.data)}
       </div>
+      {cost && <p className="card-sub">{t('cost.note', { eur: formatEuro(lang, cost.eur), source: cost.label[lang] })}</p>}
     </div>
   )
 }

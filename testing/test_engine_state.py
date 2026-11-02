@@ -140,7 +140,9 @@ def test_kpi_daily(daily):
     assert kpi.loc[("asst", "asst_cremona")].readmission_rate_30d == round(2 / 3, 4)
     assert kpi.loc[("asst", "asst_mantova")].readmissions_30d == 0
     assert kpi.on_track_pct.between(0, 1).all()
-    assert kpi.est_readmission_cost_eur.isna().all()  # open question Q2
+    # C39: readmissions times the pathway's assumed cost per readmission
+    eur = pathway_model.load("hf_lombardia_v1").readmission_cost.eur
+    assert (kpi.est_readmission_cost_eur == kpi.readmissions_30d * eur).all()
     assert con.execute("SELECT min(day), max(day), count(DISTINCT day) FROM kpi_daily").fetchone() == (0, LAST_DAY, LAST_DAY + 1)
 
 

@@ -37,7 +37,7 @@ Times are the target per block. **System** is what the app takes, measured on 2 
 
 | # | Time | Trigger (it) | Screen | Operator | The app does | System |
 |---|---|---|---|---|---|---|
-| 0 | 0:15 | "Le regole e il modello di rischio decidono; l'IA scrive solo le frasi, preparate in anticipo, perché tutto gira su questo portatile, senza GPU e senza cloud." | Storia di Maria | — | — | — |
+| 0 | 0:15 | "Le regole e il modello di rischio decidono; l'IA scrive solo le frasi, preparate in anticipo, perché tutto gira su questo portatile, senza GPU e senza cloud. Gli effetti delle azioni e gli euro sono ipotesi della simulazione: 3.500 euro a riammissione." | Storia di Maria | — | — | — |
 | 1 | 0:30 | "Vi presento la signora Maria…" · "Ogni paziente cronico ha un PAI. Ma chi verifica, ogni giorno, che venga eseguito?" | Storia di Maria | "Avvia la simulazione" | Maria's timeline without the system: discharge, day 31 drug not collected, day 47 back in hospital | — |
 | 2 | 0:10 | "Tre regioni, lo stesso sistema. Cominciamo dalla seconda." | Panoramica | — (the console opens on scenario 2, paused) | scenario 2 on screen, day 23, "In pausa" | — |
 | 3 | 0:25 | "Mentre parlavamo, gli agenti hanno già lavorato. Una proposta aspetta la direzione: la vediamo tra poco." | Panoramica | point at the queue; **do not approve yet** | cards: patients, on track, agent actions, waiting | queue on day 23: one `notify_mmg` (day 7) |
@@ -74,7 +74,6 @@ Times are the target per block. **System** is what the app takes, measured on 2 
 | Gap | Effect on the script | Comes with |
 |---|---|---|
 | Undo of an effect | "Annulla" in Attività agenti marks an action undone in the audit log; it does not move a rescheduled patient back (SPEC §7.3) | not planned |
-| Euros | step 7 shows readmissions, waits and the PNE forecast; euros wait for the cost per readmission (Q2) | Q2 |
 | A box for free questions in Chiedi | the two cached questions can only be asked through the API (`POST /api/ask`) | 2.10 (in progress) |
 | Rule proposal after the investigation (5a) | not in the demo: Rule Advisor did not enter at checkpoint 2.23 | — |
 | A call script on the call list | the Daily Worklist (phase 3) did not enter | — |

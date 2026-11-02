@@ -99,6 +99,8 @@ export type Pathway = {
   name: string
   label: Bilingual
   readmission_reference: { rate: number; label: Bilingual } | null
+  /** C39: the cost per readmission behind every euro figure, with where it comes from */
+  readmission_cost?: { eur: number; label: Bilingual } | null
   steps: {
     id: string
     label: Bilingual
@@ -153,6 +155,9 @@ export type WhatIf = {
   agents: WhatIfRun
   lever: WhatIfRun
   avoided_readmissions: number
+  /** C39: the avoided readmissions in euros, and the cost per readmission they are counted at */
+  saving_eur?: number
+  cost?: { eur: number; label: Bilingual }
   /** The PNE forecast to year end (C35): each arm's 30-day readmission rate on the year's last day. */
   pne?: {
     day: number

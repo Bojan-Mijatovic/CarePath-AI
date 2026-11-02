@@ -51,3 +51,6 @@ def test_post_whatif_carries_the_forecast():
     assert out["pne"] == pne.forecast(grid(2), 1, HF)
     assert "year_end" not in out["lever"]  # the summaries stay as in C27
     assert "pne" not in whatif.result(2, whatif.Levers(extra_slots=1))
+    # C39: the avoided readmissions in euros, at the pathway's assumed cost, which travels with the number
+    assert out["saving_eur"] == out["avoided_readmissions"] * HF.readmission_cost.eur
+    assert out["cost"] == HF.readmission_cost.model_dump()

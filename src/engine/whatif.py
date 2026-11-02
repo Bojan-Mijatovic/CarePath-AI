@@ -180,7 +180,10 @@ def result(scenario: int, levers: Levers, months: int = MONTHS, directory: Path 
                                  "base_slots")} | {
         "levers": levers.model_dump(), "baseline": strip(baseline), "agents": strip(agents), "lever": strip(lever),
         "avoided_readmissions": baseline["readmissions"] - lever["readmissions"], "precomputed": True} | (
-        {"pne": pne.forecast(grid, levers.extra_slots, pathway)} if pathway is not None else {})
+        {"pne": pne.forecast(grid, levers.extra_slots, pathway)} if pathway is not None else {}) | (
+        # C39: the euros the avoided readmissions are worth, at the pathway's cost per readmission
+        {"saving_eur": (baseline["readmissions"] - lever["readmissions"]) * pathway.readmission_cost.eur,
+         "cost": pathway.readmission_cost.model_dump()} if pathway is not None and pathway.readmission_cost else {})
 
 
 def main(argv: list[str]) -> None:

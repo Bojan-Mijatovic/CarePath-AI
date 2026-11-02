@@ -3,6 +3,7 @@
   "name": "PDTA scompenso cardiaco",
   "label": {"it": "Scompenso cardiaco", "en": "Heart failure"},
   "readmission_reference": {"rate": 0.1187, "label": {"it": "Italia, PNE 2025", "en": "Italy, PNE 2025"}},
+  "readmission_cost": {"eur": 3500, "label": {"it": "costo per riammissione ipotizzato per la demo", "en": "cost per readmission assumed for the demo"}},
   "eligibility": {"any_diagnosis": ["428.*"], "any_drug_atc": ["C03CA01"],
                   "drug_names": {"C03CA01": {"it": "furosemide", "en": "furosemide"}}},
   "status_thresholds": {"due_soon_days": 7, "dropped_after_days": 30, "dropped_if_overdue_steps": 2},
