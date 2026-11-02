@@ -196,6 +196,7 @@ def set_mode(mode: Mode) -> None:
 
 
 def mode() -> Mode:
+    """The mode in force; the demo bar shows it to the team (step 2.20, C37)."""
     return _gateway.mode
 
 

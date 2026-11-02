@@ -156,6 +156,8 @@ def build_runs(runs_dir: Path) -> dict:
                     worklist.refresh(con, state, risk, d, monitoring.fired)
                 if agents and d == CALL_DAY:  # Intervention runs after the views (SPEC §9, steps 5–6)
                     call_maria(con, sim, d)
+                if agents:
+                    worklist.record_outcomes(con, d)  # the day's calls on its list (C20), as the tick does
                 if agents and con.execute("SELECT count(*) FROM alerts WHERE level = 'regional' AND day = $d",
                                           {"d": d}).fetchall()[0][0]:  # step 7, on capacity as the tick has it (C25)
                     con.execute("DELETE FROM capacity_slots")

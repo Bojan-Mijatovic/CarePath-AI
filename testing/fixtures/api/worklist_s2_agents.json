@@ -12,7 +12,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 85,
+    "lives_alone": true,
+    "comune_name": "Casale Cremasco-Vidolasco"
   },
   {
     "rank": 2,
@@ -27,7 +30,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 60,
+    "lives_alone": false,
+    "comune_name": "Sesto ed Uniti"
   },
   {
     "rank": 3,
@@ -42,7 +48,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 46,
+    "lives_alone": false,
+    "comune_name": "Sermide e Felonica"
   },
   {
     "rank": 4,
@@ -57,7 +66,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 88,
+    "lives_alone": false,
+    "comune_name": "Viadana"
   },
   {
     "rank": 5,
@@ -72,7 +84,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 87,
+    "lives_alone": true,
+    "comune_name": "Castel Goffredo"
   },
   {
     "rank": 6,
@@ -87,7 +102,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 89,
+    "lives_alone": false,
+    "comune_name": "Bagnolo Cremasco"
   },
   {
     "rank": 7,
@@ -102,7 +120,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 61,
+    "lives_alone": false,
+    "comune_name": "Cremona"
   },
   {
     "rank": 8,
@@ -117,7 +138,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 96,
+    "lives_alone": false,
+    "comune_name": "Casalmaggiore"
   },
   {
     "rank": 9,
@@ -132,7 +156,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 89,
+    "lives_alone": false,
+    "comune_name": "Offanengo"
   },
   {
     "rank": 10,
@@ -147,7 +174,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 87,
+    "lives_alone": true,
+    "comune_name": "Quistello"
   },
   {
     "rank": 11,
@@ -162,7 +192,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 66,
+    "lives_alone": false,
+    "comune_name": "Mantova"
   },
   {
     "rank": 12,
@@ -177,7 +210,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 98,
+    "lives_alone": true,
+    "comune_name": "San Bassano"
   },
   {
     "rank": 13,
@@ -192,7 +228,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 84,
+    "lives_alone": true,
+    "comune_name": "Gadesco-Pieve Delmona"
   },
   {
     "rank": 14,
@@ -207,7 +246,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 82,
+    "lives_alone": true,
+    "comune_name": "Castiglione delle Stiviere"
   },
   {
     "rank": 15,
@@ -222,7 +264,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 88,
+    "lives_alone": true,
+    "comune_name": "Dosolo"
   },
   {
     "rank": 16,
@@ -237,7 +282,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 75,
+    "lives_alone": true,
+    "comune_name": "Borgo Virgilio"
   },
   {
     "rank": 17,
@@ -252,7 +300,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 83,
+    "lives_alone": true,
+    "comune_name": "Asola"
   },
   {
     "rank": 18,
@@ -267,7 +318,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 77,
+    "lives_alone": true,
+    "comune_name": "Viadana"
   },
   {
     "rank": 19,
@@ -282,7 +336,10 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 91,
+    "lives_alone": false,
+    "comune_name": "Martignana di Po"
   },
   {
     "rank": 20,
@@ -297,6 +354,9 @@
     ],
     "escalation_step": 0,
     "script": null,
-    "outcome": null
+    "outcome": null,
+    "age": 97,
+    "lives_alone": true,
+    "comune_name": "Annicco"
   }
 ]

@@ -80,10 +80,12 @@ def map_comuni(con: duckdb.DuckDBPyConnection, pathway_id: str | None) -> list[d
 
 
 def worklist(con: duckdb.DuckDBPyConnection, day: int | None) -> list[dict]:
-    """GET /api/worklist: the list of `day`, or of the run's last day (SPEC §5.2, C20)."""
+    """GET /api/worklist: the list of `day`, or of the run's last day (SPEC §5.2, C20), with who the patient is
+    for the Centro Servizi (C37): age, living alone, comune."""
     return rows(con, """
-        SELECT * EXCLUDE (day) FROM worklist_today
-        WHERE day = coalesce($d, (SELECT max(day) FROM worklist_today)) ORDER BY rank""", {"d": day})
+        SELECT w.* EXCLUDE (day), p.age, p.lives_alone, c.name AS comune_name
+        FROM worklist_today w JOIN patients p USING (patient_id) JOIN comuni c ON c.comune_istat = p.comune_istat
+        WHERE w.day = coalesce($d, (SELECT max(day) FROM worklist_today)) ORDER BY w.rank""", {"d": day})
 
 
 def actions(con: duckdb.DuckDBPyConnection, status: str | None) -> list[dict]:

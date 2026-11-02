@@ -141,3 +141,14 @@ def refresh(con: duckdb.DuckDBPyConnection, state: StateEngine, risk: RiskModel,
         FROM worklist_rows w JOIN pathway_state ps ON ps.patient_id = w.patient_id AND ps.pathway_id = w.pathway_id""")
     con.unregister("worklist_rows")
     return len(rows)
+
+
+def record_outcomes(con: duckdb.DuckDBPyConnection, day: int) -> None:
+    """The day's call outcomes on its list (SPEC §5.2 `outcome`, C20): the list is built at the start of the day
+    (§9 step 6) and the calls are made by Intervention afterwards (step 8), so their CALL events are written back
+    here. Step 2.20 found the column empty on screen."""
+    con.execute("""
+        UPDATE worklist_today w SET outcome = c.code
+        FROM (SELECT patient_id, arg_max(code, CAST(substr(event_id, 4) AS BIGINT)) AS code FROM events
+              WHERE event_type = 'CALL' AND day = $d GROUP BY 1) c
+        WHERE w.day = $d AND w.patient_id = c.patient_id""", {"d": day})

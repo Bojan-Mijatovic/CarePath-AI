@@ -55,10 +55,10 @@ def test_pathway_is_the_spec_file(tmp_path):
 
 
 def test_whatif_reads_the_grid_without_the_runs(tmp_path):
-    # C27, D48: the precomputed grid of the scenario on screen (scenario 1 by default); no run is needed.
+    # C27, D48: the precomputed grid of the scenario on screen (scenario 2 first, D44); no run is needed.
     client = make_client(tmp_path)
     out = client.post("/api/whatif", json={"levers": {"extra_slots": 2}, "months": 6}).json()
-    assert out["scenario"] == 1 and out["levers"] == {"extra_slots": 2} and out["precomputed"] is True
+    assert out["scenario"] == 2 and out["levers"] == {"extra_slots": 2} and out["precomputed"] is True
     assert out["avoided_readmissions"] == out["baseline"]["readmissions"] - out["lever"]["readmissions"]
     assert "kpi" not in out["lever"]
     assert out["pne"]["day"] == 364 and out["pne"]["reference"]["rate"] > 0  # C35, before the runs too
@@ -139,6 +139,25 @@ def test_worklist_by_day(client):
     assert [r["rank"] for r in today] == list(range(1, len(today) + 1))
     assert client.get("/api/worklist", params={"day": day - 1}).json()  # earlier lists stay (demo step 9a)
     assert client.get("/api/worklist", params={"run": "s2_baseline"}).json() == []
+    assert {"age", "lives_alone", "comune_name"} <= set(today[0])  # who to call (C37)
+
+
+def test_the_demo_bar_switches_the_cache(client):
+    # C37: cache_only is the demo's default (D14); live, which asks again for everything, is not offered
+    assert client.get("/api/sim/cache").json() == {"mode": "cache_only"}
+    assert client.put("/api/sim/cache", json={"mode": "cache_first"}).json() == {"mode": "cache_first"}
+    assert client.put("/api/sim/cache", json={"mode": "live"}).status_code == 422
+    assert client.put("/api/sim/cache", json={"mode": "cache_only"}).json() == {"mode": "cache_only"}
+
+
+def test_reveal_sets_the_agents_alarms_next_to_the_truth(client):
+    # C37, Rivelazione: before day 33 scenario 2 has its group alarms (day 0) but not yet the echo alarm
+    out = client.get("/api/reveal/2").json()
+    assert out["bottleneck"]["found"] is None and out["bottleneck"]["match"] is False
+    assert out["bottleneck"]["hidden"] == {"facility": "Ospedale B", "asst_id": "asst_cremona"}
+    assert out["mmg_group"]["found"]["group"] == "coop_3" and out["mmg_group"]["match"] is True
+    assert out["rural_comuni"]["match"] is True and out["rural_comuni"]["hidden"]["named"]
+    assert client.get("/api/reveal/1").status_code == 404  # not a scenario of this demo
 
 
 def test_patient_actions_and_story(client):

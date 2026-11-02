@@ -27,6 +27,7 @@ from agents.intervention import Intervention
 from agents.monitoring import Monitoring
 from engine import pathway as pathway_model
 from engine import investigations, queries, reports, whatif, worklist
+from engine import reveal as reveal_model
 from engine.db import RUNS_DIR, create_run, open_run
 from engine.risk import HIGH_RISK, RiskModel
 from engine.state import StateEngine
@@ -41,6 +42,7 @@ HORIZON_DAYS = 365
 PATHWAY_ID = "hf_lombardia_v1"  # the pathway on screen
 ARMS = ("agents", "baseline")
 SPEEDS = (0, 1, 4)  # pause, ×1 = 1 day per 2 s, ×4 = 2 days per s (SPEC §9)
+DEMO_ORDER = (2, 1, 3)  # D44: the demo walks the scenarios in this order, scenario 2 with the full flow
 
 
 class Population:
@@ -103,6 +105,7 @@ class Run:
             rows = self.intervention.run(self.con, self.state, self.risk.risk, self.monitoring, d, self.feedback)
             if any(r["type"] == "reschedule" and r["status"] == "executed" for r in rows):
                 self._write_capacity()
+            worklist.record_outcomes(self.con, d)  # the calls just made, on the day's list (C20)
             shown = sorted(rows, key=lambda r: (intervention.PRIORITY.get(r["type"], 9), -self._risk_of(r)))
             messages += [{"type": "action", "scenario": self.scenario, "day": d, "payload": r}
                          for r in shown[:intervention.STREAM_ACTIONS] if r["status"] != "rejected"]
@@ -161,7 +164,7 @@ class Demo:
         self.runs: dict[str, Run] = {}
         self.levers: dict[int, dict] = {}  # scenario -> whatif.proposed_lever(...)
         self.approved: set[int] = set()  # scenarios whose capacity proposal the manager approved (C34)
-        self.scenario = scenarios[0]
+        self.scenario = next((n for n in DEMO_ORDER if n in scenarios), scenarios[0])  # the first on screen (D44)
         self.speed = 0
         self.ready = False
         # Runs share nothing they write (own database, simulator, engine and model), and DuckDB, numpy and
@@ -267,6 +270,13 @@ class Demo:
         with self.lock:
             run = self.runs[self.default_run()]
             return investigations.on_question(run.con, run.run_id, run.state.pathway, run.day, self.scenario, question)
+
+    def reveal(self, scenario: int) -> dict:
+        """GET /api/reveal/{scenario}: the agents arm's own alarms next to scenario_truth (Rivelazione, C37)."""
+        if scenario not in self.scenarios:
+            raise ValueError(f"scenario is one of {self.scenarios}")
+        with self.lock, self.runs[f"s{scenario}_agents"].con.cursor() as cur:
+            return reveal_model.reveal(cur, self.population.pathway, scenario)
 
     def autonomy(self) -> dict[str, dict]:
         """GET /api/settings: per action type the level in force on the scenario on screen, its default, and

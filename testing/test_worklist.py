@@ -73,7 +73,14 @@ def test_reasons_name_every_overdue_step_and_the_risk(con):
 
 def test_a_list_for_every_day_and_none_without_carepath(con, runs):
     assert con.execute("SELECT count(DISTINCT day) FROM worklist_today").fetchone() == (DAY + 1,)
-    assert con.execute("SELECT count(*) FROM worklist_today WHERE outcome IS NOT NULL OR script IS NOT NULL").fetchone() == (0,)
+    assert con.execute("SELECT count(*) FROM worklist_today WHERE script IS NOT NULL").fetchone() == (0,)
+    # C37: an outcome only for a patient called that day (the fixture's call to Maria on day 31), as the CALL says
+    assert con.execute("""
+        SELECT count(*) FROM worklist_today w LEFT JOIN events e
+          ON e.patient_id = w.patient_id AND e.day = w.day AND e.event_type = 'CALL'
+        WHERE w.outcome IS DISTINCT FROM e.code""").fetchone() == (0,)
+    assert con.execute("SELECT day, outcome FROM worklist_today WHERE patient_id = 'p_00001' AND outcome IS NOT NULL"
+                       ).fetchall() == [(31, "delivery_arranged")]
     with duckdb.connect(runs / "s2_baseline.duckdb", read_only=True) as baseline:
         assert baseline.execute("SELECT count(*) FROM worklist_today").fetchone() == (0,)
 

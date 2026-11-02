@@ -57,6 +57,12 @@ class WhatIf(BaseModel):
     months: int = whatif.MONTHS
 
 
+class Cache(BaseModel):
+    """The demo bar's switch (C37): cache_only, the demo's default (D14), or cache_first, which may ask a model
+    for what the cache lacks; live, which asks again for everything, is for warm-ups only."""
+    mode: Literal["cache_only", "cache_first"]
+
+
 class Live:
     """The demo clock and the consoles it pushes to. `tick_seconds` is one simulated day at ×1 (SPEC §9)."""
 
@@ -200,6 +206,25 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
     @api.post("/sim/jump/{day}")
     async def jump(day: int) -> dict[str, int]:
         return await live.status(await live.control(demo.jump, day))
+
+    @api.get("/sim/cache")
+    def cache_mode() -> dict[str, str]:
+        """C37: the LLM gateway's mode, for the demo bar's indicator (the team only)."""
+        return {"mode": llm.mode()}
+
+    @api.put("/sim/cache")
+    def set_cache_mode(body: Cache) -> dict[str, str]:
+        llm.set_mode(body.mode)
+        return {"mode": llm.mode()}
+
+    @api.get("/reveal/{scenario}")
+    def reveal(scenario: int) -> dict:
+        """Rivelazione (C37): the agents' own alarms next to scenario_truth; nothing else reads it."""
+        live.need_ready()
+        try:
+            return demo.reveal(scenario)
+        except ValueError as e:
+            raise HTTPException(404, str(e)) from None
 
     @api.get("/kpi")
     def kpi(run: str | None = None, pathway_id: str | None = None, level: str | None = None,

@@ -77,6 +77,15 @@ def test_reschedule_only_after_a_wait_alarm(run):
     assert payload["from_facility"] == "osp_B" and payload["to_facility"] != "osp_B" and payload["patients"]
 
 
+def test_the_day_s_calls_have_their_outcome_on_the_list(run):
+    """C20: the list is built before Intervention calls (SPEC §9 steps 6 and 8); the outcome is written back."""
+    listed = dict(q(run, "SELECT patient_id, outcome FROM worklist_today WHERE day = $d", {"d": DAY}))
+    called = dict(q(run, "SELECT patient_id, code FROM events WHERE event_type = 'CALL' AND day = $d", {"d": DAY}))
+    both = set(listed) & set(called)
+    assert both and all(listed[p] == called[p] for p in both)
+    assert all(listed[p] is None for p in set(listed) - set(called))
+
+
 def test_escalation_step_follows_the_ladder(run):
     steps = dict(q(run, "SELECT escalation_step, count(*) FROM pathway_state GROUP BY 1"))
     assert set(steps) <= {0, 1, 2, 3} and steps.get(1) and steps.get(2)

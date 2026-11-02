@@ -8,7 +8,9 @@ import { type Key, type Lang, LangContext, translator } from './lib/i18n'
 import { type LeverRun, type StreamMessage, useStream } from './lib/stream'
 import Ask from './screens/Ask'
 import Compare from './screens/Compare'
-import Envelopes from './screens/Envelopes'
+import Calls from './screens/Calls'
+import DemoBar from './components/DemoBar'
+import Reveal from './screens/Reveal'
 import Flows from './screens/Flows'
 import MapScreen, { type RegionalAlert } from './screens/MapScreen'
 import MariaStory from './screens/MariaStory'
@@ -16,10 +18,11 @@ import Overview from './screens/Overview'
 import Patient from './screens/Patient'
 import WhatIf from './screens/WhatIf'
 
-// Menu order follows the prototype; the two intro screens (demo steps 1 and 2) are full screen.
+// Menu order follows the prototype; Maria's story (demo step 1) and the reveal (step 10) are full screen. There is
+// no envelope screen (D44): the operator's demo bar picks the scenario.
 const SCREENS = ['panoramica', 'mappa', 'chiedi', 'confronto', 'whatif', 'percorsi', 'chiamate', 'letti', 'pazienti'] as const
-type Screen = 'storia' | 'buste' | (typeof SCREENS)[number]
-const ALL: readonly Screen[] = ['storia', 'buste', ...SCREENS]
+type Screen = 'storia' | 'rivelazione' | (typeof SCREENS)[number]
+const ALL: readonly Screen[] = ['storia', 'rivelazione', ...SCREENS]
 const FEED_SIZE = 30
 const LANG_KEY = 'carepath.lang'
 
@@ -100,8 +103,9 @@ export default function App() {
 
   let content
   const langSwitch = <LangSwitch onChange={setLang} />
-  if (screen === 'storia') content = <MariaStory onStart={() => go('buste')} langSwitch={langSwitch} />
-  else if (screen === 'buste') content = <Envelopes onChosen={() => go('panoramica')} langSwitch={langSwitch} />
+  // The runs stand paused on day 23 (D21); the operator starts the clock on Mappa (demo step 4).
+  if (screen === 'storia') content = <MariaStory onStart={() => go('panoramica')} langSwitch={langSwitch} />
+  else if (screen === 'rivelazione') content = <Reveal onRestart={() => go('storia')} langSwitch={langSwitch} />
   else {
     content = (
       <div className="shell">
@@ -132,7 +136,7 @@ export default function App() {
             {pathway && <span className="tag">{pathway.label[lang]}</span>}
             <span className="spacer" />
             <span className="day">{day === null ? '–' : t('top.day', { day })}</span>
-            <span className="speed">{t('top.speed', { speed })}</span>
+            <span className="speed">{speed === 0 ? t('top.paused') : t('top.speed', { speed })}</span>
             <span className="pill">{t('top.synthetic')}</span>
             <LangSwitch onChange={setLang} />
             <span className={`connection ${connection}`}>{t(`conn.${connection}`)}</span>
@@ -155,6 +159,8 @@ export default function App() {
                 </div>
               ) : screen === 'whatif' ? (
                 <WhatIf scenario={scenario} pathway={pathway ?? null} />
+              ) : screen === 'chiamate' ? (
+                <Calls day={day} />
               ) : screen === 'pazienti' ? (
                 <Patient day={day} scenario={scenario} pathway={pathway ?? null} />
               ) : (
@@ -167,5 +173,10 @@ export default function App() {
       </div>
     )
   }
-  return <LangContext value={lang}>{content}</LangContext>
+  return (
+    <LangContext value={lang}>
+      {content}
+      <DemoBar day={day} speed={speed} onReveal={() => go('rivelazione')} />
+    </LangContext>
+  )
 }

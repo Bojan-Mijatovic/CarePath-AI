@@ -136,7 +136,7 @@ def test_views_have_the_spec_columns(built):
     worklist = f["api/worklist_s2_agents.json"]
     assert [r["rank"] for r in worklist] == list(range(1, 21))
     assert list(worklist[0]) == ["rank", "patient_id", "risk_score", "reasons", "pathways", "escalation_step", "script",
-                                 "outcome"]
+                                 "outcome", "age", "lives_alone", "comune_name"]  # who to call (C37)
     for r in worklist:
         bilingual(r["reasons"])
 

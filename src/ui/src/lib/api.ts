@@ -165,6 +165,37 @@ export type WhatIf = {
 
 export type PneYearEnd = { readmissions_30d: number; readmission_rate_30d: number | null }
 
+/** GET /api/worklist (SPEC §5.2, C20): one call per patient, by risk; who the patient is (C37). */
+export type WorklistRow = {
+  rank: number
+  patient_id: string
+  risk_score: number
+  reasons: Bilingual
+  pathways: string[]
+  escalation_step: number
+  script: Bilingual | null
+  outcome: string | null
+  age: number
+  lives_alone: boolean
+  comune_name: string
+}
+
+/** GET /api/reveal/{scenario} (C37): what the agents' alarms found, next to what the scenario hid. */
+export type Reveal = {
+  scenario: number
+  bottleneck: {
+    found: { day: number; facility: string; asst_id: string } | null
+    hidden: { facility: string; asst_id: string }
+    match: boolean
+  }
+  mmg_group: { found: { day: number; group: string; text: Bilingual } | null; hidden: { group: string }; match: boolean }
+  rural_comuni: {
+    found: { day: number; text: Bilingual } | null
+    hidden: { comuni: string[]; named: string[] }
+    match: boolean
+  }
+}
+
 /** GET /api/reports (C36): the Reporter's monthly reports, the latest first. `figures` keeps every number. */
 export type Report = {
   report_id: string
