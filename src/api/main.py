@@ -24,6 +24,7 @@ from agents import llm
 
 from engine import pathway as pathway_model
 from engine import queries, story, whatif
+from engine.reports import MANIFEST  # the GET /reports endpoint below shadows a module named reports
 from engine.tick import PATHWAY_ID, Demo
 
 UI_DIST = Path(__file__).resolve().parents[1] / "ui" / "dist"
@@ -291,6 +292,14 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
     @api.get("/reports")
     def reports(run: str | None = None) -> list[dict]:
         return live.read(run, queries.reports)
+
+    @api.get("/questions")
+    def questions() -> dict:
+        """C40: the questions Chiedi suggests for the scenario on screen, the cache manifest's (D17): the ones
+        that have an answer in the demo, on their alarm day. The console holds no question of its own (AC17)."""
+        scenarios = json.loads(MANIFEST.read_text(encoding="utf-8"))["scenarios"] if MANIFEST.is_file() else []
+        s = next((s for s in scenarios if s["scenario"] == demo.scenario), {})
+        return {"scenario": demo.scenario, "day": s.get("alarm_day"), "questions": s.get("questions", [])}
 
     @api.post("/ask")
     async def ask(body: Ask) -> dict:

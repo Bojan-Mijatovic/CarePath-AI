@@ -142,6 +142,13 @@ def test_worklist_by_day(client):
     assert {"age", "lives_alone", "comune_name"} <= set(today[0])  # who to call (C37)
 
 
+def test_chiedi_suggests_the_manifest_s_questions(client):
+    # C40: the questions that have an answer in the demo, on their day; the console holds none of its own
+    manifest = json.loads((story.STORY_DIR.parent / "cache" / "manifest.json").read_text(encoding="utf-8"))
+    s2 = next(s for s in manifest["scenarios"] if s["scenario"] == 2)
+    assert client.get("/api/questions").json() == {"scenario": 2, "day": s2["alarm_day"], "questions": s2["questions"]}
+
+
 def test_the_actions_of_a_day(client):
     # C38: Attività agenti reads the day's actions after a jump, not the whole run's
     day = client.post("/api/sim/pause").json()["day"]

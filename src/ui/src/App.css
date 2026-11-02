@@ -802,6 +802,47 @@
   text-align: right;
 }
 
+.ask-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ask-suggestions button,
+.ask-free button {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--primary-soft);
+  color: var(--ink);
+  text-align: left;
+}
+
+.ask-free {
+  display: flex;
+  gap: 8px;
+}
+
+.ask-free input {
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.ask-free button.primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.ask-note {
+  color: var(--warning);
+}
+
 .ask-badge-verified {
   background: #e6f4ec;
   color: var(--ok);
