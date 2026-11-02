@@ -462,9 +462,25 @@
   color: var(--ink-soft);
 }
 
+.ask-badge-verified {
+  background: #e6f4ec;
+  color: var(--ok);
+}
+
+.ask-badge-corrected {
+  background: #fdf0e3;
+  color: var(--warning);
+}
+
 .ask-claims {
   margin: 8px 0 0;
   padding-left: 18px;
+}
+
+.ask-issue {
+  margin-top: 2px;
+  color: var(--warning);
+  font-size: 13px;
 }
 
 .ask-conclusion {

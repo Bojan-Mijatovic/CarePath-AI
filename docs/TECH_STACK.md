@@ -6,7 +6,7 @@ Every technology, tool and AI model the PoC uses, with versions, licences and th
 |---|---|
 | Constraint | Zero cost; everything free and open source. Models, data and the LLM cache run on the laptop (Delivery Plan §10, D25) |
 | Versions | as installed on the demo machine `BMIJATOVICW` on 29 Oct 2026; `uv.lock` and `package-lock.json` pin the exact builds |
-| Last updated | 29 Oct 2026 |
+| Last updated | 2 Nov 2026 |
 
 ## 1. Architecture at a glance
 
@@ -111,7 +111,8 @@ Plain Python with tool calling; no LangGraph (D15). Agents read only through the
 | Intervention | rules and autonomy levels (SPEC §7) | rationale and call-script wording, from the cache or the template |
 | Daily Worklist | SQL view `worklist_today`, ranked by risk | nothing; reasons filled by code |
 | Investigator | tools choose the data | plans tool calls and writes the explanation (cached) |
-| Verifier, Rule Advisor, Reporter, Pathway Builder | code and rules | wording only (cached); gated extensions or option B |
+| Verifier | repeats each claim's tool call and checks numbers, comparisons and scope (C33) | nothing; corrections filled by code (D55, proposed) |
+| Rule Advisor, Reporter, Pathway Builder | code and rules | wording only (cached); gated extensions or option B |
 
 ### 5.4 Model evaluation
 

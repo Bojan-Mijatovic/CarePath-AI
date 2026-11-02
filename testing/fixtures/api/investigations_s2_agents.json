@@ -100,28 +100,44 @@
           "it": "Il tempo medio di attesa per l'ecocardiogramma all'Ospedale B negli ultimi 7 giorni è di 31,0 giorni, superiore alla soglia PDTA di 30 giorni, come indicato dall'allarme regionale.",
           "en": "The average waiting time for an echocardiogram at Hospital B in the last 7 days is 31.0 days, exceeding the PDTA threshold of 30 days, as indicated by the regional alert."
         },
-        "step": 1
+        "step": 1,
+        "verified": true,
+        "issues": []
       },
       {
         "text": {
           "it": "L'Ospedale B ha 0 slot disponibili per l'ecocardiogramma nei prossimi 21 giorni, mentre l'Ospedale A ha 114 slot e l'Ospedale C ne ha 102, indicando un grave deficit di capacità programmabile all'Ospedale B.",
           "en": "Hospital B has 0 available slots for an echocardiogram in the next 21 days, while Hospital A has 114 slots and Hospital C has 102 slots, indicating a severe lack of programmable capacity at Hospital B."
         },
-        "step": 2
+        "step": 2,
+        "verified": true,
+        "issues": []
       },
       {
         "text": {
           "it": "All'Ospedale B sono presenti 17 pazienti in ritardo per l'ecocardiogramma, con un ritardo massimo di 47 giorni (paziente p_02531), e tutti i pazienti in ritardo appartengono all'ASST Cremona.",
           "en": "At Hospital B, there are 17 patients delayed for an echocardiogram, with a maximum delay of 47 days (patient p_02531), and all delayed patients belong to ASST Cremona."
         },
-        "step": 3
+        "step": 3,
+        "verified": false,
+        "issues": [
+          {
+            "kind": "scope",
+            "text": {
+              "it": "patients_overdue dà il dato di ASST Cremona, non di Ospedale B",
+              "en": "patients_overdue gives the figure for ASST Cremona, not for Ospedale B"
+            }
+          }
+        ]
       },
       {
         "text": {
           "it": "Il tasso di aderenza al telemonitoraggio nei comuni dell'ATS della Val Padana varia dal 50% a un massimo del 64,52% (Borgo Mantovano), mentre la media dell'intera ATS è del 78,81%, indicando un gap significativo in alcuni territori.",
           "en": "The adherence rate to telemonitoring in the municipalities of the Val Padana ATS ranges from 50% to a maximum of 64.52% (Borgo Mantovano), while the overall ATS average is 78.81%, indicating a significant gap in some areas."
         },
-        "step": 4
+        "step": 4,
+        "verified": true,
+        "issues": []
       }
     ],
     "conclusion": {
@@ -215,28 +231,51 @@
           "it": "Nell'area di Borgocarbonara e Magnacavallo, il tasso di adesione al telemonitoraggio per pazienti che vivono da soli a più di 40 km è del 0.0%, con 5 pazienti coinvolti, mentre nel resto dell'ATS è del 87.69%.",
           "en": "In the area of Borgocarbonara and Magnacavallo, the adherence rate to telemonitoring for patients living alone more than 40 km away is 0.0%, involving 5 patients, while in the rest of the ATS it is 87.69%."
         },
-        "step": 1
+        "step": 1,
+        "verified": true,
+        "issues": []
       },
       {
         "text": {
           "it": "Nel comune di Borgocarbonara, il tasso di adesione al telemonitoraggio è del 57.14% su 7 pazienti, mentre in Poggio Rusco è del 54.55% su 11 pazienti; in entrambi i casi, i tassi sono significativamente inferiori alla media dell'ATS (83.08%).",
           "en": "In the commune of Borgocarbonara, the telemonitoring adherence rate is 57.14% among 7 patients, while in Poggio Rusco it is 54.-55% among 11 patients; in both cases, the rates are significantly below the ATS average (83.08%)."
         },
-        "step": 2
+        "step": 2,
+        "verified": false,
+        "issues": [
+          {
+            "kind": "number",
+            "text": {
+              "it": "7: non viene da adherence_by_group né dalla domanda",
+              "en": "7: not from adherence_by_group or the question"
+            }
+          },
+          {
+            "kind": "number",
+            "text": {
+              "it": "11: non viene da adherence_by_group né dalla domanda",
+              "en": "11: not from adherence_by_group or the question"
+            }
+          }
+        ]
       },
       {
         "text": {
           "it": "Sono 150 i pazienti in ritardo nel telemonitoraggio, con un ritardo massimo di 98 giorni; i pazienti più in ritardo hanno un punteggio di rischio compreso tra 0.0211 e 0.0596.",
           "en": "There are 150 patients with delayed telemonitoring, with a maximum delay of 98 days; the patients with the greatest delay have a risk score ranging from 0.0211 to 0.0596."
         },
-        "step": 4
+        "step": 4,
+        "verified": true,
+        "issues": []
       },
       {
         "text": {
           "it": "Nell'ASST Mantova, il tasso di adesione al telemonitoraggio è del 66.1%, mentre per le visite cardiologiche è del 75.14%, per l'ecocardiogramma del 74.32% e per l'esame BNP del 93.87%.",
           "en": "In the ASST Mantova, the telemonitoring adherence rate is 66.1%, while for cardiology visits it is 75.14%, for echocardiography it is 74.32%, and for BNP test it is 93.87%."
         },
-        "step": 5
+        "step": 5,
+        "verified": true,
+        "issues": []
       }
     ],
     "conclusion": {
@@ -329,28 +368,44 @@
           "it": "Il tasso di ritiro dei farmaci per il gruppo di MMG coop_3 è del 89,01%, molto al di sotto della soglia regionale di 95% (resto dell'ATS: 99,92%).",
           "en": "The medication withdrawal rate for the MMG coop_3 group is 89.01%, significantly below the regional threshold of 95% (the rest of the ATS: 99.92%)."
         },
-        "step": 1
+        "step": 1,
+        "verified": false,
+        "issues": [
+          {
+            "kind": "number",
+            "text": {
+              "it": "95%: non viene da adherence_by_group né dalla domanda",
+              "en": "95%: not from adherence_by_group or the question"
+            }
+          }
+        ]
       },
       {
         "text": {
           "it": "Nei comuni associati a coop_3, i tassi di ritiro dei farmaci sono particolarmente bassi: Camisano (81,82%), Fiesco (76,92%), Izano (74,07%), Madignano (87,5%), Montodine (82,76%), Pianengo (90%), Ricengo (86,67%), Ripalta Arpina (85,71%), Romanengo (89,47%), Soncino (87,62%). Il resto dell'ATS ha un tasso del 99,45%.",
           "en": "In the municipalities associated with coop_3, medication withdrawal rates are particularly low: Camisano (81.82%), Fiesco (76.92%), Izano (74.07%), Madignano (87.5%), Montodine (82.76%), Pianengo (90%), Ricengo (86.67%), Ripalta Arpina (85.71%), Romanengo (89.47%), Soncino (87.62%). The rest of the ATS has a rate of 99.45%."
         },
-        "step": 2
+        "step": 2,
+        "verified": true,
+        "issues": []
       },
       {
         "text": {
           "it": "I tassi di riammissione ospedaliera per il percorso Scompenso cardiaco nei comuni associati a coop_3 sono elevati: Roverbella (50%), Moglia (42,86%), Marcaria (40%), Curtatone (37,5%), Porto Mantovano (37,5%), Offanengo (33,33%), Persico Dosimo (33,33%), Sermide e Felonica (30%), Volta Mantovana (33,33%). Il resto dell'ATS ha un tasso del 11,35%.",
           "en": "Hospital readmission rates for the Heart Failure pathway in municipalities associated with coop_3 are high: Roverbella (50%), Moglia (42.86%), Marcaria (40%), Curtatone (37.5%), Porto Mantovano (37.5%), Offanengo (33.33%), Persico Dosimo (33.33%), Sermide e Felonica (30%), Volta Mantovana (33.33%). The rest of the ATS has a rate of 11.35%."
         },
-        "step": 3
+        "step": 3,
+        "verified": true,
+        "issues": []
       },
       {
         "text": {
           "it": "I principali driver di rischio per i pazienti del gruppo coop_3 sono: giorni dal dimesso (peso 1,0), giorni dal ultimo ritiro del farmaco C03CA01 (peso 0,6), giorni dall'ultimo controllo (peso 0,4), vivere da solo (peso 0,4), aumento di peso in 3 giorni (peso 0,4), età (peso 0,2). Questi dati riguardano 5 pazienti identificati nel segmento.",
           "en": "The main risk drivers for patients in the coop_3 group are: days since discharge (weight 1.0), days since last withdrawal of medication C03CA01 (weight 0.6), days since last check-up (weight 0.4), living alone (weight 0.4), weight gain in 3 days (weight 0.4), age (weight 0.2). These data pertain to 5 patients identified in the segment."
         },
-        "step": 5
+        "step": 5,
+        "verified": true,
+        "issues": []
       }
     ],
     "conclusion": {

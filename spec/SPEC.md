@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Status | **v1.12**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), v1.13 adds C26 (D47, step 2.30), proposed 29 Oct 2026; v1.14 adds C27 (D48, step 2.5), v1.15 adds C28 (D49, step 2.28), v1.16 adds C29 (D50, step 2.10), v1.17 adds C30 (D51, step 2.18), v1.18 adds C31 (D52, step 2.12), v1.19 adds C32 (D54, step 2.13), proposed 30 Oct 2026. Changes follow §0 |
-| Last updated | 30 Oct 2026 |
+| Status | **v1.20**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), v1.13 adds C26 (D47, step 2.30), proposed 29 Oct 2026; v1.14 adds C27 (D48, step 2.5), v1.15 adds C28 (D49, step 2.28), v1.16 adds C29 (D50, step 2.10), v1.17 adds C30 (D51, step 2.18), v1.18 adds C31 (D52, step 2.12), v1.19 adds C32 (D54, step 2.13), proposed 30 Oct 2026; v1.20 adds C33 (D55, Verifier), proposed 2 Nov 2026. Changes follow §0 |
+| Last updated | 2 Nov 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
 | Rule | Nobody builds against anything that is not in this file. Whoever waits on another part works with fixtures of the same shape (`testing/fixtures/`, step 1.23) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C32 proposed in v1.1–v1.19)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C33 proposed in v1.1–v1.20)
 
 | # | Change | Why |
 |---|---|---|
@@ -62,6 +62,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C30 (D51) | The shapes of `GET /settings`, `PUT /settings/autonomy` and the approve and reject decisions (§10); the level in force is read from the audit log (§7.3) | SPEC §10 named these endpoints without their shapes, and the console's Approvazioni and autonomy panel (step 2.18) need them. Keeping the levels in the audit log, which §7.3 already requires for every configuration change, adds no table |
 | C31 (D52) | The action service's order of checks, guardrail test, daily-limit facility, execution on approval, feedback hand-in and undo (§7.3, §10) | §7.3 listed the checks but not how code applies them; a rejected action should not wait in the queue first, and agent code may not import the simulator (CLAUDE.md rule 5) |
 | C32 (D54) | Intervention (§9): tick order (after the Investigator), escalation ladder, warning-sign call, reschedule after a wait alarm, `payload` effects and patient lists (§7.1), rule evidence for patient actions, reminders as one action per problem a day, at most 10 `action` messages a tick; `worklist_today` keeps the top 200 a day (§5.2); a reschedule names `from_facility`, `to_facility` and `service` (guardrail, §7.3) | The SPEC named Intervention's job, not its rules; one action row per SMS cost about 40 ms a tick, and the full worklist's texts another 40, which AC2 had no room for; an action before the Investigator would change the cached alarm investigation |
+| C33 (D55) | The Verifier (§6): code only, on the investigation's tick and on `POST /ask`; each claim of `investigations.claims` gets `verified` and `issues`; a step's `verified` on the stream (§10) is all its claims' | The SPEC had the `verified` slot and C5's repeatable call, not the checks. In the 5 answers Chiedi shows, the model's numbers were right but 6 claims gave an ASST's figure as one hospital's and 2 stated a comparison backwards ("83,65% … inferiore al 79,8%"); the 4B translation wrote "4-than" for "40 giorni". An LLM check would need its own cache and could slip the same way |
 
 ## 1. Scope
 
@@ -366,9 +367,17 @@ Every number in `data` follows the precision rule in §2. `testing/test_tools_de
 
 | Table | Columns |
 |---|---|
-| `investigations` | `investigation_id` (`inv_<run>_<n>`), `day`, `pathway_id`, `alert_id`, `question` `{"it", "en"}`, `steps` `[{"step", "tool", "args", "result_summary"}]`, `claims` `[{"text": {"it", "en"}, "step"}]`, `conclusion` `{"it", "en"}`, `prompt_version` |
+| `investigations` | `investigation_id` (`inv_<run>_<n>`), `day`, `pathway_id`, `alert_id`, `question` `{"it", "en"}`, `steps` `[{"step", "tool", "args", "result_summary"}]`, `claims` `[{"text": {"it", "en"}, "step", "verified", "issues"}]` (C33), `conclusion` `{"it", "en"}`, `prompt_version` |
 
 Steps keep the tool and its arguments, not the data, because the Verifier repeats the call (C5).
+
+**Verifier** (C33, `src/agents/verifier.py`, phase 3). Code only, no model. Whoever runs the Investigator runs it right after, on the same cursor and day (§9 step 7, `POST /ask`), so each repeated call returns the bytes the Investigator saw (C7). For every claim it repeats its step's call once and checks the claim's text:
+
+- **Numbers**, Italian and English: each number is in the tool's `data` (a fraction may be written as a percentage, ×100), in the call's arguments, in the names of the data ("weight_gain_3d"), or in the question; it may be rounded or cut to the decimals the text shows, and its sign is free. A number next to a name of the data (a hospital, a comune, a patient id, a step by its id or label, `rest_of_ats` as "resto dell'ATS") must be that name's value or a number of the call: the nearest name before it, or one just after it ("83,65% per l'ecocardiogramma"), with no other number and no sentence end between. Digits inside a name ("Poliambulatorio 5", "coop_6") are not numbers. A threshold the model made up is an issue, since its prompt says every number comes from a tool.
+- **Comparisons**, Italian: "inferiore", "superiore", "sotto", "più alto" and their kin hold between the nearest number before (not one of the call) and the first after, of the same unit (`%` or the word after the number), in one sentence. "inferiore di 9,14 punti" states a difference and is not checked.
+- **Scope**, Italian: a facility the claim names, on a tool whose data is not per facility, is an issue naming what the figure is for: the ASST of the call's `asst` (or a segment's `asst_id`), else the whole ATS.
+
+Each claim gets `verified` (true without issues, false with any) and `issues` `[{"kind": "number" | "comparison" | "scope", "text": {"it", "en"}}]`, the correction filled by code from the tool's data, for example `34,0: per Ospedale B wait_by_hospital dà 30,4` or `compliance_by_step dà il dato di ASST Cremona, non di Ospedale B`; an issue found only in the English text says so (`(testo inglese)`). The claim's text is not rewritten. A step whose call no longer returns data leaves its claims `verified: null`, `issues: []`, and the console shows them without a badge (Solution Plan §7). Measured on 2 Nov 2026 (AC10) on the 5 answers Chiedi shows: 6 of 18 claims flagged, each a slip read by hand (6 ASST figures given as a hospital's, 2 comparisons stated backwards, 1 translation slip), and each of the 97 numbers changed alone, in the Italian or the English text, caught.
 
 The canonical JSON schemas for these tools live in `src/agents/tools.py` (Pydantic models, Italian descriptions, `$ref`s inlined) and are the single source for the agents. `testing/llm_eval.py` moves to them with the LLM gateway (step 2.7) and is measured again there; its stored results (step 0.4) used its own copy. Benchmark questions are answered with these tools too, not with SQL (Solution Plan §8 allows text-to-SQL for them, but §4 puts text-to-SQL out of scope; C16).
 
@@ -462,7 +471,7 @@ complete(agent: str, prompt_version: str, messages: list, *, tools=None, schema=
 4. Monitoring applies pathway rules and approved Rule Advisor rules; raises patient deviations and regional alarms.
 5. Views refresh.
 6. Daily Worklist builds the list at the start of the day.
-7. On a regional alarm, the Investigator runs on the same tick, after `capacity_slots` is written, so its tools see the alarm's day and its cache keys match the warm-up (C25); from the cache it takes well under a second. It stores the row, sets the alarm's `investigation_id` and adds its steps to the day's messages; with no answer (a cache miss) the alarm stays without one and the tick goes on. The Verifier checks its answer (phase 3).
+7. On a regional alarm, the Investigator runs on the same tick, after `capacity_slots` is written, so its tools see the alarm's day and its cache keys match the warm-up (C25); from the cache it takes well under a second. It stores the row, sets the alarm's `investigation_id` and adds its steps to the day's messages; with no answer (a cache miss) the alarm stays without one and the tick goes on. The Verifier checks its claims first, on the same cursor and day (C33).
 8. Intervention handles the day's deviations and open alarms through the action service (C32), after the Investigator: the alarm is explained on the day as it was, then agents act (D53). If a reschedule ran, `capacity_slots` is written again.
 9. The WebSocket pushes the new state, alarms and actions.
 
@@ -524,7 +533,7 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `tick` | `{"speed": 4, "kpi": {...}}`: headline numbers for the cards; with a lever run (C28) also `"lever_run": {"run_id", "day"}`, its day behind the tick's while it catches up |
 | `alert` | `{"alert_id": "al_s2_agents_338", "level": "patient" \| "regional", "text": {"it": "...", "en": "..."}, "facility_id": "osp_B", "group_key": null, "investigation_id": "..."}`; `group_key` names the group of a group alarm (C26), and `alert_id` links the investigation to its alarm |
 | `action` | one row of `actions` |
-| `investigation` | `{"investigation_id", "step": n, "tool", "args", "result_summary": {"it", "en"}, "verified": true \| false \| null, "final": false}` |
+| `investigation` | `{"investigation_id", "step": n, "tool", "args", "result_summary": {"it", "en"}, "verified": true \| false \| null, "final": false}`; `verified` is true when the Verifier passed every claim of the step, false when one has an issue, null without a checked claim (C33) |
 
 **Tick `kpi`** (C15): the `ats` row of `kpi_daily` for the pathway on screen and the tick's day, without `day`, `level` and `key`.
 

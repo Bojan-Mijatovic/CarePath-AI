@@ -16,7 +16,7 @@ import investigation_run
 @pytest.mark.parametrize("scenario", [1, 2, 3])
 @pytest.mark.parametrize("pattern", [1, 2, 3])
 def test_ac01_patterns_found(alarm_investigations, scenario, pattern):
-    invs, names, _ = alarm_investigations[scenario]
+    invs, names, *_ = alarm_investigations[scenario]
     assert invs and None not in invs, "an alarm without investigation: a cache miss in cache_only"
     score = {1: lambda inv: investigation_run.pattern_1(inv, scenario, names),
              2: lambda inv: investigation_run.pattern_2(inv, scenario),

@@ -144,6 +144,9 @@ const STRINGS = {
   'ask.steps': { it: 'Passi dell’indagine', en: 'Investigation steps' },
   'ask.step': { it: 'Passo {step}', en: 'Step {step}' },
   'ask.unverified': { it: 'da verificare', en: 'not yet verified' },
+  'ask.verified': { it: 'verificato', en: 'verified' },
+  'ask.corrected': { it: 'corretto', en: 'corrected' },
+  'ask.correction': { it: 'Verifier', en: 'Verifier' },
   'ask.conclusion': { it: 'Conclusione', en: 'Conclusion' },
   'ask.empty': {
     it: 'Nessuna indagine finora: l’Investigator parte quando il Monitoring alza un allarme regionale.',

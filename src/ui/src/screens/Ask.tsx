@@ -6,7 +6,8 @@ const STEP_MS = 700 // one step after another, as the prototype shows them
 
 /** Demo step 5 (prototype "Chiedi"): the investigation of the latest regional alarm, step by step, each step
  * with the tool it called, the code's summary of its result and the claims it supports (SPEC §6, C24). The
- * badge waits for the Verifier (phase 3); until then every claim is "not yet verified". */
+ * Verifier (C33) repeated each step's call: a step is "verificato" when all its claims passed and "corretto"
+ * when one had an issue, shown under the claim; without a verdict it stays "da verificare". */
 export default function Ask({ day }: { day: number | null }) {
   const { lang, t } = useLang()
   const { data, error } = useApi<Investigation[]>('/api/investigations', day)
@@ -46,23 +47,33 @@ export default function Ask({ day }: { day: number | null }) {
       <section className="panel" aria-labelledby="h-steps">
         <h2 id="h-steps">{t('ask.steps')}</h2>
         <ol className="ask-steps" aria-live="polite">
-          {steps.map((s) => (
-            <li key={s.step} className="ask-step">
-              <div className="ask-step-head">
-                <span className="ask-step-n">{t('ask.step', { step: s.step })}</span>
-                <code className="ask-tool">{s.tool}</code>
-                <span className="ask-badge">{t('ask.unverified')}</span>
-              </div>
-              <div className="ask-summary">{s.result_summary[lang]}</div>
-              <ul className="ask-claims">
-                {inv.claims
-                  .filter((c) => c.step === s.step)
-                  .map((c, i) => (
-                    <li key={i}>{c.text[lang]}</li>
+          {steps.map((s) => {
+            const claims = inv.claims.filter((c) => c.step === s.step)
+            const marks = claims.map((c) => c.verified).filter((v) => v !== undefined && v !== null)
+            const badge = marks.length === 0 ? 'unverified' : marks.every(Boolean) ? 'verified' : 'corrected'
+            return (
+              <li key={s.step} className="ask-step">
+                <div className="ask-step-head">
+                  <span className="ask-step-n">{t('ask.step', { step: s.step })}</span>
+                  <code className="ask-tool">{s.tool}</code>
+                  <span className={`ask-badge ask-badge-${badge}`}>{t(`ask.${badge}`)}</span>
+                </div>
+                <div className="ask-summary">{s.result_summary[lang]}</div>
+                <ul className="ask-claims">
+                  {claims.map((c, i) => (
+                    <li key={i}>
+                      {c.text[lang]}
+                      {c.issues?.map((issue, j) => (
+                        <div key={j} className="ask-issue">
+                          {t('ask.correction')}: {issue.text[lang]}
+                        </div>
+                      ))}
+                    </li>
                   ))}
-              </ul>
-            </li>
-          ))}
+                </ul>
+              </li>
+            )
+          })}
         </ol>
       </section>
       {done && (

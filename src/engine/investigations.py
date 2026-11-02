@@ -4,7 +4,8 @@ When Monitoring opens a regional alarm on the agents arm, the Investigator looks
 tick, after capacity_slots is written: its tools must see the run as it is on the alarm's day, or their
 results, and so the cache keys (SPEC §8), would differ. From the cache that takes well under a second
 (D14); a live run (warm-up) holds the tick for minutes. The row goes to `investigations`, the alarm gets its
-investigation_id, in the table and in its stream message, and the steps go on the stream.
+investigation_id, in the table and in its stream message, and the steps go on the stream. The Verifier checks
+the claims first, on the same cursor and day (C33).
 
 A model that gives no answer (a cache miss in cache_only, a timeout) leaves the alarm without an
 investigation; it is logged and the tick goes on, so the demo never stops on it (AC9). The cache
@@ -16,7 +17,7 @@ import logging
 
 import duckdb
 
-from agents import investigator, llm, tools
+from agents import investigator, llm, tools, verifier
 from engine.db import tool_cursor
 from engine.pathway import Pathway
 
@@ -34,6 +35,7 @@ def on_question(con: duckdb.DuckDBPyConnection, run_id: str, pathway: Pathway, d
         ctx = tools.Context(run_id, tools.Query(cur), day)
         inv = investigator.ask(ctx, pathway, day, {"it": question, "en": question}, f"inv_{run_id}_{done + 1}",
                                facilities)
+        verifier.verify(ctx, pathway, inv, facilities)
     row = inv.row()
     con.execute(f"INSERT INTO investigations BY NAME SELECT {', '.join(f'${k} AS {k}' for k in row)}", row)
     return row, inv.messages(scenario)
@@ -59,6 +61,7 @@ def on_alarms(con: duckdb.DuckDBPyConnection, run_id: str, pathway: Pathway, day
                 ctx = tools.Context(run_id, tools.Query(cur), day)
                 inv = investigator.investigate(ctx, pathway, day, json.loads(text), investigation_id, facilities,
                                                step_id=step, group_alarm=group_alarm)
+                verifier.verify(ctx, pathway, inv, facilities)  # on the same day, so its calls see the same data (C33)
         except llm.LLMUnavailable as e:
             log.warning("no investigation of %s on day %d: %s", alert_id, day, e)
             continue

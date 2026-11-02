@@ -146,10 +146,15 @@ class Investigation:
                 "claims": dump(self.claims), "conclusion": dump(self.conclusion), "prompt_version": self.prompt_version}
 
     def messages(self, scenario: int) -> list[dict]:
-        """The `investigation` stream messages, one per step (SPEC §10); the last one is final."""
+        """The `investigation` stream messages, one per step (SPEC §10); the last one is final. A step is
+        verified when the Verifier passed all its claims, false when it found an issue in one, and null
+        without checked claims (C33)."""
+        def verified(step: int) -> bool | None:
+            marks = [c.get("verified") for c in self.claims if c["step"] == step and c.get("verified") is not None]
+            return all(marks) if marks else None
         return [{"type": "investigation", "scenario": scenario, "day": self.day,
                  "payload": {"investigation_id": self.investigation_id, "step": s["step"], "tool": s["tool"],
-                             "args": s["args"], "result_summary": s["result_summary"], "verified": None,
+                             "args": s["args"], "result_summary": s["result_summary"], "verified": verified(s["step"]),
                              "final": i == len(self.steps) - 1}}
                 for i, s in enumerate(self.steps)]
 

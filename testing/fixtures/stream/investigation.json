@@ -16,7 +16,7 @@
         "it": "Ospedale A 2,2 · Ospedale B 31 · Ospedale C 2",
         "en": "Ospedale A 2.2 · Ospedale B 31 · Ospedale C 2"
       },
-      "verified": null,
+      "verified": true,
       "final": false
     }
   },
@@ -35,7 +35,7 @@
         "it": "Ospedale A 114 · Ospedale B 0 · Ospedale C 102",
         "en": "Ospedale A 114 · Ospedale B 0 · Ospedale C 102"
       },
-      "verified": null,
+      "verified": true,
       "final": false
     }
   },
@@ -57,7 +57,7 @@
         "it": "count 17 · patients: 5",
         "en": "count 17 · patients: 5"
       },
-      "verified": null,
+      "verified": false,
       "final": false
     }
   },
@@ -79,7 +79,7 @@
         "it": "Poggio Rusco 0,5 · Redondesco 0,5 · Borgocarbonara 0,53 · Pomponesco 0,57 · Vailate 0,59 · Sermide e Felonica 0,6 · +5",
         "en": "Poggio Rusco 0.5 · Redondesco 0.5 · Borgocarbonara 0.53 · Pomponesco 0.57 · Vailate 0.59 · Sermide e Felonica 0.6 · +5"
       },
-      "verified": null,
+      "verified": true,
       "final": false
     }
   },

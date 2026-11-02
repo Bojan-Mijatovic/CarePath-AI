@@ -16,7 +16,7 @@ import investigation_run
 @pytest.mark.parametrize("scenario", [1, 2, 3])
 @pytest.mark.parametrize("what", ["asst", "comune_group", "mmg_group"])
 def test_ac13_scenarios(alarm_investigations, scenario, what):
-    invs, names, assts = alarm_investigations[scenario]
+    invs, names, assts, _ = alarm_investigations[scenario]
     assert invs and None not in invs, "an alarm without investigation: a cache miss in cache_only"
     score = {"asst": lambda inv: investigation_run.bottleneck_asst(inv, scenario, names, assts),
              "comune_group": lambda inv: investigation_run.pattern_3(inv, scenario),

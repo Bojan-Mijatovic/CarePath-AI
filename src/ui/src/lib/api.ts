@@ -119,7 +119,8 @@ export type Investigation = {
   alert_id: string | null
   question: Bilingual
   steps: { step: number; tool: string; args: Record<string, unknown>; result_summary: Bilingual }[]
-  claims: { text: Bilingual; step: number }[]
+  /** `verified` and `issues` come from the Verifier (SPEC §6, C33); null when the step's call gave no data. */
+  claims: { text: Bilingual; step: number; verified?: boolean | null; issues?: { kind: string; text: Bilingual }[] }[]
   conclusion: Bilingual
 }
 
