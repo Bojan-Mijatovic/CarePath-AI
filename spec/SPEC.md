@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **v1.24**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), v1.13 adds C26 (D47, step 2.30), proposed 29 Oct 2026; v1.14 adds C27 (D48, step 2.5), v1.15 adds C28 (D49, step 2.28), v1.16 adds C29 (D50, step 2.10), v1.17 adds C30 (D51, step 2.18), v1.18 adds C31 (D52, step 2.12), v1.19 adds C32 (D54, step 2.13), proposed 30 Oct 2026; v1.20 adds C33 (D55, Verifier), v1.21 adds C34 (D56, step 2.27), v1.22 adds C35 (D57, step 2.6), v1.23 adds C36 (D58, step 2.14), v1.24 adds C37 (D59, step 2.20), proposed 2 Nov 2026. Changes follow §0 |
+| Status | **v1.25**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), v1.13 adds C26 (D47, step 2.30), proposed 29 Oct 2026; v1.14 adds C27 (D48, step 2.5), v1.15 adds C28 (D49, step 2.28), v1.16 adds C29 (D50, step 2.10), v1.17 adds C30 (D51, step 2.18), v1.18 adds C31 (D52, step 2.12), v1.19 adds C32 (D54, step 2.13), proposed 30 Oct 2026; v1.20 adds C33 (D55, Verifier), v1.21 adds C34 (D56, step 2.27), v1.22 adds C35 (D57, step 2.6), v1.23 adds C36 (D58, step 2.14), v1.24 adds C37 (D59, step 2.20), v1.25 adds C38 (D60, step 2.29), proposed 2 Nov 2026. Changes follow §0 |
 | Last updated | 2 Nov 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C37 proposed in v1.1–v1.24)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C38 proposed in v1.1–v1.25)
 
 | # | Change | Why |
 |---|---|---|
@@ -67,6 +67,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C35 (D57) | PNE forecast to year end (§9 What-if, `src/engine/pne.py`): the what-if runs go on to day 364 and keep `year_end`; `POST /whatif` returns `pne` (§10) | Step 2.6 had no contract. A forecast from the grid's full runs uses the demo's own code and seed (D48), where a fitted trend would be a second model of the same thing; the prototype's "ATS target 12%" has no source, so the line is the pathway's published reference (C23) |
 | C36 (D58) | The Reporter (§9): a monthly report on the agents arm, the `reports` table, `GET /reports` and the `report` stream message (§10), `report_days` in the cache manifest (§8), and the tool `pathway_kpi`, which code calls and the model is not offered (§6) | Step 2.14 had only "numbers from views, LLM for sentences". Agents read through tools (rule 3) and no tool returned `kpi_daily`; offering a new one to the model would change every Investigator cache key. The prototype shows the report only as a line in Attività agenti; the lead chose a monthly report with a Panoramica panel, the model's prose cached only for the report the demo shows |
 | C37 (D59) | No envelope: the demo opens on scenario 2 and `POST /sim/scenario` is the demo bar's (§9, §10); `GET`/`PUT /sim/cache` for the bar's cache switch; the shape of `GET /reveal/{scenario}`; `GET /worklist` with the patient's age, living alone and comune; the day's call outcomes written back to `worklist_today` after Intervention (§5.2) | Step 2.20 and D44: the envelope is gone and the scenario order is fixed; the cache switch had no endpoint; `/reveal` had no shape; the Centro Servizi calls a person, not an id; and the outcome column stayed empty on screen because the list is built before the calls |
+| C38 (D60) | `GET /actions` takes `day` (§10) | Attività agenti (step 2.29) shows the day's actions after a jump or a reconnect, when the stream has none of that day yet; scenario 2 has about 7,000 actions by day 62, too many to read whole every day |
 
 ## 1. Scope
 
@@ -521,7 +522,7 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `GET /map?run&pathway_id` | `map_comuni` rows; regional alarms arrive on the stream (C18) |
 | `GET /worklist?run&day` | `worklist_today` of `day`, or of the latest day, without the `day` column, by `rank` (C20); C37: with the patient's `age`, `lives_alone` and `comune_name` for the Centro Servizi |
 | `GET /patients/{id}?run&day` | Paziente 360: timeline of events and actions, state per pathway (shape below, C15). With `day`, a recording from `demo/story/` (C17): only `p_00001`, `s2_baseline`, day 62 exists; anything else is 404 |
-| `GET /actions?run&status` | action queue and feed |
+| `GET /actions?run&status&day` | action queue and feed; C38: with `day`, the actions created or executed that day (Attività agenti after a jump) |
 | `GET /investigations?run` | the run's `investigations` rows (§6, C24), the latest first, JSON columns parsed (C25) |
 | `GET /reports?run` | C36: the run's `reports` rows, the latest first: `{report_id, day, month, from_day, pathway_id, figures, text: {"it", "en"}, wording, evidence}` |
 | `GET /pathways/{pathway_id}` | the pathway file of §4 as it is, so the console names steps and drugs from data (C22); 404 for an unknown id. Needs no run. `spec/pathways/<pathway_id>.json` is its fixture |

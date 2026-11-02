@@ -142,6 +142,14 @@ def test_worklist_by_day(client):
     assert {"age", "lives_alone", "comune_name"} <= set(today[0])  # who to call (C37)
 
 
+def test_the_actions_of_a_day(client):
+    # C38: Attività agenti reads the day's actions after a jump, not the whole run's
+    day = client.post("/api/sim/pause").json()["day"]
+    rows = client.get("/api/actions", params={"day": day}).json()
+    assert rows and all(day in (r["created_day"], r["executed_day"]) for r in rows)
+    assert len(rows) < len(client.get("/api/actions").json())
+
+
 def test_the_demo_bar_switches_the_cache(client):
     # C37: cache_only is the demo's default (D14); live, which asks again for everything, is not offered
     assert client.get("/api/sim/cache").json() == {"mode": "cache_only"}

@@ -86,6 +86,12 @@ export default function App() {
       if (msg.payload.kpi) setKpi(msg.payload.kpi)
       if (msg.payload.speed !== undefined) setSpeed(msg.payload.speed)
       setLeverRun(msg.payload.lever_run ?? null)
+    } else if (msg.type === 'action') {
+      // A decision or an undo sends the action again: it replaces its earlier line (step 2.29)
+      setFeed((items) => {
+        const at = items.findIndex((m) => m.type === 'action' && m.payload.action_id === msg.payload.action_id)
+        return at < 0 ? [msg, ...items].slice(0, FEED_SIZE) : items.map((m, k) => (k === at ? msg : m))
+      })
     } else {
       setFeed((items) => [msg, ...items].slice(0, FEED_SIZE))
       // The Mappa banner keeps the latest regional alarm; patient alerts would push it out of the feed.
@@ -167,7 +173,7 @@ export default function App() {
                 <p className="placeholder">{t('placeholder.screen', { screen: t(`nav.${screen}` as Key) })}</p>
               )}
             </section>
-            <ActivityFeed messages={feed} />
+            <ActivityFeed messages={feed} day={day} />
           </div>
         </main>
       </div>

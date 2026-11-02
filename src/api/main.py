@@ -260,8 +260,8 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
         return found
 
     @api.get("/actions")
-    def actions(run: str | None = None, status: str | None = None) -> list[dict]:
-        return live.read(run, lambda con: queries.actions(con, status))
+    def actions(run: str | None = None, status: str | None = None, day: int | None = None) -> list[dict]:
+        return live.read(run, lambda con: queries.actions(con, status, day))
 
     @api.post("/actions/{action_id}/{decision}")
     async def decide(action_id: str, decision: Literal["approve", "reject", "undo"]) -> dict:

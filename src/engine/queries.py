@@ -88,10 +88,13 @@ def worklist(con: duckdb.DuckDBPyConnection, day: int | None) -> list[dict]:
         WHERE w.day = coalesce($d, (SELECT max(day) FROM worklist_today)) ORDER BY w.rank""", {"d": day})
 
 
-def actions(con: duckdb.DuckDBPyConnection, status: str | None) -> list[dict]:
-    """GET /api/actions: the action queue and feed."""
-    return rows(con, "SELECT * FROM actions WHERE $s IS NULL OR status = $s ORDER BY created_day, action_id",
-                {"s": status})
+def actions(con: duckdb.DuckDBPyConnection, status: str | None, day: int | None = None) -> list[dict]:
+    """GET /api/actions: the action queue and feed; with `day`, the actions created or executed that day (C38,
+    Attività agenti after a jump)."""
+    return rows(con, """
+        SELECT * FROM actions
+        WHERE ($s IS NULL OR status = $s) AND ($d IS NULL OR created_day = $d OR executed_day = $d)
+        ORDER BY created_day, action_id""", {"s": status, "d": day})
 
 
 def investigations(con: duckdb.DuckDBPyConnection) -> list[dict]:

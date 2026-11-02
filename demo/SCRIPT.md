@@ -73,7 +73,7 @@ Times are the target per block. **System** is what the app takes, measured on 2 
 
 | Gap | Effect on the script | Comes with |
 |---|---|---|
-| Attività agenti: undo and the full rationale | the panel shows the live actions, alerts, steps and reports; no undo yet | 2.29 |
+| Undo of an effect | "Annulla" in Attività agenti marks an action undone in the audit log; it does not move a rescheduled patient back (SPEC §7.3) | not planned |
 | Euros | step 7 shows readmissions, waits and the PNE forecast; euros wait for the cost per readmission (Q2) | Q2 |
 | A box for free questions in Chiedi | the two cached questions can only be asked through the API (`POST /api/ask`) | 2.10 (in progress) |
 | Rule proposal after the investigation (5a) | not in the demo: Rule Advisor did not enter at checkpoint 2.23 | — |
