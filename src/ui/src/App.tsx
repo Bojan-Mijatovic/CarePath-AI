@@ -5,14 +5,16 @@ import Autonomy from './components/Autonomy'
 import LangSwitch from './components/LangSwitch'
 import { type Kpi, type Pathway, useApi } from './lib/api'
 import { type Key, type Lang, LangContext, translator } from './lib/i18n'
-import { type StreamMessage, useStream } from './lib/stream'
+import { type LeverRun, type StreamMessage, useStream } from './lib/stream'
 import Ask from './screens/Ask'
+import Compare from './screens/Compare'
 import Envelopes from './screens/Envelopes'
 import Flows from './screens/Flows'
 import MapScreen, { type RegionalAlert } from './screens/MapScreen'
 import MariaStory from './screens/MariaStory'
 import Overview from './screens/Overview'
 import Patient from './screens/Patient'
+import WhatIf from './screens/WhatIf'
 
 // Menu order follows the prototype; the two intro screens (demo steps 1 and 2) are full screen.
 const SCREENS = ['panoramica', 'mappa', 'chiedi', 'confronto', 'whatif', 'percorsi', 'chiamate', 'letti', 'pazienti'] as const
@@ -43,6 +45,7 @@ export default function App() {
   const [scenario, setScenario] = useState<number | null>(null)
   const [speed, setSpeed] = useState(1)
   const [kpi, setKpi] = useState<Kpi | null>(null)
+  const [leverRun, setLeverRun] = useState<LeverRun | null>(null)
   const [feed, setFeed] = useState<FeedMessage[]>([])
   const [alarm, setAlarm] = useState<RegionalAlert | null>(null)
   const t = translator(lang)
@@ -79,6 +82,7 @@ export default function App() {
       setScenario(msg.scenario)
       if (msg.payload.kpi) setKpi(msg.payload.kpi)
       if (msg.payload.speed !== undefined) setSpeed(msg.payload.speed)
+      setLeverRun(msg.payload.lever_run ?? null)
     } else {
       setFeed((items) => [msg, ...items].slice(0, FEED_SIZE))
       // The Mappa banner keeps the latest regional alarm; patient alerts would push it out of the feed.
@@ -144,11 +148,13 @@ export default function App() {
               ) : screen === 'chiedi' ? (
                 <Ask day={day} />
               ) : screen === 'confronto' ? (
-                // Prototype step 6: autonomy on top; the comparison below it is step 2.19.
+                // Prototype step 6: autonomy on top, the comparison below it.
                 <div className="overview">
                   <Autonomy day={day} />
-                  <p className="placeholder">{t('compare.later')}</p>
+                  <Compare day={day} scenario={scenario} pathway={pathway ?? null} leverRun={leverRun} />
                 </div>
+              ) : screen === 'whatif' ? (
+                <WhatIf scenario={scenario} pathway={pathway ?? null} />
               ) : screen === 'pazienti' ? (
                 <Patient day={day} scenario={scenario} pathway={pathway ?? null} />
               ) : (

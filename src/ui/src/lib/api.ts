@@ -107,8 +107,52 @@ export type Pathway = {
     specialty?: string
     loinc?: string[]
     service?: string
+    max_wait_days?: number
   }[]
   eligibility: { drug_names: Record<string, Bilingual> }
+}
+
+/** GET /api/kpi?level=ats (SPEC §5.2, C14): one row per day. */
+export type KpiRow = Kpi & { day: number; level: string; key: string }
+
+/** GET /api/capacity (C28): slot use and waits per facility of a service over 7 days. */
+export type CapacityRow = {
+  day: number
+  facility_id: string
+  name: string
+  slots_total: number | null
+  slots_booked: number | null
+  use_pct: number | null
+  bookings: number | null
+  wait_mean: number | null
+  wait_median: number | null
+  wait_p90: number | null
+}
+
+/** A run summary of POST /api/whatif (C27). */
+export type WhatIfRun = {
+  run_id: string
+  readmissions: number
+  readmission_rate_30d: number | null
+  on_track_pct: number
+  overdue: number
+  wait_days: number | null
+}
+
+export type WhatIf = {
+  scenario: number
+  facility_id: string
+  facility: string
+  service: string
+  lever_day: number
+  last_day: number
+  months: number
+  base_slots: number
+  levers: { extra_slots: number }
+  baseline: WhatIfRun
+  agents: WhatIfRun
+  lever: WhatIfRun
+  avoided_readmissions: number
 }
 
 /** GET /api/investigations (SPEC §6, C24, C25), the latest first. */

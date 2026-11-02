@@ -7,11 +7,8 @@ type Envelope<T extends string, P> = { type: T; scenario: number; day: number; p
 
 /** `lever_run` (C28): the agents arm with the proposed lever, how far it has caught up, and whether the
  * manager approved the capacity proposal (C34) */
-export type TickPayload = {
-  speed?: number
-  kpi?: Kpi
-  lever_run?: { run_id: string; day: number; approved: boolean }
-}
+export type LeverRun = { run_id: string; day: number; approved: boolean }
+export type TickPayload = { speed?: number; kpi?: Kpi; lever_run?: LeverRun }
 export type AlertPayload = {
   alert_id: string
   level: 'patient' | 'regional'

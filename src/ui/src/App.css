@@ -462,6 +462,119 @@
   color: var(--ink-soft);
 }
 
+.compare,
+.whatif {
+  display: grid;
+  gap: 16px;
+}
+
+.compare-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.compare-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.compare-col.accent {
+  border-color: var(--primary);
+}
+
+.compare-figures {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 16px;
+  margin: 12px 0;
+}
+
+.compare-figures dt {
+  color: var(--ink-muted);
+}
+
+.compare-figures dd {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.compare-delta {
+  margin-left: 8px;
+  color: var(--ok);
+  font-size: 14px;
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.compare-table caption {
+  margin-bottom: 6px;
+  color: var(--ink-muted);
+  text-align: left;
+}
+
+.compare-table th,
+.compare-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+}
+
+.compare-table th[scope='row'] {
+  text-align: left;
+  font-weight: 500;
+}
+
+.compare-table tr.over td {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.whatif-lever {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.whatif-lever label {
+  flex-basis: 100%;
+}
+
+.whatif-lever input {
+  flex: 1;
+  min-width: 160px;
+}
+
+.whatif-lever output {
+  min-width: 2ch;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.whatif-lever button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.whatif-lever button:disabled {
+  opacity: 0.6;
+}
+
 .ask-badge-verified {
   background: #e6f4ec;
   color: var(--ok);
