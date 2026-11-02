@@ -3,7 +3,8 @@ import type { StreamMessage } from '../lib/stream'
 
 type FeedMessage = Exclude<StreamMessage, { type: 'tick' }>
 
-/** The "Attività agenti · live" side panel: actions, alerts and investigation steps from /api/stream. */
+/** The "Attività agenti · live" side panel: actions, alerts, investigation steps and monthly reports from
+ * /api/stream. */
 export default function ActivityFeed({ messages }: { messages: FeedMessage[] }) {
   const { lang, t } = useLang()
   return (
@@ -25,6 +26,9 @@ export default function ActivityFeed({ messages }: { messages: FeedMessage[] }) 
           } else if (m.type === 'alert') {
             head = `Monitoring · ${t(m.payload.level === 'regional' ? 'feed.alertRegional' : 'feed.alertPatient')}`
             body = m.payload.text[lang]
+          } else if (m.type === 'report') {
+            head = `Reporter · ${m.payload.title[lang]}`
+            body = t('feed.report', { from: m.payload.from_day, to: m.day })
           } else {
             head = `Investigator · ${t('feed.step', { step: m.payload.step })}`
             body = `${m.payload.tool}: ${m.payload.result_summary[lang]}`

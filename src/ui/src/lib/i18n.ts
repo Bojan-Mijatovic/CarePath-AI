@@ -257,6 +257,12 @@ const STRINGS = {
   'feed.alertRegional': { it: 'Allarme regionale', en: 'Regional alarm' },
   'feed.alertPatient': { it: 'Paziente', en: 'Patient' },
   'feed.step': { it: 'passo {step}', en: 'step {step}' },
+  'feed.report': {
+    it: 'Rapporto mensile in stile PNE pronto, giorni {from}–{to}: in Panoramica.',
+    en: 'Monthly PNE-style report ready, days {from}–{to}: on Panoramica.',
+  },
+  'report.title': { it: 'Rapporto del mese {month} · Reporter', en: 'Report for month {month} · Reporter' },
+  'report.sub': { it: 'Giorni {from}–{to} · numeri dagli indicatori del percorso', en: 'Days {from}–{to} · numbers from the pathway indicators' },
   'feed.day': { it: 'Giorno {day}', en: 'Day {day}' },
 
   'action.reminder': { it: 'Promemoria', en: 'Reminder' },

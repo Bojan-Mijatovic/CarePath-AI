@@ -26,7 +26,7 @@ from agents import actions, intervention
 from agents.intervention import Intervention
 from agents.monitoring import Monitoring
 from engine import pathway as pathway_model
-from engine import investigations, queries, whatif, worklist
+from engine import investigations, queries, reports, whatif, worklist
 from engine.db import RUNS_DIR, create_run, open_run
 from engine.risk import HIGH_RISK, RiskModel
 from engine.state import StateEngine
@@ -106,6 +106,8 @@ class Run:
             shown = sorted(rows, key=lambda r: (intervention.PRIORITY.get(r["type"], 9), -self._risk_of(r)))
             messages += [{"type": "action", "scenario": self.scenario, "day": d, "payload": r}
                          for r in shown[:intervention.STREAM_ACTIONS] if r["status"] != "rejected"]
+            # the month's report on its last day, after the agents acted (step 2.14, C36)
+            messages += reports.on_day(self.con, self.run_id, self.state.pathway, d, self.scenario)
         self.day = d
         self.last_ms = (time.perf_counter() - t) * 1000
         return messages

@@ -9,7 +9,7 @@ import json
 import duckdb
 
 JSON_COLUMNS = {"scope", "payload", "rationale", "evidence", "details", "reasons", "script", "text", "question", "steps",
-                "claims", "conclusion"}
+                "claims", "conclusion", "figures"}
 
 
 def decode(row: dict) -> dict:
@@ -95,6 +95,11 @@ def actions(con: duckdb.DuckDBPyConnection, status: str | None) -> list[dict]:
 def investigations(con: duckdb.DuckDBPyConnection) -> list[dict]:
     """GET /api/investigations: every stored investigation, the latest first (SPEC §6, C24, C25)."""
     return rows(con, "SELECT * FROM investigations ORDER BY day DESC, investigation_id DESC")
+
+
+def reports(con: duckdb.DuckDBPyConnection) -> list[dict]:
+    """GET /api/reports: every monthly report, the latest first (C36)."""
+    return rows(con, "SELECT * FROM reports ORDER BY day DESC")
 
 
 def patient_360(con: duckdb.DuckDBPyConnection, patient_id: str) -> dict | None:

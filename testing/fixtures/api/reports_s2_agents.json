@@ -1,0 +1,252 @@
+[
+  {
+    "report_id": "rep_s2_agents_2",
+    "day": 59,
+    "month": 2,
+    "from_day": 30,
+    "pathway_id": "hf_lombardia_v1",
+    "figures": {
+      "month": 2,
+      "from_day": 30,
+      "to_day": 59,
+      "ats": {
+        "patients": 9984,
+        "on_track_pct": 0.7078,
+        "overdue": 691,
+        "readmissions_30d": 76,
+        "readmission_rate_30d": 0.1306,
+        "actions_executed": 1,
+        "actions_pending": 1
+      },
+      "readmissions_month": 33,
+      "actions_month": 1,
+      "assts": {
+        "asst_crema": {
+          "name": "ASST Crema",
+          "patients": 2028,
+          "on_track_pct": 0.6997,
+          "overdue": 153,
+          "readmissions_30d": 18,
+          "readmission_rate_30d": 0.1364,
+          "actions_executed": 0,
+          "actions_pending": 0
+        },
+        "asst_cremona": {
+          "name": "ASST Cremona",
+          "patients": 2756,
+          "on_track_pct": 0.7032,
+          "overdue": 190,
+          "readmissions_30d": 24,
+          "readmission_rate_30d": 0.1463,
+          "actions_executed": 0,
+          "actions_pending": 0
+        },
+        "asst_mantova": {
+          "name": "ASST Mantova",
+          "patients": 5200,
+          "on_track_pct": 0.7135,
+          "overdue": 348,
+          "readmissions_30d": 34,
+          "readmission_rate_30d": 0.1189,
+          "actions_executed": 1,
+          "actions_pending": 0
+        }
+      },
+      "compliance": {
+        "telemon": 0.615,
+        "cardio_visit": 0.7565,
+        "echo": 0.8109,
+        "lab_bnp": 0.8162
+      },
+      "wait": {
+        "step": "echo",
+        "days": 30,
+        "by_facility": {
+          "Ospedale A": 2.0,
+          "Ospedale B": 47.8,
+          "Ospedale C": 2.0
+        }
+      },
+      "reference": {
+        "rate": 0.1187,
+        "label": {
+          "it": "Italia, PNE 2025",
+          "en": "Italy, PNE 2025"
+        }
+      }
+    },
+    "text": {
+      "it": "Scompenso cardiaco: rapporto del mese 2 (giorni 30–59).\nRiammissioni a 30 giorni dal giorno 0: 13,1%, riferimento Italia, PNE 2025 11,87%. Nel mese: 33 riammissioni.\nPer ASST: ASST Crema 13,6%, ASST Cremona 14,6%, ASST Mantova 11,9%.\nIn linea con il PAI: 70,8% dei 9984 pazienti; 691 passi in ritardo.\nScadenze rispettate negli ultimi 90 giorni: Telemonitoraggio 61,5%, Visita cardiologica 75,6%, Ecocardiogramma 81,1%, Esame BNP 81,6%.\nAttesa media per Ecocardiogramma nel mese, in giorni: Ospedale A 2,0, Ospedale B 47,8, Ospedale C 2,0.\nAzioni degli agenti nel mese: 1 eseguite; 1 in attesa di approvazione.",
+      "en": "Heart failure: report for month 2 (days 30–59).\n30-day readmissions since day 0: 13.1%, reference Italy, PNE 2025 11.87%. In the month: 33 readmissions.\nBy ASST: ASST Crema 13.6%, ASST Cremona 14.6%, ASST Mantova 11.9%.\nOn track with the PAI: 70.8% of 9984 patients; 691 steps overdue.\nDeadlines met in the last 90 days: Telemonitoring 61.5%, Cardiology visit 75.6%, Echocardiogram 81.1%, BNP test 81.6%.\nMean wait for Echocardiogram in the month, in days: Ospedale A 2.0, Ospedale B 47.8, Ospedale C 2.0.\nAgent actions in the month: 1 executed; 1 waiting for approval."
+    },
+    "wording": "template",
+    "evidence": [
+      {
+        "tool": "pathway_kpi",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "level": "ats"
+        },
+        "run_id": "s2_agents",
+        "day": 59
+      },
+      {
+        "tool": "pathway_kpi",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "level": "ats",
+          "day": 29
+        },
+        "run_id": "s2_agents",
+        "day": 59
+      },
+      {
+        "tool": "pathway_kpi",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "level": "asst"
+        },
+        "run_id": "s2_agents",
+        "day": 59
+      },
+      {
+        "tool": "compliance_by_step",
+        "args": {
+          "pathway_id": "hf_lombardia_v1"
+        },
+        "run_id": "s2_agents",
+        "day": 59
+      },
+      {
+        "tool": "wait_by_hospital",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "step": "echo",
+          "period_days": 30
+        },
+        "run_id": "s2_agents",
+        "day": 59
+      }
+    ]
+  },
+  {
+    "report_id": "rep_s2_agents_1",
+    "day": 29,
+    "month": 1,
+    "from_day": 0,
+    "pathway_id": "hf_lombardia_v1",
+    "figures": {
+      "month": 1,
+      "from_day": 0,
+      "to_day": 29,
+      "ats": {
+        "patients": 9980,
+        "on_track_pct": 0.7266,
+        "overdue": 813,
+        "readmissions_30d": 43,
+        "readmission_rate_30d": 0.1453,
+        "actions_executed": 0,
+        "actions_pending": 0
+      },
+      "readmissions_month": 43,
+      "actions_month": 0,
+      "assts": {
+        "asst_crema": {
+          "name": "ASST Crema",
+          "patients": 2026,
+          "on_track_pct": 0.7315,
+          "overdue": 176,
+          "readmissions_30d": 9,
+          "readmission_rate_30d": 0.1343,
+          "actions_executed": 0,
+          "actions_pending": 0
+        },
+        "asst_cremona": {
+          "name": "ASST Cremona",
+          "patients": 2755,
+          "on_track_pct": 0.7132,
+          "overdue": 242,
+          "readmissions_30d": 13,
+          "readmission_rate_30d": 0.1605,
+          "actions_executed": 0,
+          "actions_pending": 0
+        },
+        "asst_mantova": {
+          "name": "ASST Mantova",
+          "patients": 5199,
+          "on_track_pct": 0.7317,
+          "overdue": 395,
+          "readmissions_30d": 21,
+          "readmission_rate_30d": 0.1419,
+          "actions_executed": 0,
+          "actions_pending": 0
+        }
+      },
+      "compliance": {
+        "telemon": 0.6129,
+        "cardio_visit": 0.7788,
+        "echo": 0.8114,
+        "lab_bnp": 0.8667
+      },
+      "wait": {
+        "step": "echo",
+        "days": 30,
+        "by_facility": {
+          "Ospedale A": 2.1,
+          "Ospedale B": 11.8,
+          "Ospedale C": 2.0
+        }
+      },
+      "reference": {
+        "rate": 0.1187,
+        "label": {
+          "it": "Italia, PNE 2025",
+          "en": "Italy, PNE 2025"
+        }
+      }
+    },
+    "text": {
+      "it": "Scompenso cardiaco: rapporto del mese 1 (giorni 0–29).\nRiammissioni a 30 giorni dal giorno 0: 14,5%, riferimento Italia, PNE 2025 11,87%. Nel mese: 43 riammissioni.\nPer ASST: ASST Crema 13,4%, ASST Cremona 16,1%, ASST Mantova 14,2%.\nIn linea con il PAI: 72,7% dei 9980 pazienti; 813 passi in ritardo.\nScadenze rispettate negli ultimi 90 giorni: Telemonitoraggio 61,3%, Visita cardiologica 77,9%, Ecocardiogramma 81,1%, Esame BNP 86,7%.\nAttesa media per Ecocardiogramma nel mese, in giorni: Ospedale A 2,1, Ospedale B 11,8, Ospedale C 2,0.\nAzioni degli agenti nel mese: 0 eseguite; 0 in attesa di approvazione.",
+      "en": "Heart failure: report for month 1 (days 0–29).\n30-day readmissions since day 0: 14.5%, reference Italy, PNE 2025 11.87%. In the month: 43 readmissions.\nBy ASST: ASST Crema 13.4%, ASST Cremona 16.1%, ASST Mantova 14.2%.\nOn track with the PAI: 72.7% of 9980 patients; 813 steps overdue.\nDeadlines met in the last 90 days: Telemonitoring 61.3%, Cardiology visit 77.9%, Echocardiogram 81.1%, BNP test 86.7%.\nMean wait for Echocardiogram in the month, in days: Ospedale A 2.1, Ospedale B 11.8, Ospedale C 2.0.\nAgent actions in the month: 0 executed; 0 waiting for approval."
+    },
+    "wording": "template",
+    "evidence": [
+      {
+        "tool": "pathway_kpi",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "level": "ats"
+        },
+        "run_id": "s2_agents",
+        "day": 29
+      },
+      {
+        "tool": "pathway_kpi",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "level": "asst"
+        },
+        "run_id": "s2_agents",
+        "day": 29
+      },
+      {
+        "tool": "compliance_by_step",
+        "args": {
+          "pathway_id": "hf_lombardia_v1"
+        },
+        "run_id": "s2_agents",
+        "day": 29
+      },
+      {
+        "tool": "wait_by_hospital",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "step": "echo",
+          "period_days": 30
+        },
+        "run_id": "s2_agents",
+        "day": 29
+      }
+    ]
+  }
+]

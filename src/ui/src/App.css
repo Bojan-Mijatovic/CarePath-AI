@@ -575,6 +575,11 @@
   opacity: 0.6;
 }
 
+.report-text p {
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
 .pne-bars {
   display: grid;
   gap: 10px;

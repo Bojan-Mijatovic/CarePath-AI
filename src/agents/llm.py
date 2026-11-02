@@ -195,6 +195,10 @@ def set_mode(mode: Mode) -> None:
     _gateway.set_mode(mode)
 
 
+def mode() -> Mode:
+    return _gateway.mode
+
+
 def complete(agent: str, prompt_version: str, messages: list[dict], *, tools: list | None = None,
              schema: type[BaseModel] | None = None, model: str) -> GatewayResult:
     """SPEC §8: the one function every agent calls."""

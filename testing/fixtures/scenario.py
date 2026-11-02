@@ -26,8 +26,9 @@ from agents import actions, tools
 from engine import pathway as pathway_model
 from engine.db import create_run, open_run, tool_cursor
 from agents.monitoring import Monitoring
-from engine import investigations, worklist
+from engine import investigations, reports, worklist
 from engine.queries import investigations as investigations_rows
+from engine.queries import reports as reports_rows
 from engine.queries import capacity, kpi_headline, map_comuni, patient_360, rows, sankey
 from engine.queries import worklist as worklist_rows
 from engine.risk import HIGH_RISK, RiskModel
@@ -132,7 +133,7 @@ def build_runs(runs_dir: Path) -> dict:
     ref = load_reference()
     patients, mmg = generate_patients(SEED, ref)
     hf = pathway_model.load(PATHWAY_ID)
-    live, investigation = {}, []
+    live, investigation, report = {}, [], []
     for run_id, agents in RUNS.items():
         sim = Simulator(SEED, patients, ref, hf, days=DAYS)
         sim.apply_scenario(load_scenario(SCENARIO), mmg)
@@ -160,11 +161,13 @@ def build_runs(runs_dir: Path) -> dict:
                     con.execute("DELETE FROM capacity_slots")
                     append(con, "capacity_slots", sim.capacity_slots())
                     investigation = investigations.on_alarms(con, run_id, hf, d, SCENARIO, [])
+                if agents:  # the month's report on its last day (step 2.14, C36)
+                    report = reports.on_day(con, run_id, hf, d, SCENARIO) or report
                 if agents and d == ALARM_DAY:
                     live = propose_reschedule(con, sim, d) | {"investigation": investigation}
             con.execute("DELETE FROM capacity_slots")
             append(con, "capacity_slots", sim.capacity_slots())
-    return live
+    return live | {"report": report[0]}
 
 
 def stream(con, live: dict) -> dict[str, object]:
@@ -182,6 +185,7 @@ def stream(con, live: dict) -> dict[str, object]:
         "alert_regional.json": as_message(alert("regional")),
         "action.json": msg("action", CALL_DAY, call),
         "investigation.json": live["investigation"],  # the Investigator on the alarm's tick, from the cache (C25)
+        "report.json": live["report"],  # the last month's report (C36)
     }
 
 
@@ -203,6 +207,7 @@ def export(runs_dir: Path, live: dict) -> dict[str, object]:
         out["api/capacity_echo_s2_agents.json"] = capacity(con, PATHWAY_ID, "echo", last)  # C28
         out["api/worklist_s2_agents.json"] = worklist_rows(con, last)[:WORKLIST_SIZE]
         out["api/investigations_s2_agents.json"] = investigations_rows(con)
+        out["api/reports_s2_agents.json"] = reports_rows(con)  # C36
         out["api/settings_s2_agents.json"] = {"autonomy": actions.settings(con)}  # C30, the defaults
         out |= {f"stream/{name}": m for name, m in stream(con, live).items()}
         out["tools/wait_by_hospital.json"] = live["wait"]

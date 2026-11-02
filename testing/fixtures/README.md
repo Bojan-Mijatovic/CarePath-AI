@@ -30,6 +30,7 @@ uv run python testing/fixtures/scenario.py   # rewrite every JSON file here (abo
 | `stream/action.json` | `action`: Maria's call | as `actions` |
 | `stream/investigation.json` | `investigation`, one message per step | real: the Investigator on the alarm's tick (step 2.17, C25), replayed from `demo/cache/`; without the cache the builder makes no investigation and `test_fixtures.py` fails |
 | `api/investigations_s2_agents.json` | `GET /api/investigations` (SPEC §6, C24, C25), each claim with the Verifier's `verified` and `issues` (C33) | real, as above |
+| `stream/report.json`, `api/reports_s2_agents.json` | `report` and `GET /api/reports` (C36): the Reporter's reports of days 29 and 59 | real; the template, since the fixture run's day 59 is not the demo's and the model's prose is not cached for it |
 | `api/settings_s2_agents.json` | `GET /api/settings` (SPEC §7.2, §10, C30): the autonomy levels | real: the defaults, since nobody changed a level |
 | `tools/wait_by_hospital.json`, `tools/free_slots.json`, `tools/error.json` | tool result envelope and error (SPEC §6) | real: `agents.tools` called on the live run on day 35 (`free_slots` sees that day's bookings, so a finished run gives other numbers for day 35) |
 

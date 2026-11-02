@@ -1,0 +1,15 @@
+{
+  "type": "report",
+  "scenario": 2,
+  "day": 59,
+  "payload": {
+    "report_id": "rep_s2_agents_2",
+    "month": 2,
+    "from_day": 30,
+    "title": {
+      "it": "Rapporto del mese 2",
+      "en": "Report for month 2"
+    },
+    "wording": "template"
+  }
+}

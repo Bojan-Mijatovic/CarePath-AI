@@ -183,6 +183,16 @@ TABLES = {
         claims            JSON NOT NULL,
         conclusion        JSON NOT NULL,
         prompt_version    VARCHAR NOT NULL""",
+    "reports": """
+        report_id    VARCHAR PRIMARY KEY,
+        day          INTEGER NOT NULL,
+        month        INTEGER NOT NULL,
+        from_day     INTEGER NOT NULL,
+        pathway_id   VARCHAR NOT NULL,
+        figures      JSON NOT NULL,
+        text         JSON NOT NULL,
+        wording      VARCHAR NOT NULL,
+        evidence     JSON NOT NULL""",
     "actions": f"""
         action_id       VARCHAR PRIMARY KEY,
         agent           VARCHAR NOT NULL,

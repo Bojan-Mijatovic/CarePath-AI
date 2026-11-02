@@ -1,15 +1,18 @@
 import { useState } from 'react'
-import { type Action, type Kpi, type Pathway, send, useApi } from '../lib/api'
+import { type Action, type Kpi, type Pathway, type Report, send, useApi } from '../lib/api'
 import { agentName, formatNumber, formatPercent, label, useLang } from '../lib/i18n'
 
-/** Demo step 3 (prototype "Pregled"): headline numbers of the day, the approval queue, the PNE indicator. */
+/** Demo step 3 (prototype "Pregled"): headline numbers of the day, the approval queue, the PNE indicator, and
+ * the Reporter's latest monthly report (step 2.14). */
 export default function Overview({ day, kpi, pathway }: { day: number | null; kpi: Kpi | null; pathway: Pathway | null }) {
   const { lang, t } = useLang()
   const [decisions, setDecisions] = useState(0)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const { data: proposed } = useApi<Action[]>('/api/actions?status=proposed', `${day}-${decisions}`)
+  const { data: reports } = useApi<Report[]>('/api/reports', day) // the Reporter's monthly reports (C36)
   if (day === null || kpi === null || pathway === null) return <p className="placeholder">{t('overview.waiting')}</p>
+  const report = (reports ?? []).find((r) => r.day <= day)
   const reference = pathway.readmission_reference
   const queue = (proposed ?? []).filter((a) => a.created_day <= day)
   const n = (x: number) => formatNumber(lang, x)
@@ -91,6 +94,19 @@ export default function Overview({ day, kpi, pathway }: { day: number | null; kp
             </div>
           )}
         </section>
+        {report && (
+          <section className="panel wide" aria-labelledby="h-report">
+            <h2 id="h-report">{t('report.title', { month: report.month })}</h2>
+            <div className="card-sub">
+              {t('report.sub', { from: report.from_day, to: report.day })}
+            </div>
+            <div className="report-text">
+              {report.text[lang].split('\n').map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   )

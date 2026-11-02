@@ -165,6 +165,18 @@ export type WhatIf = {
 
 export type PneYearEnd = { readmissions_30d: number; readmission_rate_30d: number | null }
 
+/** GET /api/reports (C36): the Reporter's monthly reports, the latest first. `figures` keeps every number. */
+export type Report = {
+  report_id: string
+  day: number
+  month: number
+  from_day: number
+  pathway_id: string
+  figures: Record<string, unknown>
+  text: Bilingual
+  wording: 'model' | 'template'
+}
+
 /** GET /api/investigations (SPEC §6, C24, C25), the latest first. */
 export type Investigation = {
   investigation_id: string

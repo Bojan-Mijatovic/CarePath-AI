@@ -116,6 +116,12 @@ class OverdueArgs(Args):
     limit: int = Field(20, ge=1, le=100)
 
 
+class KpiArgs(Args):
+    pathway_id: str = PathwayId
+    level: Literal["ats", "asst"] = Field("ats", description="tutta l'ATS, o una riga per ASST")
+    day: int | None = Field(None, ge=0, description="un giorno passato; senza, oggi")
+
+
 class FreeSlotsArgs(Args):
     service: str = Field(pattern=ID, description="servizio, es. echo, cardio_visit, lab")
     asst: Asst | None = AsstArg
@@ -377,6 +383,27 @@ def compliance_by_step(ctx: Context, a: ComplianceArgs) -> dict:
     return {s.id: rows.get(s.id) for s in _timed(p)}
 
 
+KPI_FIELDS = ("patients", "on_track_pct", "overdue", "readmissions_30d", "readmission_rate_30d", "actions_executed",
+              "actions_pending")
+
+
+def pathway_kpi(ctx: Context, a: KpiArgs) -> dict:
+    """C36: the pathway's kpi_daily rows of a day (SPEC §5.2), for the Reporter: {key: {field: value}}, key `ats`
+    or an ASST id. Readmissions count from day 0, the PNE year."""
+    p = _pathway(a.pathway_id)
+    day = ctx.day if a.day is None else a.day
+    if day > ctx.day:
+        raise ToolError("bad_argument", f"day {day} is after today ({ctx.day})")
+    rows = ctx.db.rows("""
+        SELECT key, patients, round(on_track_pct, 4), overdue, readmissions_30d, round(readmission_rate_30d, 4),
+               actions_executed, actions_pending
+        FROM kpi_daily WHERE pathway_id = $pw AND level = $lv AND day = $d ORDER BY key""",
+                       {"pw": p.pathway_id, "lv": a.level, "d": day})
+    if not rows:
+        raise ToolError("empty_result", f"no KPI on day {day}")
+    return {key: dict(zip(KPI_FIELDS, values)) for key, *values in rows}
+
+
 def wait_by_hospital(ctx: Context, a: WaitArgs) -> dict:
     p = _pathway(a.pathway_id)
     s = _step(p, a.step)
@@ -555,7 +582,13 @@ TOOLS = {
     "risk_drivers": (RiskDriversArgs, risk_drivers, "Principali fattori di rischio per un segmento di pazienti."),
     "compare_segments": (CompareArgs, compare_segments,
                          "Confronta due segmenti di pazienti su una metrica: valori di a e b e differenza a - b."),
+    "pathway_kpi": (KpiArgs, pathway_kpi,
+                    "Indicatori del percorso di un giorno (pazienti, in linea, ritardi, riammissioni, azioni), per "
+                    "l'ATS o per ASST."),
 }
+# Tools that code calls but the model is not offered (C36): the tool list is part of every Investigator cache
+# key (SPEC §8), so a new tool there would make every cached investigation miss.
+CODE_ONLY = {"pathway_kpi"}
 
 
 def _inline(node, defs: dict):
@@ -570,9 +603,11 @@ def _inline(node, defs: dict):
 
 
 def definitions() -> list[dict]:
-    """The tools in the function-calling format of Ollama (SPEC §8)."""
+    """The tools the model is offered, in the function-calling format of Ollama (SPEC §8)."""
     out = []
     for name, (args, _, description) in TOOLS.items():
+        if name in CODE_ONLY:
+            continue
         schema = args.model_json_schema()
         out.append({"type": "function", "function": {"name": name, "description": description,
                                                      "parameters": _inline(schema, schema.get("$defs", {}))}})

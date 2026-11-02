@@ -33,7 +33,7 @@ log = logging.getLogger("carepath.api")
 class StreamMessage(BaseModel):
     """Envelope for every message on /api/stream."""
 
-    type: Literal["tick", "alert", "action", "investigation"]
+    type: Literal["tick", "alert", "action", "investigation", "report"]
     scenario: int
     day: int
     payload: dict[str, Any] = {}
@@ -262,6 +262,10 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
     @api.get("/investigations")
     def investigations(run: str | None = None) -> list[dict]:
         return live.read(run, queries.investigations)
+
+    @api.get("/reports")
+    def reports(run: str | None = None) -> list[dict]:
+        return live.read(run, queries.reports)
 
     @api.post("/ask")
     async def ask(body: Ask) -> dict:

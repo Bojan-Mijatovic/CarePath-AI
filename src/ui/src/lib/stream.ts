@@ -33,6 +33,16 @@ export type StreamMessage =
   | Envelope<'alert', AlertPayload>
   | Envelope<'action', Action>
   | Envelope<'investigation', InvestigationPayload>
+  | Envelope<'report', ReportPayload>
+
+/** `report` (C36): the Reporter's monthly report is ready; GET /api/reports has its text and figures. */
+export type ReportPayload = {
+  report_id: string
+  month: number
+  from_day: number
+  title: Bilingual
+  wording: 'model' | 'template'
+}
 
 export type ConnectionState = 'connecting' | 'open' | 'closed'
 

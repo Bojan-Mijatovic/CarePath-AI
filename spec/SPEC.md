@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **v1.22**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), v1.13 adds C26 (D47, step 2.30), proposed 29 Oct 2026; v1.14 adds C27 (D48, step 2.5), v1.15 adds C28 (D49, step 2.28), v1.16 adds C29 (D50, step 2.10), v1.17 adds C30 (D51, step 2.18), v1.18 adds C31 (D52, step 2.12), v1.19 adds C32 (D54, step 2.13), proposed 30 Oct 2026; v1.20 adds C33 (D55, Verifier), v1.21 adds C34 (D56, step 2.27), v1.22 adds C35 (D57, step 2.6), proposed 2 Nov 2026. Changes follow §0 |
+| Status | **v1.23**. v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), v1.13 adds C26 (D47, step 2.30), proposed 29 Oct 2026; v1.14 adds C27 (D48, step 2.5), v1.15 adds C28 (D49, step 2.28), v1.16 adds C29 (D50, step 2.10), v1.17 adds C30 (D51, step 2.18), v1.18 adds C31 (D52, step 2.12), v1.19 adds C32 (D54, step 2.13), proposed 30 Oct 2026; v1.20 adds C33 (D55, Verifier), v1.21 adds C34 (D56, step 2.27), v1.22 adds C35 (D57, step 2.6), v1.23 adds C36 (D58, step 2.14), proposed 2 Nov 2026. Changes follow §0 |
 | Last updated | 2 Nov 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
@@ -26,7 +26,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 
 After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
-### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C35 proposed in v1.1–v1.22)
+### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C36 proposed in v1.1–v1.23)
 
 | # | Change | Why |
 |---|---|---|
@@ -65,6 +65,7 @@ After `spec-v1`, a change needs: agreement at a sync, an entry in the decision r
 | C33 (D55) | The Verifier (§6): code only, on the investigation's tick and on `POST /ask`; each claim of `investigations.claims` gets `verified` and `issues`; a step's `verified` on the stream (§10) is all its claims' | The SPEC had the `verified` slot and C5's repeatable call, not the checks. In the 5 answers Chiedi shows, the model's numbers were right but 6 claims gave an ASST's figure as one hospital's and 2 stated a comparison backwards ("83,65% … inferiore al 79,8%"); the 4B translation wrote "4-than" for "40 giorni". An LLM check would need its own cache and could slip the same way |
 | C34 (D56) | Action type `capacity_proposal` (§7.2, fixed level 1), Intervention's capacity proposal on the wait alarm (§9), `approved` in the tick's `lever_run` (§10), `capacity_proposal` in the cache manifest (§8) | Step 2.27 needs D45's structural fix as an action to approve; §7.2 had no type for it. Buying capacity is a decision outside the system, so no level lets an agent do it, and approval changes no event: the console turns to the lever run computed in advance (C28) |
 | C35 (D57) | PNE forecast to year end (§9 What-if, `src/engine/pne.py`): the what-if runs go on to day 364 and keep `year_end`; `POST /whatif` returns `pne` (§10) | Step 2.6 had no contract. A forecast from the grid's full runs uses the demo's own code and seed (D48), where a fitted trend would be a second model of the same thing; the prototype's "ATS target 12%" has no source, so the line is the pathway's published reference (C23) |
+| C36 (D58) | The Reporter (§9): a monthly report on the agents arm, the `reports` table, `GET /reports` and the `report` stream message (§10), `report_days` in the cache manifest (§8), and the tool `pathway_kpi`, which code calls and the model is not offered (§6) | Step 2.14 had only "numbers from views, LLM for sentences". Agents read through tools (rule 3) and no tool returned `kpi_daily`; offering a new one to the model would change every Investigator cache key. The prototype shows the report only as a line in Attività agenti; the lead chose a monthly report with a Panoramica panel, the model's prose cached only for the report the demo shows |
 
 ## 1. Scope
 
@@ -342,6 +343,7 @@ Every number in `data` follows the precision rule in §2. `testing/test_tools_de
 | `readmissions_by_comune` | `pathway_id`, `period_days=180` | `{comune_name: rate}`, sorted descending |
 | `risk_drivers` | `pathway_id`, `segment?` | `{drivers: [{name, weight}], patients}` (C19) |
 | `compare_segments` | `pathway_id`, `a`, `b` (segments), `metric` | `{a: value, b: value, difference}` |
+| `pathway_kpi` (C36, code only) | `pathway_id`, `level` (`ats`, `asst`), `day?` (today by default, not later) | `{key: {patients, on_track_pct, overdue, readmissions_30d, readmission_rate_30d, actions_executed, actions_pending}}`, the `kpi_daily` rows of the day (§5.2). Not offered to the model: `definitions()` leaves out `CODE_ONLY`, because the tool list is part of every Investigator cache key (§8) |
 | `eligibility_candidates` (option B) | `pathway_id`, `mmg?` | `{count, patients: [{patient_id, reasons}]}` |
 | `free_beds` (optional) | `diagnosis`, `asst?` | `[{facility_id, ward, free_now, free_in_2d, distance_km}]` |
 
@@ -476,7 +478,9 @@ complete(agent: str, prompt_version: str, messages: list, *, tools=None, schema=
 6. Daily Worklist builds the list at the start of the day.
 7. On a regional alarm, the Investigator runs on the same tick, after `capacity_slots` is written, so its tools see the alarm's day and its cache keys match the warm-up (C25); from the cache it takes well under a second. It stores the row, sets the alarm's `investigation_id` and adds its steps to the day's messages; with no answer (a cache miss) the alarm stays without one and the tick goes on. The Verifier checks its claims first, on the same cursor and day (C33).
 8. Intervention handles the day's deviations and open alarms through the action service (C32), after the Investigator: the alarm is explained on the day as it was, then agents act (D53). If a reschedule ran, `capacity_slots` is written again.
-9. The WebSocket pushes the new state, alarms and actions.
+9. The WebSocket pushes the new state, alarms and actions. On the last day of a month (days 29, 59, …) the agents arm's Reporter first writes the month's report (C36), after Intervention.
+
+**Reporter** (C36, `src/agents/reporter.py`, step 2.14). Code reads the month's numbers through the tools: `pathway_kpi` for the ATS (today and the day before the month, for the month's readmissions and executed actions) and per ASST, `compliance_by_step`, and `wait_by_hospital` over the month's 30 days for the pathway's step with a wait threshold. A template, filled by code in Italian and English, is the report: 30-day readmissions from day 0 with the pathway's reference, the month's readmissions, the rate per ASST, the on-track share and overdue steps, deadlines met per step, the wait per facility, and the agents' actions. The row goes to `reports` (`report_id` `rep_<run>_<n>`, `day`, `month`, `from_day`, `pathway_id`, `figures` with every number, `text` `{"it", "en"}`, `wording`, `evidence` the tools' sources). For the reports the cache manifest lists (`report_days`, D17) the engine asks `qwen3:30b-instruct` to rewrite the Italian as 4–5 sentences in the PNE style (`reporter-v1`) and `qwen3:4b-instruct` to translate it with facility names as placeholders; the text is used when both have only the template's numbers and keep the same facility names, else the template stands. `wording` says which, and the cache check (§8) fails on a template where the manifest lists the model's.
 
 The baseline arm skips steps 6, 7 and 8.
 
@@ -517,6 +521,7 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `GET /patients/{id}?run&day` | Paziente 360: timeline of events and actions, state per pathway (shape below, C15). With `day`, a recording from `demo/story/` (C17): only `p_00001`, `s2_baseline`, day 62 exists; anything else is 404 |
 | `GET /actions?run&status` | action queue and feed |
 | `GET /investigations?run` | the run's `investigations` rows (§6, C24), the latest first, JSON columns parsed (C25) |
+| `GET /reports?run` | C36: the run's `reports` rows, the latest first: `{report_id, day, month, from_day, pathway_id, figures, text: {"it", "en"}, wording, evidence}` |
 | `GET /pathways/{pathway_id}` | the pathway file of §4 as it is, so the console names steps and drugs from data (C22); 404 for an unknown id. Needs no run. `spec/pathways/<pathway_id>.json` is its fixture |
 | `POST /actions/{id}/approve`, `/reject`, `/undo` | decisions, on the agents arm of the scenario on screen. C30: approve and reject take an action in `proposed` and return `{action_id, status}`; 404 for an unknown action, 422 for one already decided. The audit log gets `approved` or `rejected` with actor `manager` (the demo has no login). C31: approve executes the action at once (`status` `executed`), `/undo` takes an executed action (`undone`, otherwise 422), and each pushes the changed action as an `action` message |
 | `GET /settings`, `PUT /settings/autonomy` | autonomy per action type. C30: `GET` returns `{"autonomy": {type: {level, default, fixed}}}` for the types of §7.2, from the defaults and the `config_changed` entries of the audit log (`details`: `{setting: "autonomy", type, level, before}`); `PUT {type, level}` holds for the ATS, so it is logged in every agents run of the demo, and answers like `GET`; 422 for an unknown type, a level outside 0–3 or `rule_proposal` other than 1. A run built again after a jump back starts from the defaults |
@@ -539,6 +544,7 @@ REST, FastAPI, JSON. **Every path below is under the `/api` prefix** (for exampl
 | `alert` | `{"alert_id": "al_s2_agents_338", "level": "patient" \| "regional", "text": {"it": "...", "en": "..."}, "facility_id": "osp_B", "group_key": null, "investigation_id": "..."}`; `group_key` names the group of a group alarm (C26), and `alert_id` links the investigation to its alarm |
 | `action` | one row of `actions` |
 | `investigation` | `{"investigation_id", "step": n, "tool", "args", "result_summary": {"it", "en"}, "verified": true \| false \| null, "final": false}`; `verified` is true when the Verifier passed every claim of the step, false when one has an issue, null without a checked claim (C33) |
+| `report` | C36: `{"report_id", "month", "from_day", "title": {"it", "en"}, "wording": "model" \| "template"}`, on the last day of a month; the text is in `GET /reports` |
 
 **Tick `kpi`** (C15): the `ats` row of `kpi_daily` for the pathway on screen and the tick's day, without `day`, `level` and `key`.
 

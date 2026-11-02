@@ -55,7 +55,17 @@ def play(runs_dir: Path, ui_dir: Path, ready_s: int = READY_S) -> dict:
                                 r.json() if r.status_code == 200 else r.text))
             proposals = [a for a in c.get("/api/actions", params={"run": f"s{n}_agents"}).json()
                          if a["type"] == "capacity_proposal"]
-            out[n] = {"investigations": found, "answers": answers, "proposals": proposals}
+            for day in s.get("report_days", []):  # step 2.14: after the questions, which are keyed by the alarm day
+                # the days before it from the cache only: alarms on the way (scenario 2, days 35 and 49) are not
+                # in the demo, and a warm-up must not ask the model to investigate them (D17)
+                mode = llm.mode()
+                llm.set_mode("cache_only")
+                c.post(f"/api/sim/jump/{day - 1}").raise_for_status()
+                llm.set_mode(mode)
+                c.post(f"/api/sim/jump/{day}").raise_for_status()
+            reports = [r for r in c.get("/api/reports", params={"run": f"s{n}_agents"}).json()
+                       if r["day"] in s.get("report_days", [])]
+            out[n] = {"investigations": found, "answers": answers, "proposals": proposals, "reports": reports}
     return out
 
 
@@ -72,6 +82,9 @@ def misses(played: dict) -> list[str]:
         if expected[n].get("capacity_proposal") and [p["payload"]["wording"] for p in got["proposals"]] != ["model"]:
             out.append(f"scenario {n}: capacity proposal {[p['payload']['wording'] for p in got['proposals']]}, "
                        "one in the model's words expected")
+        wording = {r["day"]: r["wording"] for r in got["reports"]}
+        out += [f"scenario {n}: report of day {d} {wording.get(d, 'missing')}, the model's words expected"
+                for d in expected[n].get("report_days", []) if wording.get(d) != "model"]
         out += [f"scenario {n}: no answer to {q!r} ({status})" for q, status, _, _ in got["answers"] if status != 200]
     return out
 
@@ -89,6 +102,8 @@ def main(argv: list[str]) -> None:
             print(f"s{n} ask {status} {seconds:>6} s  {q[:60]} -> {str(text)[:120]}")
         for p in got["proposals"]:
             print(f"s{n} day {p['created_day']:>2} capacity_proposal ({p['payload']['wording']}): {p['rationale']['it']}")
+        for r in got["reports"]:
+            print(f"s{n} day {r['day']:>2} report ({r['wording']}):\n{r['text']['it']}\n{r['text']['en']}")
     print("\n".join(misses(played)) or "no miss")
 
 

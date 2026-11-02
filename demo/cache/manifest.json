@@ -1,5 +1,5 @@
 {
-  "note": "LLM outputs the demo shows (D17, SPEC §8), in demo order (D44). Played by testing/cache_warmup.py; testing/test_cache_complete.py fails on any miss. Every other text is a template filled by code. capacity_proposal: Intervention's proposal on the alarm day in the model's words (step 2.27, C34).",
+  "note": "LLM outputs the demo shows (D17, SPEC §8), in demo order (D44). Played by testing/cache_warmup.py; testing/test_cache_complete.py fails on any miss. Every other text is a template filled by code. capacity_proposal: Intervention's proposal on the alarm day in the model's words (step 2.27, C34). report_days: the monthly reports the demo shows in the model's words (step 2.14, C36); the others are the template.",
   "updated": "2026-11-02",
   "minutes_per_investigation": [5, 7],
   "scenarios": [
@@ -8,6 +8,7 @@
       "alarm_day": 33,
       "alarm_investigations": 3,
       "capacity_proposal": true,
+      "report_days": [59],
       "questions": [
         "Quale ospedale ha l'attesa più lunga per l'ecocardiogramma nell'ultima settimana?",
         "L'Ospedale A ha un problema di attese per l'ecocardiogramma rispetto agli altri ospedali?"

@@ -31,6 +31,7 @@ SPEC_COLUMNS = {
                "text", "investigation_id", "closed_day"],
     "investigations": ["investigation_id", "day", "pathway_id", "alert_id", "question", "steps", "claims", "conclusion",
                        "prompt_version"],
+    "reports": ["report_id", "day", "month", "from_day", "pathway_id", "figures", "text", "wording", "evidence"],  # C36
     "actions": ["action_id", "agent", "type", "patient_id", "scope", "pathway_id", "payload", "rationale",
                 "evidence", "autonomy_level", "status", "created_day", "executed_day", "decided_by"],
     "audit_log": ["ts_day", "action_id", "event", "actor", "details"],

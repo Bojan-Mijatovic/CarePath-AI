@@ -86,7 +86,8 @@ def test_stream_messages(built):
     payload_keys = {"tick": ["speed", "kpi"],
                     "alert": ["alert_id", "level", "facility_id", "group_key", "investigation_id", "text"],
                     "action": columns(runs, "actions"),
-                    "investigation": ["investigation_id", "step", "tool", "args", "result_summary", "verified", "final"]}
+                    "investigation": ["investigation_id", "step", "tool", "args", "result_summary", "verified", "final"],
+                    "report": ["report_id", "month", "from_day", "title", "wording"]}
     messages = [m for path, m in f.items() if path.startswith("stream/")]
     messages = [x for m in messages for x in (m if isinstance(m, list) else [m])]
     assert {m["type"] for m in messages} == set(payload_keys)
