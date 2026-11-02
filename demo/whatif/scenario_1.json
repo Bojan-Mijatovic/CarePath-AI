@@ -1853,7 +1853,12 @@
      "readmissions_30d": 228,
      "readmission_rate_30d": 0.1218
     }
-   ]
+   ],
+   "year_end": {
+    "day": 364,
+    "readmissions_30d": 423,
+    "readmission_rate_30d": 0.1251
+   }
   },
   {
    "arm": "agents",
@@ -3699,7 +3704,12 @@
      "readmissions_30d": 167,
      "readmission_rate_30d": 0.1002
     }
-   ]
+   ],
+   "year_end": {
+    "day": 364,
+    "readmissions_30d": 308,
+    "readmission_rate_30d": 0.1028
+   }
   },
   {
    "arm": "agents",
@@ -5545,7 +5555,12 @@
      "readmissions_30d": 167,
      "readmission_rate_30d": 0.1002
     }
-   ]
+   ],
+   "year_end": {
+    "day": 364,
+    "readmissions_30d": 308,
+    "readmission_rate_30d": 0.1031
+   }
   },
   {
    "arm": "agents",
@@ -7391,7 +7406,12 @@
      "readmissions_30d": 167,
      "readmission_rate_30d": 0.1002
     }
-   ]
+   ],
+   "year_end": {
+    "day": 364,
+    "readmissions_30d": 308,
+    "readmission_rate_30d": 0.1033
+   }
   },
   {
    "arm": "agents",
@@ -9237,7 +9257,12 @@
      "readmissions_30d": 167,
      "readmission_rate_30d": 0.1002
     }
-   ]
+   ],
+   "year_end": {
+    "day": 364,
+    "readmissions_30d": 308,
+    "readmission_rate_30d": 0.1032
+   }
   },
   {
    "arm": "agents",
@@ -11083,7 +11108,12 @@
      "readmissions_30d": 167,
      "readmission_rate_30d": 0.1002
     }
-   ]
+   ],
+   "year_end": {
+    "day": 364,
+    "readmissions_30d": 308,
+    "readmission_rate_30d": 0.1031
+   }
   }
  ]
 }

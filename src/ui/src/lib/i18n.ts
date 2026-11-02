@@ -155,6 +155,18 @@ const STRINGS = {
     it: 'Simulazioni complete calcolate in anticipo, con gli stessi agenti',
     en: 'Full simulations computed in advance, with the same agents',
   },
+  'pneForecast.title': {
+    it: 'Previsione PNE a fine anno · riammissioni a 30 giorni al giorno {day}',
+    en: 'PNE forecast to year end · 30-day readmissions on day {day}',
+  },
+  'pneForecast.sub': {
+    it: 'Dal giorno 0 a fine anno, stesse simulazioni complete calcolate in anticipo, con i livelli di autonomia iniziali.',
+    en: 'From day 0 to year end, the same full simulations computed in advance, with the starting autonomy levels.',
+  },
+  'pneForecast.tip': { it: '{rate} · {count} riammissioni', en: '{rate} · {count} readmissions' },
+  'pneForecast.reference': { it: 'Linea tratteggiata: {source}, {rate}', en: 'Dashed line: {source}, {rate}' },
+  'pneForecast.rate': { it: 'Tasso a fine anno', en: 'Rate at year end' },
+  'pneForecast.count': { it: 'Riammissioni nell’anno', en: 'Readmissions in the year' },
   'whatif.table': { it: 'Dal giorno {from} al giorno {to}', en: 'From day {from} to day {to}' },
   'whatif.note': {
     it: 'Stesso seme, stessa popolazione, stesso periodo. L’attesa è la media sulle prenotazioni dei 6 mesi.',

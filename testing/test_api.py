@@ -61,6 +61,7 @@ def test_whatif_reads_the_grid_without_the_runs(tmp_path):
     assert out["scenario"] == 1 and out["levers"] == {"extra_slots": 2} and out["precomputed"] is True
     assert out["avoided_readmissions"] == out["baseline"]["readmissions"] - out["lever"]["readmissions"]
     assert "kpi" not in out["lever"]
+    assert out["pne"]["day"] == 364 and out["pne"]["reference"]["rate"] > 0  # C35, before the runs too
     assert client.post("/api/whatif", json={"levers": {"extra_slots": 9}}).status_code == 422
     assert client.post("/api/whatif", json={"months": 3}).status_code == 422
     assert client.post("/api/whatif", json={"levers": {"echo": 1}}).status_code == 422

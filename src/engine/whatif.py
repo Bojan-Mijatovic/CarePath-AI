@@ -12,6 +12,10 @@ months. Facility and day come from the alarm Monitoring raised in the agents run
 A lever run is the agents run until the lever's first day (tick.Run), so the two differ only after it.
 A lever on the telemonitoring deadline changes only when agents act; it comes with Intervention (step 2.13).
 
+Every run then goes on to the year's last day (YEAR_END_DAY), and its PNE indicator there, the 30-day
+readmission rate from day 0, is kept for the year-end forecast (engine.pne, step 2.6, C35); the 6-month summary
+is still taken on its last day.
+
 Results go to demo/whatif/scenario_<n>.json and must be computed again after a change to the simulator, the
 engine or the agents, like the LLM cache; `testing/test_ac04_whatif_speed.py` catches a stale file.
 """
@@ -34,6 +38,7 @@ MONTHS, DAYS_PER_MONTH = 6, 30.5
 PERIOD_DAYS = round(MONTHS * DAYS_PER_MONTH)  # 183: from the lever's first day to the last day, both included
 MAX_EXTRA_SLOTS = 4
 LAST_ALARM_DAY = 60  # every scenario's wait alarm opens by day 33 (SPEC §5.3)
+YEAR_END_DAY = 364  # the last day of the demo's year (tick.HORIZON_DAYS - 1): PNE counts a calendar year
 KPI_COLUMNS = ["day", "patients", "on_track_pct", "overdue", "dropped", "readmissions_30d", "readmission_rate_30d"]
 
 
@@ -94,6 +99,14 @@ def _summary(run, lever_day: int, service: str, facility: str) -> dict:
             "overdue": last["overdue"], "wait_days": wait.get(facility), "wait_by_facility": wait, "kpi": rows}
 
 
+def _year_end(run) -> dict:
+    """The run's PNE indicator on YEAR_END_DAY (SPEC §5.2): readmissions and index discharges from day 0."""
+    (readmissions, rate), = run.con.execute("""
+        SELECT readmissions_30d, readmission_rate_30d FROM kpi_daily
+        WHERE level = 'ats' AND pathway_id = $pw AND day = $d""", {"pw": run.pathway_id, "d": YEAR_END_DAY}).fetchall()
+    return {"day": YEAR_END_DAY, "readmissions_30d": readmissions, "readmission_rate_30d": rate}
+
+
 def compute(scenario: int, population, runs_dir: Path, directory: Path = WHATIF_DIR) -> dict:
     """The grid of one scenario (see the module docstring), written to `path(scenario, directory)`."""
     from engine.tick import HORIZON_DAYS, Run  # engine.tick reads the grid (proposed_lever), so not at the top
@@ -124,8 +137,10 @@ def compute(scenario: int, population, runs_dir: Path, directory: Path = WHATIF_
                 run = Run(run_id, population, runs_dir, HORIZON_DAYS, levers)
             try:
                 run.advance_to(last_day)
-                return {"arm": arm, "levers": Levers(extra_slots=extra).model_dump() if arm == "agents" else None,
-                        **_summary(run, lever_day, service, facility)}
+                out = {"arm": arm, "levers": Levers(extra_slots=extra).model_dump() if arm == "agents" else None,
+                       **_summary(run, lever_day, service, facility)}
+                run.advance_to(YEAR_END_DAY)
+                return out | {"year_end": _year_end(run)}
             finally:
                 if run is not agents:
                     run.close()
@@ -146,21 +161,26 @@ def compute(scenario: int, population, runs_dir: Path, directory: Path = WHATIF_
     return out
 
 
-def result(scenario: int, levers: Levers, months: int = MONTHS, directory: Path = WHATIF_DIR) -> dict:
-    """POST /api/whatif (C27): without CarePath, with CarePath, and with CarePath and the lever, from the grid.
-    Raises FileNotFoundError when the grid was not computed, ValueError for a lever or a period it lacks."""
+def result(scenario: int, levers: Levers, months: int = MONTHS, directory: Path = WHATIF_DIR,
+           pathway: Pathway | None = None) -> dict:
+    """POST /api/whatif (C27): without CarePath, with CarePath, and with CarePath and the lever, from the grid,
+    and with `pathway` the PNE forecast to year end (C35). Raises FileNotFoundError when the grid was not
+    computed, ValueError for a lever or a period it lacks."""
+    from engine import pne  # engine.pne reads YEAR_END_DAY from here
+
     if months != MONTHS:
         raise ValueError(f"the grid covers {MONTHS} months")
     grid = json.loads(path(scenario, directory).read_text(encoding="utf-8"))
     runs = {(r["arm"], (r["levers"] or {}).get("extra_slots", 0)): r for r in grid["runs"]}
     if ("agents", levers.extra_slots) not in runs:
         raise ValueError(f"extra_slots is one of 0..{MAX_EXTRA_SLOTS}")
-    strip = lambda r: {k: v for k, v in r.items() if k != "kpi"}
+    strip = lambda r: {k: v for k, v in r.items() if k not in ("kpi", "year_end")}
     baseline, agents, lever = runs["baseline", 0], runs["agents", 0], runs["agents", levers.extra_slots]
     return {k: grid[k] for k in ("scenario", "facility_id", "facility", "service", "lever_day", "last_day", "months",
                                  "base_slots")} | {
         "levers": levers.model_dump(), "baseline": strip(baseline), "agents": strip(agents), "lever": strip(lever),
-        "avoided_readmissions": baseline["readmissions"] - lever["readmissions"], "precomputed": True}
+        "avoided_readmissions": baseline["readmissions"] - lever["readmissions"], "precomputed": True} | (
+        {"pne": pne.forecast(grid, levers.extra_slots, pathway)} if pathway is not None else {})
 
 
 def main(argv: list[str]) -> None:
@@ -175,7 +195,8 @@ def main(argv: list[str]) -> None:
                   f"{out['last_day']}, base {out['base_slots']} a day", flush=True)
             for r in out["runs"]:
                 print(f"  {r['run_id']:<24} readmissions {r['readmissions']:>4}  wait at {out['facility']} "
-                      f"{r['wait_days']}  on track {r['on_track_pct']}", flush=True)
+                      f"{r['wait_days']}  on track {r['on_track_pct']}  PNE on day {r['year_end']['day']} "
+                      f"{r['year_end']['readmission_rate_30d']}", flush=True)
 
 
 if __name__ == "__main__":

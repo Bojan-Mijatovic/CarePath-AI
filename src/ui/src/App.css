@@ -575,6 +575,58 @@
   opacity: 0.6;
 }
 
+.pne-bars {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.pne-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 200px) 1fr 64px;
+  align-items: center;
+  gap: 12px;
+}
+
+.pne-label {
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.pne-track {
+  position: relative;
+  height: 16px;
+}
+
+.pne-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 0 4px 4px 0;
+  background: var(--primary);
+}
+
+.pne-ref {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  border-left: 2px dashed var(--ink-muted);
+}
+
+.pne-ref-key {
+  display: inline-block;
+  width: 0;
+  height: 12px;
+  margin-right: 8px;
+  border-left: 2px dashed var(--ink-muted);
+  vertical-align: middle;
+}
+
+.pne-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+}
+
 .ask-badge-verified {
   background: #e6f4ec;
   color: var(--ok);

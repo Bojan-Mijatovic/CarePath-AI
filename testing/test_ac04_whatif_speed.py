@@ -42,6 +42,7 @@ def test_the_grid_is_complete(n):
     assert g["lever_day"] == g["alarm_day"] + 1
     for r in g["runs"]:
         assert r["kpi"][-1]["day"] == g["last_day"]
+        assert r["year_end"]["day"] == whatif.YEAR_END_DAY  # step 2.6: the runs go on to year end (C35)
 
 
 @pytest.mark.parametrize("n", SCENARIOS)

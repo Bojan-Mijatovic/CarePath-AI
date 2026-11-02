@@ -153,7 +153,17 @@ export type WhatIf = {
   agents: WhatIfRun
   lever: WhatIfRun
   avoided_readmissions: number
+  /** The PNE forecast to year end (C35): each arm's 30-day readmission rate on the year's last day. */
+  pne?: {
+    day: number
+    baseline: PneYearEnd
+    agents: PneYearEnd
+    lever: PneYearEnd
+    reference: { rate: number; label: Bilingual } | null
+  }
 }
+
+export type PneYearEnd = { readmissions_30d: number; readmission_rate_30d: number | null }
 
 /** GET /api/investigations (SPEC §6, C24, C25), the latest first. */
 export type Investigation = {

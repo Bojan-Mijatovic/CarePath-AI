@@ -24,7 +24,7 @@ from agents import llm
 
 from engine import pathway as pathway_model
 from engine import queries, story, whatif
-from engine.tick import Demo
+from engine.tick import PATHWAY_ID, Demo
 
 UI_DIST = Path(__file__).resolve().parents[1] / "ui" / "dist"
 log = logging.getLogger("carepath.api")
@@ -278,7 +278,8 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
     def what_if(body: WhatIf) -> dict:
         """The scenario on screen, from its precomputed grid (C27, D48); it does not wait for the runs."""
         try:
-            return whatif.result(demo.scenario, body.levers, body.months, whatif_dir)
+            # the pathway from its file, not from the runs: what-if answers before they are ready (D48)
+            return whatif.result(demo.scenario, body.levers, body.months, whatif_dir, pathway_model.load(PATHWAY_ID))
         except FileNotFoundError:
             raise HTTPException(503, f"no what-if grid for scenario {demo.scenario}: uv run python -m engine.whatif")
         except ValueError as e:
