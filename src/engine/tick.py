@@ -211,9 +211,11 @@ class Demo:
         self.runs[run_id] = run
 
     def start(self) -> None:
-        """All runs to the start day, paused. Also what POST /api/sim/reset does."""
+        """All runs to the start day, paused, on the opening scenario (D44). Also what POST /api/sim/reset does: a
+        reset after scenario 3 had left scenario 3 on screen, so a rehearsal started from the wrong one."""
         with self.lock:
             self.ready, self.speed = False, 0
+            self.scenario = next((n for n in DEMO_ORDER if n in self.scenarios), self.scenarios[0])
             if self.population is None:
                 self.population = Population(self.seed)
             if self.whatif_dir is not None:
@@ -249,7 +251,13 @@ class Demo:
             if lever is not None and self.speed == 1 and lever.day == self.day:
                 ids.append(lever.run_id)
             messages = self._parallel(lambda run_id: self.runs[run_id].tick(), ids)
-            return [self.tick_message()] + messages[self.default_run()]  # the screen shows the agents arm
+            shown = messages[self.default_run()]  # the screen shows the agents arm
+            if self.speed == 1 and any(m["type"] == "alert" and m["payload"]["level"] == "regional"
+                                       and m["payload"]["facility_id"] for m in shown):
+                # Demo step 4 (D21): at ×1 the clock stops on the day a wait alarm opens, so the demo is on the
+                # day its answers were prepared for (C41); a human pause landed a day late in 6 of 10 dry runs
+                self.speed = 0
+            return [self.tick_message()] + shown
 
     def jump(self, day: int) -> list[dict]:
         if not 0 <= day < self.days:

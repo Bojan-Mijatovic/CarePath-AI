@@ -47,6 +47,8 @@ def demo(tmp_path_factory):
     d.start()
     d.set_speed(1)  # ×1: the lever run keeps up
     while d.day < 36:
+        if d.speed == 0:  # D63: the clock stops on the alarm's day (33); the operator goes on at ×1
+            d.set_speed(1)
         d.advance()
     yield d
     d.close()

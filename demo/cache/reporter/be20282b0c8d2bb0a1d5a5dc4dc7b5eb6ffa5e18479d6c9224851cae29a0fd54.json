@@ -1,0 +1,31 @@
+{
+  "agent": "reporter",
+  "model": "qwen3:4b-instruct",
+  "prompt_version": "reporter-translate-v2",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Traduci in inglese questo testo. Mantieni le sigle PH_1, PH_2, PH_3, N_1, N_2, N_3, N_4, N_5, N_6, N_7, N_8, N_9, N_10, N_11, N_12, N_13, N_14, N_15, N_16, N_17, N_18, N_19, N_20, N_21, N_22, N_23, N_24, N_25 esattamente come sono, una per una.\n\nNel mese N_1 (giorni N_2–N_3), il tasso di riammissioni a N_4 giorni dal giorno N_5 per scompenso cardiaco è stato pari al N_6%, inferiore al riferimento Italia PNE N_7 (N_8%), con N_9 riammissioni registrate. Per ASST Crema, il tasso è stato del N_10%, per ASST Cremona del N_11% e per ASST Mantova del N_12%. L’adesione al PAI è risultata pari all’N_13% su N_14 pazienti, con N_15 passi in ritardo. Le scadenze rispettate negli ultimi N_16 giorni hanno registrato il N_17% per Telemonitoraggio, il N_18% per Visita cardiologica, l’N_19% per Ecocardiogramma e il N_20% per Esame BNP. L’attesa media per Ecocardiogramma nel mese è stata di N_21 giorni in PH_1, N_22 giorni in PH_2 e N_23 giorni in PH_3. Nel mese sono state eseguite N_24 azioni dagli agenti, con N_25 in attesa di approvazione."
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "Translation",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{ \"text\": \"In month N_1 (days N_2–N_3), the rate of readmissions to N_4 days from day N_5 for cardiac decompensation was N_6%, lower than the reference Italy PNE N_7 (N_8%), with N_9 readmissions recorded. For ASST Crema, the rate was N_10%, for ASST Cremona it was N_11%, and for ASST Mantova it was N_12%. Adherence to PAI was N_13% among N_14 patients, with N_15 steps delayed. Scheduled follow-ups completed in the last N_16 days recorded N_17% for Telemonitoring, N_18% for Cardiology Visit, N_19% for Echocardiogram, and N_20% for BNP Test. The average waiting time for Echocardiogram in the month was N_21 days in PH_1, N_22 days in PH_2, and N_23 days in PH_3. In the month, N_24 actions were carried out by agents, with N_25 pending approval.\" }"
+  }
+}

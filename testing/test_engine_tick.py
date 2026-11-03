@@ -72,6 +72,33 @@ def test_capacity_table_follows_the_simulator(demo):
     assert table == list(sim.itertuples(index=False, name=None))
 
 
+def test_at_x1_the_clock_stops_on_the_wait_alarm(tmp_path):
+    # C41: scenario 3's echo alarm opens on day 29; at ×1 the clock stops that day, at ×4 it would go on
+    d = Demo(tmp_path, scenarios=(3,), start_day=27, days=40, whatif_dir=None)
+    d.start()
+    try:
+        d.set_speed(1)
+        days = []
+        while d.speed:
+            days.append(d.advance()[0]["day"])
+        assert days == [28, 29] and d.tick_message()["payload"]["speed"] == 0
+    finally:
+        d.close()
+
+
+def test_a_reset_opens_on_the_first_scenario_again(tmp_path):
+    # D44: the demo opens on scenario 2; a reset after another scenario must too (found by testing/demo_dryrun.py)
+    d = Demo(tmp_path, scenarios=(1, 2), start_day=2, days=DAYS, whatif_dir=None)
+    d.start()
+    try:
+        assert d.scenario == 2
+        d.choose(1)
+        d.start()
+        assert d.scenario == 2
+    finally:
+        d.close()
+
+
 def test_runs_stop_at_the_horizon(tmp_path):
     d = Demo(tmp_path, scenarios=(3,), start_day=DAYS - 2, days=DAYS)
     d.start()

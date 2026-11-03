@@ -55,6 +55,16 @@ def play(runs_dir: Path, ui_dir: Path, ready_s: int = READY_S) -> dict:
                                 r.json() if r.status_code == 200 else r.text))
             proposals = [a for a in c.get("/api/actions", params={"run": f"s{n}_agents"}).json()
                          if a["type"] == "capacity_proposal"]
+            # The operator's actions of demo/SCRIPT.md on the alarm day, in its order: approve the proposal, then
+            # (scenario 2, steps 5b and 6) the MMG notice and Riprogrammazione at "Da sola". They change the run
+            # from the next day, so a later cached text (the day-59 report) must be warmed after them (C41)
+            for p in proposals:
+                c.post(f"/api/actions/{p['action_id']}/approve").raise_for_status()
+            if n == manifest["scenarios"][0]["scenario"]:
+                for a in c.get("/api/actions", params={"run": f"s{n}_agents", "status": "proposed"}).json():
+                    if a["type"] == "notify_mmg":
+                        c.post(f"/api/actions/{a['action_id']}/approve").raise_for_status()
+                c.put("/api/settings/autonomy", json={"type": "reschedule", "level": 3}).raise_for_status()
             for day in s.get("report_days", []):  # step 2.14: after the questions, which are keyed by the alarm day
                 # the days before it from the cache only: alarms on the way (scenario 2, days 35 and 49) are not
                 # in the demo, and a warm-up must not ask the model to investigate them (D17)
@@ -79,7 +89,7 @@ def misses(played: dict) -> list[str]:
         if len(got["investigations"]) != expected[n]["alarm_investigations"]:
             out.append(f"scenario {n}: {len(got['investigations'])} alarm investigations, "
                        f"{expected[n]['alarm_investigations']} expected")
-        if expected[n].get("capacity_proposal") and [p["payload"]["wording"] for p in got["proposals"]] != ["model"]:
+        if expected[n].get("capacity_proposal") and [p["payload"].get("wording") for p in got["proposals"]] != ["model"]:
             out.append(f"scenario {n}: capacity proposal {[p['payload']['wording'] for p in got['proposals']]}, "
                        "one in the model's words expected")
         wording = {r["day"]: r["wording"] for r in got["reports"]}

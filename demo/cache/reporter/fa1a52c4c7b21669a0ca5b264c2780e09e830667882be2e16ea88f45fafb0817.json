@@ -1,0 +1,31 @@
+{
+  "agent": "reporter",
+  "model": "qwen3:30b-instruct",
+  "prompt_version": "reporter-v3",
+  "request": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Sei il Reporter di CarePath AI per l'ATS della Val Padana. Riscrivi il rapporto mensile qui sotto come un testo breve per la direzione, nello stile dei rapporti PNE di Agenas: 4 o 5 frasi complete, con soggetto e verbo, non un elenco. Regole:\n- Usa solo i numeri e i nomi del rapporto, scritti come sono; non aggiungere numeri, cause, giudizi clinici o terapie.\n- Non sciogliere le sigle (PAI, PNE, ASST, BNP).\n- Ogni numero mantiene il suo periodo: le scadenze rispettate sono degli ultimi 90 giorni, le riammissioni a 30 giorni sono dal giorno 0.\n- Le azioni eseguite e quelle in attesa di approvazione sono due gruppi distinti.\n- Nomina ogni struttura con il suo nome completo, una per una (per esempio \"Ospedale A\").\n\nScompenso cardiaco: rapporto del mese 2 (giorni 30–59).\nRiammissioni a 30 giorni dal giorno 0: 11,2%, riferimento Italia, PNE 2025 11,87%. Nel mese: 24 riammissioni.\nPer ASST: ASST Crema 12,0%, ASST Cremona 12,5%, ASST Mantova 10,1%.\nIn linea con il PAI: 82,0% dei 9984 pazienti; 488 passi in ritardo.\nScadenze rispettate negli ultimi 90 giorni: Telemonitoraggio 61,1%, Visita cardiologica 75,4%, Ecocardiogramma 81,1%, Esame BNP 73,6%.\nAttesa media per Ecocardiogramma nel mese, in giorni: Ospedale A 2,0, Ospedale B 47,9, Ospedale C 2,0.\nAzioni degli agenti nel mese: 2784 eseguite; 2 in attesa di approvazione."
+      }
+    ],
+    "tools": null,
+    "schema": {
+      "properties": {
+        "testo": {
+          "title": "Testo",
+          "type": "string"
+        }
+      },
+      "required": [
+        "testo"
+      ],
+      "title": "Prose",
+      "type": "object"
+    }
+  },
+  "response": {
+    "role": "assistant",
+    "content": "{ \"testo\": \"Nel mese 2 (giorni 30–59), il tasso di riammissioni a 30 giorni dal giorno 0 per scompenso cardiaco è stato pari al 11,2%, inferiore al riferimento Italia PNE 2025 (11,87%), con 24 riammissioni registrate. Per ASST Crema, il tasso è stato del 12,0%, per ASST Cremona del 12,5% e per ASST Mantova del 10,1%. L’adesione al PAI è risultata pari all’82,0% su 9984 pazienti, con 488 passi in ritardo. Le scadenze rispettate negli ultimi 90 giorni hanno registrato il 61,1% per Telemonitoraggio, il 75,4% per Visita cardiologica, l’81,1% per Ecocardiogramma e il 73,6% per Esame BNP. L’attesa media per Ecocardiogramma nel mese è stata di 2,0 giorni in Ospedale A, 47,9 giorni in Ospedale B e 2,0 giorni in Ospedale C. Nel mese sono state eseguite 2784 azioni dagli agenti, con 2 in attesa di approvazione.\" }"
+  }
+}
