@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Origin from '../components/Origin'
 import { type Investigation, send, useApi } from '../lib/api'
 import { useLang } from '../lib/i18n'
 
@@ -14,6 +15,7 @@ export default function Ask({ day }: { day: number | null }) {
   const { data, error } = useApi<Investigation[]>('/api/investigations', `${day}-${asked}`)
   const inv = data?.[0]
   const [shown, setShown] = useState<{ id?: string; steps: number }>({ steps: 0 })
+  const { data: cache } = useApi<{ mode: string }>('/api/sim/cache', `${day}-${asked}`) // the gateway's mode (C37)
 
   useEffect(() => {
     if (!inv) return
@@ -52,6 +54,8 @@ export default function Ask({ day }: { day: number | null }) {
           {inv.alert_id ? t('ask.kicker') : t('ask.kickerQuestion')} · {t('ask.day', { day: inv.day })}
         </div>
         <h2 className="ask-question">{inv.question[lang]}</h2>
+        {/* D14: the demo shows what the local model wrote at the warm-up; the audience is told so, not left to guess */}
+        {cache?.mode === 'cache_only' && <p className="ask-prepared">{t('ask.prepared')}</p>}
       </section>
       <section className="panel" aria-labelledby="h-steps">
         <h2 id="h-steps">{t('ask.steps')}</h2>
@@ -67,7 +71,15 @@ export default function Ask({ day }: { day: number | null }) {
                   <code className="ask-tool">{s.tool}</code>
                   <span className={`ask-badge ask-badge-${badge}`}>{t(`ask.${badge}`)}</span>
                 </div>
-                <div className="ask-summary">{s.result_summary[lang]}</div>
+                <div className="ask-summary">
+                  {s.result_summary[lang]}
+                  <Origin kind="code" />
+                </div>
+                {claims.length > 0 && (
+                  <div className="ask-origin">
+                    <Origin kind="model" />
+                  </div>
+                )}
                 <ul className="ask-claims">
                   {claims.map((c, i) => (
                     <li key={i}>
@@ -87,7 +99,10 @@ export default function Ask({ day }: { day: number | null }) {
       </section>
       {done && (
         <section className="panel" aria-labelledby="h-conclusion">
-          <h2 id="h-conclusion">{t('ask.conclusion')}</h2>
+          <h2 id="h-conclusion">
+            {t('ask.conclusion')}
+            <Origin kind="model" />
+          </h2>
           <p className="ask-conclusion">{inv.conclusion[lang]}</p>
         </section>
       )}

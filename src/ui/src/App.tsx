@@ -2,8 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import ActivityFeed from './components/ActivityFeed'
 import Autonomy from './components/Autonomy'
+import Guide from './components/Guide'
 import LangSwitch from './components/LangSwitch'
-import { type Kpi, type Pathway, useApi } from './lib/api'
+import { type Kpi, type Pathway, type SimStatus, useApi } from './lib/api'
+import { STEPS } from './lib/guide'
 import { type Key, type Lang, LangContext, translator } from './lib/i18n'
 import { type LeverRun, type StreamMessage, useStream } from './lib/stream'
 import Ask from './screens/Ask'
@@ -19,13 +21,25 @@ import Overview from './screens/Overview'
 import Patient from './screens/Patient'
 import WhatIf from './screens/WhatIf'
 
-// Menu order follows the prototype; Maria's story (demo step 1) and the reveal (step 10) are full screen. There is
-// no envelope screen (D44): the operator's demo bar picks the scenario.
-const SCREENS = ['panoramica', 'mappa', 'chiedi', 'confronto', 'whatif', 'percorsi', 'chiamate', 'letti', 'pazienti'] as const
-type Screen = 'storia' | 'rivelazione' | (typeof SCREENS)[number]
+// Menu order follows the demo's (D66), Percorsi last as the demo does not show it; Maria's story (demo step 1)
+// and the reveal (step 10) are full screen. There is no envelope screen (D44): the guide and the operator's demo
+// bar pick the scenario.
+const SCREENS = ['panoramica', 'mappa', 'chiedi', 'confronto', 'whatif', 'chiamate', 'pazienti', 'letti', 'percorsi'] as const
+export type Screen = 'storia' | 'rivelazione' | (typeof SCREENS)[number]
 const ALL: readonly Screen[] = ['storia', 'rivelazione', ...SCREENS]
 const FEED_SIZE = 30
 const LANG_KEY = 'carepath.lang'
+const GUIDE_KEY = 'carepath.guide.step'
+
+// A reload keeps the guide's stage: taking the stages again would run their clocks
+function savedStep(): number {
+  try {
+    const n = Number(localStorage.getItem(GUIDE_KEY))
+    return Number.isInteger(n) && n >= 0 && n < STEPS.length ? n : 0
+  } catch {
+    return 0
+  }
+}
 
 function screenFromHash(): Screen {
   const id = location.hash.slice(1)
@@ -53,7 +67,16 @@ export default function App() {
   const [feed, setFeed] = useState<FeedMessage[]>([])
   const [alarm, setAlarm] = useState<RegionalAlert | null>(null)
   const [bedTarget, setBedTarget] = useState<BedTarget | null>(null)
+  const [guideStep, setGuideStep] = useState(savedStep)
   const t = translator(lang)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(GUIDE_KEY, String(guideStep))
+    } catch {
+      // a blocked store only loses the stage on a reload
+    }
+  }, [guideStep])
 
   useEffect(() => {
     const onHash = () => setScreen(screenFromHash())
@@ -104,16 +127,34 @@ export default function App() {
   const pathwayId = kpi?.pathway_id ?? null
   // Names come from the pathway file, so the console names no disease itself (AC17).
   const { data: pathway } = useApi<Pathway>(pathwayId ? `/api/pathways/${pathwayId}` : null)
-  const go = (next: Screen) => {
+  const go = useCallback((next: Screen) => {
     window.history.pushState(null, '', `#${next}`) // pushState fires no hashchange, so set the screen too
     setScreen(next)
+    window.scrollTo(0, 0) // a new screen from its top, not where the last one was scrolled to
+  }, [])
+  // A click that does what the guide's next stage does moves the guide with it, unless that stage runs the clock
+  const follow = (next: Screen) => {
+    const coming = STEPS[guideStep + 1]
+    if (coming && !coming.run && coming.screen === next && coming.scenario === scenario) setGuideStep(guideStep + 1)
+    go(next)
   }
+  const onStatus = useCallback((status: SimStatus) => setSpeed(status.speed), [])
+  const restart = useCallback(() => setGuideStep(0), [])
 
   let content
   const langSwitch = <LangSwitch onChange={setLang} />
   // The runs stand paused on day 23 (D21); the operator starts the clock on Mappa (demo step 4).
-  if (screen === 'storia') content = <MariaStory onStart={() => go('panoramica')} langSwitch={langSwitch} />
-  else if (screen === 'rivelazione') content = <Reveal onRestart={() => go('storia')} langSwitch={langSwitch} />
+  if (screen === 'storia') content = <MariaStory onStart={() => follow('panoramica')} langSwitch={langSwitch} />
+  else if (screen === 'rivelazione')
+    content = (
+      <Reveal
+        onRestart={() => {
+          restart()
+          go('storia')
+        }}
+        langSwitch={langSwitch}
+      />
+    )
   else {
     content = (
       <div className="shell">
@@ -122,19 +163,19 @@ export default function App() {
             <strong>CarePath AI</strong>
             <span>{t('brand.ats')}</span>
           </div>
+          <button type="button" className="nav-item" onClick={() => go('storia')}>
+            {t('nav.storia')}
+          </button>
           {SCREENS.map((name) => (
             <button
               key={name}
               type="button"
-              className={name === screen ? 'nav-item active' : 'nav-item'}
-              onClick={() => go(name)}
+              className={`nav-item${name === screen ? ' active' : ''}${name === 'percorsi' ? ' muted' : ''}`}
+              onClick={() => follow(name)}
             >
               {t(`nav.${name}` as Key)}
             </button>
           ))}
-          <button type="button" className="nav-item muted" onClick={() => go('storia')}>
-            {t('nav.storia')}
-          </button>
           <div className="nav-footer">{t('nav.footer')}</div>
         </nav>
 
@@ -154,7 +195,7 @@ export default function App() {
               {screen === 'panoramica' ? (
                 <Overview day={day} kpi={kpi} pathway={pathway ?? null} />
               ) : screen === 'mappa' ? (
-                <MapScreen day={day} pathwayId={pathwayId} alert={alarm} onInvestigation={() => go('chiedi')} />
+                <MapScreen day={day} pathwayId={pathwayId} alert={alarm} onInvestigation={() => follow('chiedi')} />
               ) : screen === 'percorsi' ? (
                 <Flows day={day} pathwayId={pathwayId} />
               ) : screen === 'chiedi' ? (
@@ -176,7 +217,7 @@ export default function App() {
                   pathway={pathway ?? null}
                   onAdmission={(target) => {
                     setBedTarget(target)
-                    go('letti')
+                    follow('letti')
                   }}
                 />
               ) : screen === 'letti' ? (
@@ -199,7 +240,16 @@ export default function App() {
   return (
     <LangContext value={lang}>
       {content}
-      <DemoBar day={day} speed={speed} onReveal={() => go('rivelazione')} />
+      <Guide
+        step={guideStep}
+        setStep={setGuideStep}
+        scenario={scenario}
+        day={day}
+        speed={speed}
+        go={go}
+        onStatus={onStatus}
+      />
+      <DemoBar day={day} speed={speed} onReveal={() => go('rivelazione')} onStatus={onStatus} onReset={restart} />
     </LangContext>
   )
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Origin from '../components/Origin'
 import { type CapacityRow, type KpiRow, type Pathway, useApi } from '../lib/api'
 import { formatEuro, formatNumber, formatPercent, useLang } from '../lib/i18n'
 import type { LeverRun } from '../lib/stream'
@@ -123,13 +124,21 @@ export default function Compare({
   return (
     <div className="compare">
       <div className="compare-head">
-        <p className="lead">{lever ? t('compare.leadLever') : t('compare.lead')}</p>
+        <p className="lead">
+          {lever ? t('compare.leadLever') : t('compare.lead')}
+          <Origin kind="code" />
+        </p>
         {leverRun && (
           <div className="lang" role="group" aria-label={t('compare.mode')}>
             <button type="button" aria-pressed={mode === 'arms'} onClick={() => setMode('arms')}>
               {t('compare.modeArms')}
             </button>
-            <button type="button" aria-pressed={mode === 'lever'} onClick={() => setMode('lever')}>
+            <button
+              type="button"
+              aria-pressed={mode === 'lever'}
+              data-spot={mode === 'lever' ? undefined : 'compare-lever'}
+              onClick={() => setMode('lever')}
+            >
               {t('compare.modeLever')}
             </button>
           </div>

@@ -234,6 +234,9 @@ export type Admission = {
   action: Action | null
 }
 
+/** What every POST /api/sim/* answers with: the scenario on screen, its day and the clock's speed. */
+export type SimStatus = { scenario: number; day: number; speed: number }
+
 /** GET /api/investigations (SPEC §6, C24, C25), the latest first. */
 export type Investigation = {
   investigation_id: string

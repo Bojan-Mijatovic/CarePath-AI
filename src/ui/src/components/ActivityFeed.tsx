@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { type Action, send, useApi } from '../lib/api'
 import { agentName, label, type Translator, useLang } from '../lib/i18n'
 import type { StreamMessage } from '../lib/stream'
+import Origin, { type OriginKind } from './Origin'
 
 type FeedMessage = Exclude<StreamMessage, { type: 'tick' }>
 const BACKFILL = 10 // as many actions as a tick pushes (C32)
@@ -51,7 +52,7 @@ export default function ActivityFeed({ messages, day }: { messages: FeedMessage[
   }
 
   return (
-    <aside className="feed" aria-labelledby="h-feed">
+    <aside className="feed" aria-labelledby="h-feed" data-spot="feed">
       <h2 id="h-feed">
         <span className="live-dot" aria-hidden="true" />
         {t('feed.title')}
@@ -64,6 +65,9 @@ export default function ActivityFeed({ messages, day }: { messages: FeedMessage[
           let extra: string | null = null
           let waiting = false
           let action: Action | null = null
+          let origin: OriginKind = 'code' // Monitoring's alarms and the Investigator's tool summaries are code's
+          if (m.type === 'action') origin = m.payload.payload.wording === 'model' ? 'model' : 'code'
+          else if (m.type === 'report' && m.payload.wording === 'model') origin = 'model'
           if (m.type === 'action') {
             action = m.payload
             waiting = action.status === 'proposed'
@@ -97,6 +101,7 @@ export default function ActivityFeed({ messages, day }: { messages: FeedMessage[
                 {extra && <div className="feed-evidence">{extra}</div>}
                 <div className="feed-day">
                   {t('feed.day', { day: m.day })}
+                  <Origin kind={origin} />
                   {action?.status === 'executed' && (
                     <button
                       type="button"

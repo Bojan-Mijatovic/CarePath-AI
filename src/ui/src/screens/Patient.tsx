@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Origin from '../components/Origin'
 import { type Pathway, type Patient360, stepOf, type TimelineEvent, useApi } from '../lib/api'
 import { formatNumber, formatPercent, label, useLang } from '../lib/i18n'
 import type { BedTarget } from './Beds'
@@ -57,7 +58,7 @@ export default function Patient({
         <input id="patient-id" value={draft} onChange={(ev) => setDraft(ev.target.value)} />
         <button type="submit">{t('patient.show')}</button>
       </form>
-      <div className="lang" role="group" aria-label={t('patient.with')}>
+      <div className="lang" role="group" aria-label={t('patient.with')} data-spot="patient-arm">
         {(['agents', 'baseline'] as const).map((a) => (
           <button key={a} type="button" aria-pressed={arm === a} onClick={() => setArm(a)}>
             {t(a === 'agents' ? 'patient.with' : 'patient.without')}
@@ -109,7 +110,10 @@ export default function Patient({
             {Array.isArray(s.overdue_steps) && s.overdue_steps.length > 0 && (
               <div className="patient-overdue">{t('patient.overdue', { steps: s.overdue_steps.map(stepName).join(', ') })}</div>
             )}
-            <div className="card-sub">{t('patient.risk', { risk: formatPercent(lang, Number(s.risk_score), 1) })}</div>
+            <div className="card-sub">
+              {t('patient.risk', { risk: formatPercent(lang, Number(s.risk_score), 1) })}
+              <Origin kind="code" />
+            </div>
           </div>
         ))}
       </section>

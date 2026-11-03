@@ -74,10 +74,192 @@ const STRINGS = {
   },
   'bar.reveal': { it: 'Rivelazione', en: 'Reveal' },
   'bar.keys': {
-    it: 'Tasti: 1 2 3 scenario · spazio pausa/×1 · f ×4 · j giorno · c cache · v rivelazione · r reset · il tasto a sinistra di 1: barra',
-    en: 'Keys: 1 2 3 scenario · space pause/×1 · f ×4 · j day · c cache · v reveal · r reset · the key left of 1: bar',
+    it: 'Tasti: → o PagGiù tappa successiva · ← o PagSu precedente · g guida · 1 2 3 scenario · spazio pausa/×1 · f ×4 · j giorno · c cache · v rivelazione · r reset · il tasto a sinistra di 1: barra',
+    en: 'Keys: → or PgDn next stage · ← or PgUp previous · g guide · 1 2 3 scenario · space pause/×1 · f ×4 · j day · c cache · v reveal · r reset · the key left of 1: bar',
+  },
+
+  // The guide bar (D66): what the audience reads at each stage of demo/SCRIPT.md
+  'guide.title': { it: 'Guida della demo', en: 'Demo guide' },
+  'guide.count': { it: 'Tappa {n} di {total}', en: 'Stage {n} of {total}' },
+  'guide.optional': { it: 'facoltativa', en: 'optional' },
+  'guide.running': { it: '×{speed} · giorno {day} → {until}', en: '×{speed} · day {day} → {until}' },
+  'guide.back': { it: 'Tappa precedente', en: 'Previous stage' },
+  'guide.next': { it: 'Tappa successiva: {title}', en: 'Next stage: {title}' },
+  'guide.last': { it: 'Ultima tappa', en: 'Last stage' },
+  'guide.failed': { it: 'Non riuscito: {detail}', en: 'Failed: {detail}' },
+  'guide.maria.title': { it: 'La storia di Maria', en: "Maria's story" },
+  'guide.maria.text': {
+    it: 'Una paziente sintetica. Senza un sistema che la segue, nessuno si accorge che esce dal suo piano di cura.',
+    en: 'A synthetic patient. With no system following her, nobody notices her leaving her care plan.',
+  },
+  'guide.overview.title': { it: 'Scenario 2: la prima regione', en: 'Scenario 2: the first region' },
+  'guide.overview.text': {
+    it: 'La simulazione è in pausa. Gli agenti hanno già lavorato; una proposta aspetta la direzione.',
+    en: 'The simulation is paused. The agents have already worked; a proposal waits for the management.',
+  },
+  'guide.map.title': { it: 'Il territorio', en: 'The territory' },
+  'guide.map.text': {
+    it: 'Ogni paziente, ogni giorno. La simulazione corre e si ferma da sola al primo allarme.',
+    en: 'Every patient, every day. The simulation runs and stops by itself at the first alarm.',
+  },
+  'guide.ask.title': { it: 'L’indagine', en: 'The investigation' },
+  'guide.ask.text': {
+    it: 'Non solo cosa, ma perché: l’agente indaga con i suoi strumenti e il Verifier controlla ogni numero.',
+    en: 'Not only what, but why: the agent investigates with its tools and the Verifier checks every number.',
+  },
+  'guide.approve.title': { it: 'La direzione decide', en: 'The management decides' },
+  'guide.approve.text': {
+    it: 'L’IA propone, la direzione approva: prima la proposta di capacità, poi l’avviso al MMG.',
+    en: 'The AI proposes, the management approves: first the capacity proposal, then the notice to the GP.',
+  },
+  'guide.autonomy.title': { it: 'Più autonomia', en: 'More autonomy' },
+  'guide.autonomy.text': {
+    it: 'La direzione decide quanto l’IA fa da sola: la riprogrammazione passa a «Da sola».',
+    en: 'The management decides how much the AI does alone: rescheduling goes to “Alone”.',
+  },
+  'guide.fast.title': { it: 'Senza e con CarePath', en: 'Without and with CarePath' },
+  'guide.fast.text': {
+    it: 'La stessa regione, senza e con gli agenti, fianco a fianco: ×4 fino al giorno {day}.',
+    en: 'The same region, without and with the agents, side by side: ×4 to day {day}.',
+  },
+  'guide.lever.title': { it: 'I nuovi posti', en: 'The new slots' },
+  'guide.lever.text': {
+    it: '«Prima / dopo i nuovi posti»: l’attesa con i posti approvati dalla direzione.',
+    en: '“Before / after the new slots”: the wait with the slots the management approved.',
+  },
+  'guide.whatif.title': { it: 'E se compriamo di più?', en: 'What if we buy more?' },
+  'guide.whatif.text': {
+    it: 'Una decisione di budget, simulata sei mesi avanti e misurata con l’indicatore PNE.',
+    en: 'A budget decision, simulated six months ahead and measured with the PNE indicator.',
+  },
+  'guide.calls.title': { it: 'Le chiamate di oggi', en: "Today's calls" },
+  'guide.calls.text': {
+    it: 'Il Centro Servizi chiama prima chi rischia di più, con i motivi e l’esito.',
+    en: 'The Service Centre calls the highest risk first, with the reasons and the outcome.',
+  },
+  'guide.patient.title': { it: 'Torniamo da Maria', en: 'Back to Maria' },
+  'guide.patient.text': {
+    it: 'La stessa paziente con CarePath e senza: cosa cambia nei suoi giorni.',
+    en: 'The same patient with CarePath and without: what changes in her days.',
+  },
+  'guide.bed.title': { it: 'Un posto letto', en: 'A bed' },
+  'guide.bed.text': {
+    it: 'Senza CarePath Maria torna in ospedale. Il ricovero lo decide il medico; dove, lo trova l’IA in un istante.',
+    en: 'Without CarePath Maria is back in hospital. The doctor decides to admit her; the AI finds where in an instant.',
+  },
+  'guide.other.title': { it: 'Scenario 1: un’altra regione', en: 'Scenario 1: another region' },
+  'guide.other.text': {
+    it: 'Stesso sistema, stesso codice, nessuna istruzione: qui il problema è in un altro ospedale. Il suo allarme è già arrivato ed è già indagato.',
+    en: 'Same system, same code, no instructions: here the problem is at another hospital. Its alarm has already come and been investigated.',
+  },
+  'guide.approveOther.title': { it: 'La direzione decide', en: 'The management decides' },
+  'guide.approveOther.text': {
+    it: 'Anche qui l’agente propone nuovi posti; la direzione approva.',
+    en: 'Here too the agent proposes new slots; the management approves.',
+  },
+  'guide.fastOther.title': { it: 'Senza e con CarePath', en: 'Without and with CarePath' },
+  'guide.fastOther.text': {
+    it: '×4 fino al giorno {day}, poi «Prima / dopo i nuovi posti».',
+    en: '×4 to day {day}, then “Before / after the new slots”.',
+  },
+  'guide.third.title': { it: 'Scenario 3: la terza regione', en: 'Scenario 3: the third region' },
+  'guide.third.text': {
+    it: 'Stesso codice ancora, un terzo ospedale in difficoltà. La simulazione corre e si ferma da sola sull’allarme.',
+    en: 'The same code again, a third hospital in trouble. The simulation runs and stops by itself on the alarm.',
+  },
+  'guide.reveal.title': { it: 'Rivelazione', en: 'Reveal' },
+  'guide.reveal.text': {
+    it: 'Cosa era nascosto nelle tre regioni, accanto a ciò che gli agenti hanno trovato da soli.',
+    en: 'What was hidden in the three regions, next to what the agents found on their own.',
+  },
+  // What the system did at each stage, without numbers: the numbers on screen come from the data (rule 1)
+  'guide.behind': { it: 'Dietro le quinte:', en: 'Behind the scenes:' },
+  'guide.maria.behind': {
+    it: 'Maria è una di migliaia di pazienti sintetici: un simulatore con un seme fisso genera i loro eventi giorno per giorno.',
+    en: 'Maria is one of thousands of synthetic patients: a simulator with a fixed seed makes their events day by day.',
+  },
+  'guide.overview.behind': {
+    it: 'Le etichette colorate dicono chi ha fatto cosa: «Calcolato» è il codice, «Scritto dal LLM» sono solo frasi, «Decide una persona» siete voi.',
+    en: 'The coloured labels say who did what: “Computed” is code, “Written by the LLM” is only sentences, “A person decides” is you.',
+  },
+  'guide.map.behind': {
+    it: 'L’allarme è una regola del Monitoring sui tempi d’attesa, non un’opinione dell’IA. A destra, il lavoro degli agenti giorno per giorno.',
+    en: 'The alarm is a Monitoring rule on waiting times, not the AI’s opinion. On the right, the agents’ work day by day.',
+  },
+  'guide.ask.behind': {
+    it: 'L’Investigator non scrive SQL: chiama solo strumenti di sola lettura. Il LLM mette in frasi i numeri ricevuti; il Verifier ripete ogni chiamata.',
+    en: 'The Investigator writes no SQL: it only calls read-only tools. The LLM phrases the numbers it got; the Verifier repeats every call.',
+  },
+  'guide.approve.behind': {
+    it: 'Gli agenti leggono soltanto. Solo il servizio azioni cambia qualcosa, dopo il controllo dell’autonomia; ogni azione va nell’audit e si può annullare.',
+    en: 'The agents only read. Only the action service changes anything, after the autonomy check; every action goes to the audit log and can be undone.',
+  },
+  'guide.autonomy.behind': {
+    it: 'Il livello vale per tipo di azione e ogni cambio va nell’audit. Diagnosi e terapia non sono mai compito dell’IA.',
+    en: 'The level holds per type of action and every change goes to the audit log. Diagnosis and therapy are never the AI’s job.',
+  },
+  'guide.fast.behind': {
+    it: 'Due simulazioni con lo stesso seme e gli stessi pazienti: l’unica differenza sono gli agenti.',
+    en: 'Two simulations with the same seed and the same patients: the only difference is the agents.',
+  },
+  'guide.lever.behind': {
+    it: 'I nuovi posti sono una terza simulazione, uguale alla seconda fino al giorno della leva.',
+    en: 'The new slots are a third simulation, the same as the second up to the lever day.',
+  },
+  'guide.whatif.behind': {
+    it: 'Ogni posizione del cursore è una simulazione completa calcolata in anticipo: nessun numero viene dal modello linguistico.',
+    en: 'Every position of the slider is a full simulation computed in advance: no number comes from the language model.',
+  },
+  'guide.calls.behind': {
+    it: 'Il rischio viene da un modello XGBoost, i motivi da regole: in questa lista non c’è nessun LLM.',
+    en: 'The risk comes from an XGBoost model, the reasons from rules: there is no LLM in this list.',
+  },
+  'guide.patient.behind': {
+    it: 'Gli eventi vengono dal simulatore; quelli segnati «agente» sono azioni degli agenti, che il simulatore applica dal giorno dopo.',
+    en: 'The events come from the simulator; those marked “agent” are the agents’ actions, which the simulator applies from the next day.',
+  },
+  'guide.bed.behind': {
+    it: 'Il Bed Finder ordina i reparti con regole fisse: libero ora, stesso ospedale, il più vicino. Nessun LLM.',
+    en: 'Bed Finder ranks the wards with fixed rules: free now, the same hospital, the nearest. No LLM.',
+  },
+  'guide.other.behind': {
+    it: 'Tra gli scenari cambiano solo i dati. Le regole e gli agenti sono gli stessi, e nessuno ha detto loro dove guardare.',
+    en: 'Between the scenarios only the data change. The rules and the agents are the same, and nobody told them where to look.',
+  },
+  'guide.approveOther.behind': {
+    it: 'Quanti posti, lo calcola il codice dalla simulazione what-if; il LLM scrive solo le frasi della motivazione, che il codice controlla.',
+    en: 'How many slots, code computes from the what-if simulation; the LLM writes only the rationale’s sentences, which code checks.',
+  },
+  'guide.fastOther.behind': {
+    it: 'La stessa misura di prima: stesso seme, stessi pazienti, senza e con gli agenti, poi con i nuovi posti.',
+    en: 'The same measure as before: same seed, same patients, without and with the agents, then with the new slots.',
+  },
+  'guide.third.behind': {
+    it: 'Gli agenti non possono leggere ciò che la simulazione ha nascosto: lo vedrete solo nella rivelazione.',
+    en: 'The agents cannot read what the simulation hid: you will see it only in the reveal.',
+  },
+  'guide.reveal.behind': {
+    it: 'È l’unica schermata che legge la verità nascosta della simulazione; gli agenti non vi accedono mai, e un test lo controlla.',
+    en: 'It is the only screen that reads the simulation’s hidden truth; the agents never reach it, and a test checks that.',
   },
   'bar.failed': { it: 'Comando non riuscito: {detail}', en: 'Command failed: {detail}' },
+
+  // Who made what the audience reads (D66): code computes, the language model only phrases, a person decides
+  'origin.code': { it: 'Calcolato', en: 'Computed' },
+  'origin.code.tip': {
+    it: 'Calcolato dal codice: regole, viste SQL, simulazione o XGBoost; i testi sono modelli fissi compilati dal codice. Nessun modello linguistico.',
+    en: 'Computed by code: rules, SQL views, the simulation or XGBoost; the texts are fixed templates code fills in. No language model.',
+  },
+  'origin.model': { it: 'Scritto dal LLM', en: 'Written by the LLM' },
+  'origin.model.tip': {
+    it: 'Frasi del modello linguistico locale attorno ai valori che il codice gli ha dato; in questa demo preparate in anticipo.',
+    en: 'Sentences by the local language model around the values code gave it; in this demo prepared in advance.',
+  },
+  'origin.person': { it: 'Decide una persona', en: 'A person decides' },
+  'origin.person.tip': {
+    it: 'Nulla di ciò che aspetta parte senza questa decisione; ogni decisione va nell’audit e si può annullare.',
+    en: 'Nothing that waits goes ahead without this decision; every decision goes to the audit log and can be undone.',
+  },
 
   'calls.lead': {
     it: 'La lista che gli agenti preparano ogni mattina per il Centro Servizi: una chiamata per paziente, con tutti i motivi, ordinata per rischio.',
@@ -268,6 +450,10 @@ const STRINGS = {
   'ask.noAnswer': {
     it: 'Per questa domanda non c’è una risposta preparata oggi: in questa demo le risposte sono generate in anticipo.',
     en: 'There is no answer prepared for this question today: in this demo the answers are generated in advance.',
+  },
+  'ask.prepared': {
+    it: 'Risposta preparata in anticipo dal modello linguistico locale, su questo portatile: in questa demo non viene generata dal vivo. I numeri vengono dagli strumenti, non dal modello.',
+    en: 'Answer prepared in advance by the local language model, on this laptop: in this demo it is not generated live. The numbers come from the tools, not from the model.',
   },
   'ask.suggestionsDay': { it: 'Risposte preparate per il giorno {day}.', en: 'Answers prepared for day {day}.' },
   'ask.verified': { it: 'verificato', en: 'verified' },

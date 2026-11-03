@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { send, useApi } from '../lib/api'
+import { send, type SimStatus, useApi } from '../lib/api'
 import { useLang } from '../lib/i18n'
 
 const ORDER = [2, 1, 3] // D44: the demo walks the scenarios in this order
@@ -13,10 +13,15 @@ export default function DemoBar({
   day,
   speed,
   onReveal,
+  onStatus,
+  onReset,
 }: {
   day: number | null
   speed: number
   onReveal: () => void
+  /** The server's answer to a clock command: a pause sends no tick, so the top bar would keep the old speed */
+  onStatus: (status: SimStatus) => void
+  onReset: () => void
 }) {
   const { t } = useLang()
   const [open, setOpen] = useState(false)
@@ -26,12 +31,18 @@ export default function DemoBar({
   const jumpField = useRef<HTMLInputElement>(null)
   const { data: cache } = useApi<{ mode: Mode }>('/api/sim/cache', changes)
 
-  const run = useCallback((method: 'POST' | 'PUT', path: string, body?: unknown) => {
-    setError(null)
-    send(method, path, body)
-      .then(() => setChanges((k) => k + 1))
-      .catch((e: unknown) => setError(String(e)))
-  }, [])
+  const run = useCallback(
+    (method: 'POST' | 'PUT', path: string, body?: unknown) => {
+      setError(null)
+      send<SimStatus | { mode: Mode }>(method, path, body)
+        .then((status) => {
+          setChanges((k) => k + 1)
+          if ('speed' in status) onStatus(status)
+        })
+        .catch((e: unknown) => setError(String(e)))
+    },
+    [onStatus],
+  )
   const setSpeed = useCallback((factor: number) => run('POST', '/api/sim/speed', { factor }), [run])
   const jump = () => {
     const d = Number(draft)
@@ -43,8 +54,11 @@ export default function DemoBar({
     [run, cache],
   )
   const reset = useCallback(() => {
-    if (window.confirm(t('bar.resetConfirm'))) run('POST', '/api/sim/reset')
-  }, [run, t])
+    if (window.confirm(t('bar.resetConfirm'))) {
+      run('POST', '/api/sim/reset')
+      onReset()
+    }
+  }, [run, t, onReset])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

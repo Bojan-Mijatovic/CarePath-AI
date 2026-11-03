@@ -709,6 +709,167 @@
   font-size: 13px;
 }
 
+/* Who made a value or a text (D66): code, the language model or a person */
+.origin {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  vertical-align: middle;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.origin-code {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.origin-model {
+  background: var(--llm-soft);
+  color: var(--llm);
+}
+
+.origin-person {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+/* The guide bar (D66): the demo's stage for the audience, at the bottom like a subtitle */
+body.guided {
+  --guide-h: 100px;
+  padding-bottom: var(--guide-h);
+}
+
+body.guided .shell,
+body.guided .intro {
+  min-height: calc(100vh - var(--guide-h));
+}
+
+body.guided .demobar {
+  bottom: calc(var(--guide-h) + 12px);
+}
+
+.guide {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: var(--guide-h);
+  box-sizing: border-box;
+  padding: 10px 24px;
+  border-top: 3px solid var(--brand);
+  background: var(--nav-bg);
+  color: var(--nav-ink);
+}
+
+.guide-count {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--brand);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.guide-optional {
+  color: var(--nav-muted);
+  font-size: 12px;
+}
+
+.guide-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.guide-text strong {
+  font-size: 17px;
+}
+
+.guide-text span {
+  font-size: 15px;
+}
+
+.guide-text .guide-behind {
+  color: var(--nav-muted);
+  font-size: 13px;
+}
+
+.guide-behind b {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.guide-clock {
+  flex: none;
+  color: var(--brand);
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.guide-clock.failed {
+  max-width: 320px;
+  color: #f2b49a;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+.guide-buttons {
+  flex: none;
+  display: flex;
+  gap: 8px;
+}
+
+.guide-buttons button {
+  min-width: 52px;
+  min-height: 44px;
+  border: 1px solid var(--nav-active);
+  border-radius: 8px;
+  background: var(--nav-active);
+  color: var(--nav-ink);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.guide-buttons button.primary {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: var(--nav-bg);
+}
+
+.guide-buttons button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@keyframes guide-spot {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(36 87 197 / 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgb(36 87 197 / 0.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-spot] {
+    animation: none !important;
+  }
+}
+
 .demobar-row {
   display: flex;
   flex-wrap: wrap;
@@ -856,6 +1017,27 @@
 .ask-claims {
   margin: 8px 0 0;
   padding-left: 18px;
+}
+
+.ask-origin {
+  margin-top: 10px;
+}
+
+.ask-prepared {
+  margin: 8px 0 0;
+  padding: 6px 10px;
+  border-left: 3px solid var(--llm);
+  background: var(--llm-soft);
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.ask-origin .origin {
+  margin-left: 0;
+}
+
+.ask-origin + .ask-claims {
+  margin-top: 4px;
 }
 
 .ask-issue {

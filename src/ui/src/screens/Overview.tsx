@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { type Action, type Kpi, type Pathway, type Report, send, useApi } from '../lib/api'
 import { agentName, formatEuro, formatNumber, formatPercent, label, useLang } from '../lib/i18n'
+import Origin from '../components/Origin'
 
 /** Demo step 3 (prototype "Pregled"): headline numbers of the day, the approval queue, the PNE indicator, and
  * the Reporter's latest monthly report (step 2.14). */
@@ -28,7 +29,10 @@ export default function Overview({ day, kpi, pathway }: { day: number | null; kp
 
   return (
     <div className="overview">
-      <p className="lead">{t('overview.intro', { days: day, patients: n(kpi.patients) })}</p>
+      <p className="lead">
+        {t('overview.intro', { days: day, patients: n(kpi.patients) })}
+        <Origin kind="code" />
+      </p>
       <div className="cards">
         <div className="card">
           <div className="card-label">{t('card.patients')}</div>
@@ -53,7 +57,10 @@ export default function Overview({ day, kpi, pathway }: { day: number | null; kp
       </div>
       <div className="panels">
         <section className="panel wide" aria-labelledby="h-approvals">
-          <h2 id="h-approvals">{t('approvals.title')}</h2>
+          <h2 id="h-approvals">
+            {t('approvals.title')}
+            <Origin kind="person" />
+          </h2>
           {queue.length === 0 && <p className="placeholder">{t('approvals.empty')}</p>}
           {error && <p className="placeholder">{error}</p>}
           {queue.map((a) => (
@@ -62,12 +69,14 @@ export default function Overview({ day, kpi, pathway }: { day: number | null; kp
                 <div className="approval-title">{label(t, 'action', a.type)}</div>
                 <div className="approval-meta">
                   {t('approvals.meta', { agent: agentName(a.agent), level: a.autonomy_level, day: a.created_day })}
+                  <Origin kind={a.payload.wording === 'model' ? 'model' : 'code'} />
                 </div>
                 <p className="approval-rationale">{a.rationale[lang]}</p>
               </div>
               <button
                 type="button"
                 className="primary"
+                data-spot={`approve-${a.type}`}
                 disabled={busy !== null}
                 onClick={() => decide(a.action_id, 'approve')}
               >
@@ -80,7 +89,10 @@ export default function Overview({ day, kpi, pathway }: { day: number | null; kp
           ))}
         </section>
         <section className="panel" aria-labelledby="h-pne">
-          <h2 id="h-pne">{t('pne.title')}</h2>
+          <h2 id="h-pne">
+            {t('pne.title')}
+            <Origin kind="code" />
+          </h2>
           <div className="card-sub">{t('pne.sub', { pathway: pathway.label[lang] })}</div>
           <div className="pne">
             <span className="card-value">
@@ -108,6 +120,7 @@ export default function Overview({ day, kpi, pathway }: { day: number | null; kp
             <h2 id="h-report">{t('report.title', { month: report.month })}</h2>
             <div className="card-sub">
               {t('report.sub', { from: report.from_day, to: report.day })}
+              <Origin kind={report.wording === 'model' ? 'model' : 'code'} />
             </div>
             <div className="report-text">
               {report.text[lang].split('\n').map((line, i) => (

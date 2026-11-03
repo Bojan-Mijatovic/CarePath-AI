@@ -1,3 +1,4 @@
+import Origin from '../components/Origin'
 import { type MapRow, useApi } from '../lib/api'
 import { useGeo } from '../lib/geo'
 import { formatPercent, type Key, useLang } from '../lib/i18n'
@@ -41,9 +42,12 @@ export default function MapScreen({
   return (
     <div className="mapscreen">
       {alert && (
-        <div className="alarm-banner" role="alert">
+        <div className="alarm-banner" role="alert" data-spot="alarm">
           <div className="alarm-text">
-            <div className="alarm-head">{t('map.regional', { day: alert.day })}</div>
+            <div className="alarm-head">
+              {t('map.regional', { day: alert.day })}
+              <Origin kind="code" />
+            </div>
             <div>{alert.payload.text[lang]}</div>
           </div>
           {alert.payload.investigation_id && (

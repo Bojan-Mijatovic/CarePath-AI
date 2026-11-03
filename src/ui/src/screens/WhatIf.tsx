@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import Origin from '../components/Origin'
 import { type Pathway, type PneYearEnd, type WhatIf as Result, type WhatIfRun, send } from '../lib/api'
 import { formatEuro, formatNumber, formatPercent, useLang } from '../lib/i18n'
 
@@ -55,8 +56,11 @@ export default function WhatIf({ scenario, pathway }: { scenario: number | null;
     <div className="whatif">
       <section className="panel" aria-labelledby="h-whatif">
         <h2 id="h-whatif">{t('whatif.title')}</h2>
-        <p className="lead">{t('whatif.lead', { months: MONTHS })}</p>
-        <div className="whatif-lever">
+        <p className="lead">
+          {t('whatif.lead', { months: MONTHS })}
+          <Origin kind="code" />
+        </p>
+        <div className="whatif-lever" data-spot="whatif">
           <label htmlFor="extra-slots">
             {result && step
               ? t('whatif.lever', { step: step.label[lang], facility: result.facility, day: result.lever_day })

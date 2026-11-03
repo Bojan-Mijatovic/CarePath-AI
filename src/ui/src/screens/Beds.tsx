@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Origin from '../components/Origin'
 import {
   type Action,
   type Admission,
@@ -164,9 +165,12 @@ export default function Beds({
       ) : (
         <div className="beds-status idle">
           <div className="beds-status-text">
-            <span>{noBed ? t('beds.noBed') : action?.status === 'undone' ? t('beds.undone') : t('beds.guard')}</span>
+            <span>
+              {noBed ? t('beds.noBed') : action?.status === 'undone' ? t('beds.undone') : t('beds.guard')}
+              <Origin kind="person" />
+            </span>
           </div>
-          <button type="button" className="primary" disabled={busy} onClick={() => request()}>
+          <button type="button" className="primary" data-spot="bed-request" disabled={busy} onClick={() => request()}>
             {t(action ? 'beds.again' : 'beds.request')}
           </button>
         </div>
@@ -174,7 +178,10 @@ export default function Beds({
 
       {candidates.length > 0 && (
         <section className="panel" aria-labelledby="h-beds">
-          <div className="card-sub">{seconds ? t('beds.foundIn', { s: seconds }) : t('beds.foundBy')}</div>
+          <div className="card-sub">
+            {seconds ? t('beds.foundIn', { s: seconds }) : t('beds.foundBy')}
+            <Origin kind="code" />
+          </div>
           <h2 id="h-beds">{t('beds.candidates')}</h2>
           <div className="beds-cards">
             {candidates.map((c, k) => {

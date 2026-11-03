@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Origin from '../components/Origin'
 import { useApi, type WorklistRow } from '../lib/api'
 import { formatPercent, label, useLang } from '../lib/i18n'
 
@@ -25,7 +26,10 @@ export default function Calls({ day }: { day: number | null }) {
 
   return (
     <div className="calls">
-      <p className="lead">{t('calls.lead')}</p>
+      <p className="lead">
+        {t('calls.lead')}
+        <Origin kind="code" />
+      </p>
       <div className="calls-day">
         <label htmlFor="calls-day">{t('calls.day')}</label>
         <input

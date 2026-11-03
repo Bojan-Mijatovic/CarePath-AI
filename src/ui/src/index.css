@@ -16,6 +16,9 @@
   --primary-soft: #eaf0fb;
   --warning: #b45309;
   --ok: #1f7a4d;
+  --ok-soft: #e6f4ec;
+  --llm: #6b3fa0;
+  --llm-soft: #f2ecfa;
 
   --sans: system-ui, 'Segoe UI', sans-serif;
   --mono: ui-monospace, Consolas, monospace;

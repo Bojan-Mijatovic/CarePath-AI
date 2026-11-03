@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" font-family="Segoe UI, system-ui, sans-serif">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#14212b"/></marker></defs>
+<rect width="1600" height="900" fill="#ffffff"/>
+<text x="50" y="72" font-size="40" font-weight="700" fill="#14212b" text-anchor="start">How CarePath AI works</text>
+<text x="50" y="112" font-size="22" font-weight="400" fill="#5b6b78" text-anchor="start">Code computes, the language model only writes the sentences, a person decides.</text>
+<rect x="50" y="230" width="230" height="220" rx="14" fill="#eaf0fb" stroke="#2457c5" stroke-width="2.5"/>
+<text x="68" y="268" font-size="21" font-weight="700" fill="#2457c5" text-anchor="start">1 · Simulator</text>
+<text x="68" y="306" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">10,000 synthetic patients</text>
+<text x="68" y="336" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">events day by day</text>
+<text x="68" y="366" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">fixed seed: the same run,</text>
+<text x="68" y="396" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">byte for byte</text>
+<rect x="367" y="230" width="230" height="220" rx="14" fill="#eaf0fb" stroke="#2457c5" stroke-width="2.5"/>
+<text x="385" y="268" font-size="21" font-weight="700" fill="#2457c5" text-anchor="start">2 · Engine</text>
+<text x="385" y="306" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">pathway rules</text>
+<text x="385" y="336" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">SQL views</text>
+<text x="385" y="366" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">PNE indicator</text>
+<text x="385" y="396" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">risk with XGBoost</text>
+<text x="385" y="426" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">Monitoring’s alarms</text>
+<rect x="684" y="230" width="230" height="220" rx="14" fill="#eaf0fb" stroke="#2457c5" stroke-width="2.5"/>
+<text x="702" y="268" font-size="21" font-weight="700" fill="#2457c5" text-anchor="start">3 · Agents</text>
+<text x="702" y="306" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">Monitoring, Investigator,</text>
+<text x="702" y="336" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">Intervention, Reporter,</text>
+<text x="702" y="366" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">Verifier, Bed Finder</text>
+<text x="702" y="396" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">read only through tools</text>
+<rect x="1001" y="230" width="230" height="220" rx="14" fill="#eaf0fb" stroke="#2457c5" stroke-width="2.5"/>
+<text x="1019" y="268" font-size="21" font-weight="700" fill="#2457c5" text-anchor="start">4 · Action service</text>
+<text x="1019" y="306" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">the only writer</text>
+<text x="1019" y="336" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">autonomy 0–3, guardrails</text>
+<text x="1019" y="366" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">rationale and evidence</text>
+<text x="1019" y="396" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">audit log, can be undone</text>
+<rect x="1318" y="230" width="230" height="220" rx="14" fill="#e6f4ec" stroke="#1f7a4d" stroke-width="2.5"/>
+<text x="1336" y="268" font-size="21" font-weight="700" fill="#1f7a4d" text-anchor="start">5 · People</text>
+<text x="1336" y="306" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">management and doctors</text>
+<text x="1336" y="336" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">approve or reject</text>
+<text x="1336" y="366" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">choose the autonomy</text>
+<text x="1336" y="396" font-size="17" font-weight="400" fill="#14212b" text-anchor="start">diagnosis, therapy: theirs</text>
+<line x1="286" y1="340.0" x2="361" y2="340.0" stroke="#14212b" stroke-width="2.5" marker-end="url(#a)"/>
+<text x="323.5" y="326.0" font-size="14" font-weight="600" fill="#5b6b78" text-anchor="middle">events</text>
+<line x1="603" y1="340.0" x2="678" y2="340.0" stroke="#14212b" stroke-width="2.5" marker-end="url(#a)"/>
+<text x="640.5" y="309.0" font-size="14" font-weight="600" fill="#5b6b78" text-anchor="middle">state and</text>
+<text x="640.5" y="326.0" font-size="14" font-weight="600" fill="#5b6b78" text-anchor="middle">alarms</text>
+<line x1="920" y1="340.0" x2="995" y2="340.0" stroke="#14212b" stroke-width="2.5" marker-end="url(#a)"/>
+<text x="957.5" y="326.0" font-size="14" font-weight="600" fill="#5b6b78" text-anchor="middle">proposals</text>
+<line x1="1237" y1="340.0" x2="1312" y2="340.0" stroke="#14212b" stroke-width="2.5" marker-end="url(#a)"/>
+<text x="1274.5" y="326.0" font-size="14" font-weight="600" fill="#5b6b78" text-anchor="middle">decisions</text>
+<path d="M1116.0,226 L1116.0,190 L165.0,190 L165.0,224" fill="none" stroke="#2457c5" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#a)"/>
+<rect x="310.5" y="176" width="660" height="28" fill="#ffffff"/>
+<text x="640.5" y="196" font-size="16" font-weight="600" fill="#2457c5" text-anchor="middle">executed actions: the simulator applies their effect from the next day</text>
+<rect x="624" y="540" width="350" height="210" rx="14" fill="#f2ecfa" stroke="#6b3fa0" stroke-width="2.5"/>
+<text x="642" y="578" font-size="21" font-weight="700" fill="#6b3fa0" text-anchor="start">Local language model</text>
+<text x="642" y="616" font-size="16" font-weight="400" fill="#14212b" text-anchor="start">qwen3 30B writes, qwen3 4B translates</text>
+<text x="642" y="646" font-size="16" font-weight="400" fill="#14212b" text-anchor="start">only sentences on values it got</text>
+<text x="642" y="676" font-size="16" font-weight="400" fill="#14212b" text-anchor="start">the Verifier repeats every call</text>
+<text x="642" y="706" font-size="16" font-weight="400" fill="#14212b" text-anchor="start">in the demo: prepared in advance</text>
+<line x1="799.0" y1="454" x2="799.0" y2="536" stroke="#6b3fa0" stroke-width="2.5" stroke-dasharray="6 5"/>
+<text x="811.0" y="501.0" font-size="15" font-weight="600" fill="#6b3fa0" text-anchor="start">values → sentences</text>
+<rect x="50" y="540" width="517" height="180" rx="14" fill="#f4f6f8" stroke="#5b6b78" stroke-width="2.5"/>
+<text x="68" y="578" font-size="21" font-weight="700" fill="#5b6b78" text-anchor="start">The scenarios’ hidden truth</text>
+<text x="68" y="616" font-size="16" font-weight="400" fill="#14212b" text-anchor="start">where each scenario’s problem is</text>
+<text x="68" y="646" font-size="16" font-weight="400" fill="#14212b" text-anchor="start">only the Reveal and the tests read it</text>
+<text x="68" y="676" font-size="16" font-weight="400" fill="#14212b" text-anchor="start">the agents never reach it</text>
+<text x="1021" y="562" font-size="19" font-weight="700" fill="#14212b" text-anchor="start">The labels in the console</text>
+<rect x="1021" y="588" width="190" height="32" rx="16" fill="#eaf0fb"/>
+<text x="1116" y="610" font-size="16" font-weight="700" fill="#2457c5" text-anchor="middle">Computed</text>
+<text x="1227" y="610" font-size="16" font-weight="400" fill="#14212b" text-anchor="start">rules, SQL, simulation, XGBoost</text>
+<rect x="1021" y="640" width="190" height="32" rx="16" fill="#f2ecfa"/>
+<text x="1116" y="662" font-size="16" font-weight="700" fill="#6b3fa0" text-anchor="middle">Written by the LLM</text>
+<text x="1227" y="662" font-size="16" font-weight="400" fill="#14212b" text-anchor="start">only sentences around numbers</text>
+<rect x="1021" y="692" width="190" height="32" rx="16" fill="#e6f4ec"/>
+<text x="1116" y="714" font-size="16" font-weight="700" fill="#1f7a4d" text-anchor="middle">A person decides</text>
+<text x="1227" y="714" font-size="16" font-weight="400" fill="#14212b" text-anchor="start">nothing goes ahead without them</text>
+<text x="50" y="850" font-size="18" font-weight="400" fill="#5b6b78" text-anchor="start">Everything runs on this laptop: no data leaves it, no cost, synthetic data only.</text>
+</svg>

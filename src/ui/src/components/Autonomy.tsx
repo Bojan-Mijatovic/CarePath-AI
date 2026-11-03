@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { type Autonomy as Levels, send, useApi } from '../lib/api'
+import Origin from './Origin'
 import { type Key, label, useLang } from '../lib/i18n'
 
 // The Intervention's action types, the ones the demo shows (prototype step 6); the others belong to agents
@@ -24,7 +25,10 @@ export default function Autonomy({ day }: { day: number | null }) {
 
   return (
     <section className="panel autonomy" aria-labelledby="h-autonomy">
-      <h2 id="h-autonomy">{t('autonomy.title')}</h2>
+      <h2 id="h-autonomy">
+        {t('autonomy.title')}
+        <Origin kind="person" />
+      </h2>
       <p className="lead">{t('autonomy.lead')}</p>
       {error && <p className="placeholder">{error}</p>}
       {data &&
@@ -41,6 +45,7 @@ export default function Autonomy({ day }: { day: number | null }) {
                     role="radio"
                     aria-checked={l === level}
                     className={l === level ? 'level active' : 'level'}
+                    data-spot={l === level ? undefined : `autonomy-${type}-${l}`}
                     disabled={fixed}
                     onClick={() => l !== level && set(type, l)}
                   >

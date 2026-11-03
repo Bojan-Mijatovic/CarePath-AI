@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Step | Delivery plan 2.24 (R5) |
-| Version | v1.1, 2 Nov 2026: the demo bar's hotkeys and no envelope (2.20), the PNE forecast (2.6), the monthly report (2.14), Lista chiamate and Rivelazione (2.20). v1.2, 3 Nov 2026: step 9c, Posti letto, optional (D64). v2 after Attività agenti (2.29); final timings at the rehearsals (4.6) |
+| Version | v1.1, 2 Nov 2026: the demo bar's hotkeys and no envelope (2.20), the PNE forecast (2.6), the monthly report (2.14), Lista chiamate and Rivelazione (2.20). v1.2, 3 Nov 2026: step 9c, Posti letto, optional (D64). v1.3, 3 Nov 2026: the guide bar (D66, proposed). v1.4, 3 Nov 2026: who-made-it labels, "Dietro le quinte", the system slide (D66, proposed). v2 after Attività agenti (2.29); final timings at the rehearsals (4.6) |
 | Sources | Solution Plan §11 (steps 1–10, trigger sentences); D21 (pacing), D24 (the opening), D44 (no envelope, scenarios 2, 1, 3), D45 (closed loop), D53 (reschedule after the alarm) |
 | Target | 7 minutes, Italian audience. Trigger sentences are said in Italian; the Italian colleague reviews them before the first rehearsal |
 
@@ -16,7 +16,9 @@ Two people run the demo. The **narrator** speaks; the **operator** clicks on the
 3. `uv run carepath-api`; open <http://127.0.0.1:8000>. The 9 runs replay to day 23 and pause: **measured 59–64 s**. The top bar says "connesso".
 4. The console is on "Storia di Maria", in Italian.
 
-The operator's controls are hotkeys of the hidden demo bar (step 2.20). They work while the bar is hidden; the key left of `1` shows it, with the LLM's cache mode for the team.
+**The guide bar (D66)** at the bottom of the screen walks this script in 20 stages, which the audience sees: the stage ("Tappa 5 di 20"), its title and one sentence. ▶, → or PageDown (a presenter's clicker) takes the next stage: its scenario, its screen and its clock. At ×1 the server stops the clock on the alarm (D63); at ×4 the guide stops it on the script's day (62, 43 and 49 in scenarios 2, 1 and 3; it lands a day later at most). ▶ waits while the clock runs. The operator still clicks every approval, "Da sola", "Prima / dopo i nuovi posti", the what-if slider, "Senza CarePath" and "Trova il posto letto"; the guide outlines each and scrolls to it, and never clicks one. ◀ goes back a stage without running its clock. `g` hides the bar; a reload keeps its stage; a reset (`r`) and "Ricomincia" take it back to stage 1. Stage 12 is 9c, marked "facoltativa": to cut it, press ▶ again without clicking. Under the sentence, a "Dietro le quinte" line says what the system did at that stage, and on stages 2, 3 and 16 a dashed outline asks the audience to watch Attività agenti. Every value and text in the console carries a label for who made it: "Calcolato" (code), "Scritto dal LLM" (sentences only) or "Decide una persona"; stage 2 explains the three. Before step 1, show the slide `demo/slides/how-it-works-it.svg` (English: `-en.svg`).
+
+The hidden demo bar (step 2.20) stays as the fallback. Its hotkeys work while it is hidden; the key left of `1` shows it, with the LLM's cache mode for the team.
 
 | Key | Does |
 |---|---|
@@ -28,6 +30,8 @@ The operator's controls are hotkeys of the hidden demo bar (step 2.20). They wor
 | `v` | Rivelazione |
 | `r` | reset to day 23 (asks first; about a minute) |
 | the key left of `1` (`` ` `` on a US layout, `\` on an Italian one) | show or hide the bar; it is matched by its place, so any layout works |
+| → or PageDown, ← or PageUp | the guide's next or previous stage |
+| `g` | show or hide the guide bar |
 
 ## The flow
 
@@ -94,7 +98,7 @@ Run on 2 Nov 2026, commit `eba59c0`, team laptop on mains power, no model loaded
 | Approve, autonomy, what-if, Maria, Chiedi from the cache | under 0.3 s each |
 | Step 4.2, the same walk with the proposal approved and "Da sola" (commit `c704460`) | start 75 s; lever run catch-up 12.5 s (scenario 2), 7.1 s (1), 9.4 s (3); app at most 2.12 GB, no swap |
 | Dry runs (`uv run python testing/demo_dryrun.py 10`, D63) | 10 of 10 without a stop or a fallback, the clock stopping on day 33 every time. Over ten runs in a row the laptop slows as it heats: the reset from 95 to 143 s, scenario 2 at ×4 from 18 to 29 s, the lever run's catch-up from 13 to 20 s; after 15 minutes' rest the first run is fast again, and the API's memory grows only 0.03 GB a run (2.20 to 2.29 GB over four), so it is heat, not a leak |
-
+| Dry runs again after Bed Finder (commit `9ad8d9b`, 3 Nov 2026, step 9c included) | 10 of 10 without a stop or a fallback, the clock on day 33 every time, Maria's bed in 0.1 s each time. Heat as before: the reset from 114 to 157 s, scenario 2 at ×4 from 23 to 37 s, its catch-up from 15 to 23 s; the API at 2.25–2.39 GB, no growth |
 | Step 9c, Bed Finder for Maria's day-47 admission (3 Nov 2026) | 35–36 ms in the engine, 60 ms through the API on day 48 (AC18 holds each of its 20 admissions under 3 s) |
 
 **For rehearsals in a row (AC9):** mains power, the best-performance power mode, nothing else running, and a few minutes' pause between runs; step 6 at ×4 then takes about 18 s, up to about 30 s on a hot laptop.
