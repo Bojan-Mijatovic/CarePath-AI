@@ -53,6 +53,16 @@ class Autonomy(BaseModel):
     level: int
 
 
+class Admission(BaseModel):
+    """POST /admissions (C42). Without `diagnosis` and `facility_id`, the patient's ADMISSION of `day` in the run."""
+    patient_id: str = Field(pattern=r"^[A-Za-z0-9_]{1,32}$")
+    run: str | None = None
+    day: int | None = None
+    diagnosis: str | None = Field(None, pattern=r"^[0-9A-Z][0-9A-Z.]{1,9}$")
+    facility_id: str | None = Field(None, pattern=r"^[A-Za-z0-9_]{1,32}$")
+    choice: int = Field(0, ge=0)
+
+
 class WhatIf(BaseModel):
     levers: whatif.Levers = whatif.Levers()
     months: int = whatif.MONTHS
@@ -274,6 +284,19 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
             raise HTTPException(404, f"no action {action_id}") from None
         live.publish(messages)
         return {"action_id": action_id, "status": messages[0]["payload"]["status"]}
+
+    @api.post("/admissions")
+    async def admissions(body: Admission) -> dict:
+        """Bed Finder (demo step 9c, C42): a doctor has decided to admit; the agent picks ward and bed in the
+        run (the agents arm on screen by default) and the action service assigns or proposes it (SPEC §7)."""
+        run = body.run or demo.default_run()
+        try:
+            result, messages = await live.control(demo.admit, run, body.patient_id, body.day, body.diagnosis,
+                                                  body.facility_id, body.choice)
+        except KeyError:
+            raise HTTPException(404, f"no run {run}") from None
+        live.publish(messages)
+        return result
 
     @api.get("/settings")
     def settings() -> dict:

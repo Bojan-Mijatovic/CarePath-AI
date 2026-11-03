@@ -1,0 +1,81 @@
+{
+  "data": {
+    "wards": [
+      "cardiologia",
+      "medicina_interna"
+    ],
+    "beds": [
+      {
+        "facility_id": "osp_A",
+        "name": "Ospedale A",
+        "ward": "cardiologia",
+        "beds_total": 40,
+        "free_now": 1,
+        "free_in_2d": 6,
+        "bed": 40,
+        "distance_km": 0.0
+      },
+      {
+        "facility_id": "osp_A",
+        "name": "Ospedale A",
+        "ward": "medicina_interna",
+        "beds_total": 80,
+        "free_now": 15,
+        "free_in_2d": 28,
+        "bed": 26,
+        "distance_km": 0.0
+      },
+      {
+        "facility_id": "osp_B",
+        "name": "Ospedale B",
+        "ward": "cardiologia",
+        "beds_total": 28,
+        "free_now": 7,
+        "free_in_2d": 10,
+        "bed": 17,
+        "distance_km": 61.0
+      },
+      {
+        "facility_id": "osp_B",
+        "name": "Ospedale B",
+        "ward": "medicina_interna",
+        "beds_total": 56,
+        "free_now": 15,
+        "free_in_2d": 24,
+        "bed": 47,
+        "distance_km": 61.0
+      },
+      {
+        "facility_id": "osp_C",
+        "name": "Ospedale C",
+        "ward": "cardiologia",
+        "beds_total": 20,
+        "free_now": 4,
+        "free_in_2d": 6,
+        "bed": 2,
+        "distance_km": 91.2
+      },
+      {
+        "facility_id": "osp_C",
+        "name": "Ospedale C",
+        "ward": "medicina_interna",
+        "beds_total": 40,
+        "free_now": 13,
+        "free_in_2d": 20,
+        "bed": 40,
+        "distance_km": 91.2
+      }
+    ]
+  },
+  "source": {
+    "tool": "free_beds",
+    "args": {
+      "pathway_id": "hf_lombardia_v1",
+      "diagnosis": "428.0",
+      "from_facility": "osp_A",
+      "patient_id": "p_00001"
+    },
+    "run_id": "s2_baseline",
+    "day": 47
+  }
+}

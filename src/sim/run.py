@@ -28,7 +28,7 @@ PATHWAY_ID = "hf_lombardia_v1"
 
 def load_reference_tables(con: duckdb.DuckDBPyConnection, ref: dict, patients: pd.DataFrame, mmg: pd.DataFrame) -> None:
     for table, df in [("comuni", ref["comuni"]), ("mmg", mmg), ("facilities", ref["facilities"]),
-                      ("patients", patients)]:
+                      ("beds", ref["beds"]), ("patients", patients)]:
         con.register("src", df)
         con.execute(f"INSERT INTO {table} BY NAME SELECT * FROM src")
         con.unregister("src")
@@ -50,6 +50,7 @@ def run(run_id: str, days: int = 365, seed: int = 42, overwrite: bool = False, r
     sim_ms, write_ms, state_ms = [], [], []
     with open_run(run_id, runs_dir) as con:
         load_reference_tables(con, ref, patients, mmg)
+        append(con, "bed_occupancy", sim.bed_occupancy())
         state = StateEngine(con, sim.pathway)
         risk = RiskModel(sim.pathway)
         agents = run_id.split("_")[1] == "agents"

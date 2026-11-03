@@ -38,6 +38,12 @@
   "reading_noise_kg": 0.4,
   "lab_log_mean": 6.0,
   "lab_log_sd": 0.6,
+  "beds": {
+    "occupancy": {"cardiologia": 0.4, "medicina_interna": 0.62, "endocrinologia": 0.8},
+    "noise_sd": 0.04,
+    "noise_ar": 0.8,
+    "stay_days": 7
+  },
   "effects": {
     "reminder": {"collect": 0.2, "book": 0.2, "start": 0.15, "review": 0.0},
     "call_task": {"collect": 0.35, "book": 0.35, "start": 0.3, "review": 0.25},

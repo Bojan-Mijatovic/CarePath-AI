@@ -213,6 +213,27 @@ export type Report = {
   wording: 'model' | 'template'
 }
 
+/** A ward Bed Finder considered (SPEC §6 `free_beds`, C42), best first. */
+export type BedCandidate = {
+  facility_id: string
+  name: string
+  ward: string
+  ward_label: Bilingual
+  beds_total: number
+  free_now: number
+  free_in_2d: number
+  bed: number | null
+  distance_km: number
+  same_facility: boolean
+}
+
+/** POST /api/admissions (C42): the candidates and the bed_assignment, null when no ward has a bed free today. */
+export type Admission = {
+  admission: { run_id: string; patient_id: string; day: number; facility_id: string }
+  candidates: BedCandidate[]
+  action: Action | null
+}
+
 /** GET /api/investigations (SPEC §6, C24, C25), the latest first. */
 export type Investigation = {
   investigation_id: string

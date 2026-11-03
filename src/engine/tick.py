@@ -22,7 +22,7 @@ from pathlib import Path
 
 import duckdb
 
-from agents import actions, intervention
+from agents import actions, bed_finder, intervention
 from agents.intervention import Intervention
 from agents.monitoring import Monitoring
 from engine import pathway as pathway_model
@@ -72,6 +72,7 @@ class Run:
         create_run(run_id, runs_dir=runs_dir, overwrite=True)
         self.con = open_run(run_id, runs_dir)
         load_reference_tables(self.con, p.ref, p.patients, p.mmg)
+        append(self.con, "bed_occupancy", self.sim.bed_occupancy())  # once, not per tick (C42)
         for events in self.sim.warm_up():
             append(self.con, "events", events)
         self.state = StateEngine(self.con, p.pathway)
@@ -227,7 +228,10 @@ class Demo:
 
     @property
     def day(self) -> int:
-        return self.runs[f"s{self.scenario}_agents"].day
+        # Under the lock: a jump back takes the scenario's runs out while it rebuilds them, and the API's status
+        # read in between found no run (KeyError and a 500, 3 Nov 2026); now it waits for the rebuild
+        with self.lock:
+            return self.runs[f"s{self.scenario}_agents"].day
 
     def choose(self, scenario: int) -> None:
         if scenario not in self.scenarios:
@@ -294,25 +298,59 @@ class Demo:
 
     def set_autonomy(self, action_type: str, level: int) -> None:
         """PUT /api/settings/autonomy: the manager's level holds for the ATS, so it is logged in every agents
-        run of the demo on its day. A run built again after a jump back starts from the defaults, as on reset."""
+        run of the demo on its day. A run built again after a jump back starts from the defaults, as on reset.
+        Bed Finder serves the hospitals in both arms (C42), so its level goes to the baseline runs too."""
         with self.lock:
             for run in self.runs.values():
-                if run.agents:
+                if run.agents or action_type == bed_finder.ACTION:
                     actions.set_level(run.con, run.day, action_type, level)
 
+    def _run_of(self, action_id: str) -> Run:
+        """The run an action belongs to, from its id (`act_<run_id>_<n>`, SPEC §7.3); the agents arm on screen
+        for an id of no run of the demo, where it is then not found."""
+        return self.runs.get(action_id.removeprefix("act_").rpartition("_")[0]) or self.runs[self.default_run()]
+
     def decide(self, action_id: str, decision: str) -> list[dict]:
-        """POST /api/actions/{id}/approve, /reject or /undo, on the agents arm of the scenario on screen.
+        """POST /api/actions/{id}/approve, /reject or /undo, in the action's own run: the agents arm, or a
+        baseline run for a bed (C42). A bed is the doctor's decision, every other action the manager's.
         Returns the `action` message of the changed action (SPEC §10)."""
         with self.lock:
-            run = self.runs[self.default_run()]
+            run = self._run_of(action_id)
+            kind = run.con.execute("SELECT type FROM actions WHERE action_id = $id", {"id": action_id}).fetchall()
+            actor = bed_finder.DOCTOR if kind and kind[0][0] == bed_finder.ACTION else actions.MANAGER
             if decision == "undo":
-                row = actions.undo(run.con, run.day, action_id)
+                row = actions.undo(run.con, run.day, action_id, actor)
             else:
-                row = actions.decide(run.con, run.day, action_id, decision == "approve", run.feedback)
+                row = actions.decide(run.con, run.day, action_id, decision == "approve", run.feedback, actor)
                 if row["type"] == "capacity_proposal" and row["status"] == "executed":
-                    self.approved.add(self.scenario)  # the console turns to the lever run (D45, C34)
-            return [{"type": "action", "scenario": self.scenario, "day": run.day, "payload": row},
+                    self.approved.add(run.scenario)  # the console turns to the lever run (D45, C34)
+            return [{"type": "action", "scenario": run.scenario, "day": run.day, "payload": row},
                     *([self.tick_message()] if row["type"] == "capacity_proposal" else [])]
+
+    def admit(self, run_id: str, patient_id: str, day: int | None = None, diagnosis: str | None = None,
+              facility_id: str | None = None, choice: int = 0) -> tuple[dict, list[dict]]:
+        """POST /api/admissions (C42): Bed Finder for a patient a doctor admits in `run_id` on `day` (today by
+        default). Without a diagnosis and an emergency department, they are the patient's ADMISSION of that day
+        in the run, as Maria's on day 47 without CarePath (demo step 9c). Returns the result and its `action`
+        message. KeyError for a run of no scenario, ValueError for a bad request."""
+        with self.lock:
+            run = self.runs[run_id]
+            day = run.day if day is None else day
+            if not 0 <= day <= run.day:
+                raise ValueError(f"day is between 0 and {run.day}, the run's today")
+            if not run.con.execute("SELECT count(*) FROM patients WHERE patient_id = $p", {"p": patient_id}).fetchall()[0][0]:
+                raise ValueError(f"no patient {patient_id} in {run_id}")
+            if diagnosis is None or facility_id is None:
+                found = run.con.execute("""SELECT code, facility_id FROM events WHERE patient_id = $p AND day = $d
+                                           AND event_type = 'ADMISSION'""", {"p": patient_id, "d": day}).fetchall()
+                if not found:
+                    raise ValueError(f"{patient_id} has no admission on day {day}: give the diagnosis and the facility")
+                diagnosis, facility_id = diagnosis or found[0][0], facility_id or found[0][1]
+            result = bed_finder.admit(run.con, run_id, run.state.pathway, day, patient_id, diagnosis, facility_id, choice)
+            admission = {"run_id": run_id, "patient_id": patient_id, "day": day, "facility_id": facility_id}
+            message = ([{"type": "action", "scenario": run.scenario, "day": run.day, "payload": result["action"]}]
+                       if result["action"] else [])
+            return {"admission": admission} | result, message
 
     def tick_message(self) -> dict:
         """SPEC §10 `tick` for the scenario on screen; `kpi` is the agents arm's."""

@@ -6,7 +6,8 @@ in a row, with a reset between runs, and every check of what the screen would sh
 Each run, from the reset to day 23: scenario 2 at ×1 to its alarm (the investigation is there and the Verifier
 marked its steps), Chiedi's prepared questions (answered from the cache), the capacity proposal in the model's
 words, approved, the MMG notice approved, Riprogrammazione at "Da sola", ×4 to day 62, the lever run caught up,
-the day-59 report in the model's words, what-if with the PNE forecast and euros, the call list, Maria; then
+the day-59 report in the model's words, what-if with the PNE forecast and euros, the call list, Maria and her bed
+(step 9c, Bed Finder on her day-47 admission without CarePath); then
 scenarios 1 and 3 (investigation, proposal, ×4) and the reveal, where every pattern must match. A failed check
 or an HTTP error is a stop. The log goes to testing/results/ (not committed). It needs no model: the demo runs
 in cache_only (D14).
@@ -117,6 +118,11 @@ def one_run() -> dict:
     check("pne" in w and w.get("saving_eur", 0) > 0, "what-if without the PNE forecast or the saving")
     check(len(req("GET", "/worklist")) > 0, "an empty call list")
     check(bool(req("GET", "/patients/p_00001?run=s2_agents")["timeline"]), "Maria without a timeline")
+    # Step 9c (optional, D64): Bed Finder for Maria's day-47 admission without CarePath
+    t = time.perf_counter()
+    bed = req("POST", "/admissions", {"patient_id": "p_00001", "run": "s2_baseline", "day": 47})["action"]
+    times["s2_bed"] = time.perf_counter() - t
+    check(bed is not None and bed["status"] == "executed", f"no bed assigned to Maria: {bed}")
 
     for n, alarm in ((1, 19), (3, 29)):
         req("POST", f"/sim/scenario/{n}")

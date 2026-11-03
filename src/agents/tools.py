@@ -15,6 +15,7 @@ as engine.state. Group tools return the worst groups only, see GROUPS_SHOWN.
 """
 
 import json
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -126,6 +127,14 @@ class FreeSlotsArgs(Args):
     service: str = Field(pattern=ID, description="servizio, es. echo, cardio_visit, lab")
     asst: Asst | None = AsstArg
     horizon_days: int = Field(21, ge=1, le=90, description="posti liberi da domani per N giorni")
+
+
+class FreeBedsArgs(Args):
+    pathway_id: str = PathwayId
+    diagnosis: str = Field(pattern=r"^[0-9A-Z][0-9A-Z.]{1,9}$", description="diagnosi di ricovero ICD-9-CM, es. 428.0")
+    from_facility: str = Field(pattern=r"^[A-Za-z0-9_]{1,32}$", description="ospedale del pronto soccorso, es. osp_A")
+    patient_id: str | None = Field(None, pattern=ID, description="il paziente da ricoverare: non occupa ancora un letto")
+    asst: Asst | None = AsstArg
 
 
 class AdherenceArgs(Args):
@@ -449,6 +458,68 @@ def free_slots(ctx: Context, a: FreeSlotsArgs) -> dict:
     return dict(rows)
 
 
+def wards_for(p: Pathway, diagnosis: str) -> list[str]:
+    """The wards that take a diagnosis, in the pathway file's order (`ward_by_diagnosis`, codes ending in * are
+    prefixes); [] when the pathway names none."""
+    for pattern, wards in p.ward_by_diagnosis.items():
+        if diagnosis.startswith(pattern[:-1]) if pattern.endswith("*") else diagnosis == pattern:
+            return list(wards)
+    return []
+
+
+def free_beds(ctx: Context, a: FreeBedsArgs) -> dict:
+    """Bed Finder (C42): for every ward that takes the diagnosis, the beds free today, the ones expected free in
+    2 days and the first free bed. A bed is taken by a patient outside the cohort (`bed_occupancy`), by a cohort
+    patient in hospital (ADMISSION and DISCHARGE events; the simulator puts nobody in a ward, so one goes to the
+    diagnosis's wards by patient number), or by an executed bed_assignment of the day, which holds its own bed.
+    Bed numbers are spread over the ward by a fixed hash, the same for every run; no draw."""
+    p = _pathway(a.pathway_id)
+    wards = wards_for(p, a.diagnosis)
+    if not wards:
+        raise ToolError("bad_argument", f"{p.pathway_id} names no ward for diagnosis {a.diagnosis!r}")
+    facilities = {f: (lat, lon) for f, lat, lon in ctx.db.rows("SELECT facility_id, lat, lon FROM facilities")}
+    if a.from_facility not in facilities:
+        raise ToolError("bad_argument", f"unknown facility {a.from_facility!r}")
+    asst = "AND f.asst_id = $asst" if a.asst else ""
+    beds = ctx.db.rows(f"""
+        SELECT b.facility_id, f.name, b.ward, b.beds_total, coalesce(o.occupied, 0), coalesce(o.expected_discharges_next_2d, 0),
+               o.day IS NOT NULL
+        FROM beds b JOIN facilities f USING (facility_id)
+        LEFT JOIN bed_occupancy o ON o.facility_id = b.facility_id AND o.ward = b.ward AND o.day = $d
+        WHERE list_contains($wards, b.ward) {asst} ORDER BY b.facility_id""",
+                       {"d": ctx.day, "wards": wards} | ({"asst": a.asst} if a.asst else {}))
+    if not beds or not all(known for *_, known in beds):
+        raise ToolError("empty_result", f"no beds or no bed occupancy for these wards on day {ctx.day}")
+    assigned = ctx.db.rows("""
+        SELECT patient_id, payload->>'facility_id', payload->>'ward', CAST(payload->>'bed' AS INTEGER) FROM actions
+        WHERE type = 'bed_assignment' AND status = 'executed' AND CAST(payload->>'day' AS INTEGER) = $d""", {"d": ctx.day})
+    inpatients = ctx.db.rows("""
+        SELECT patient_id, facility_id, code FROM (
+            SELECT patient_id, arg_max(event_type, day) AS last, arg_max(facility_id, day) AS facility_id,
+                   arg_max(code, day) AS code
+            FROM events WHERE event_type IN ('ADMISSION', 'DISCHARGE') AND day <= $d GROUP BY patient_id)
+        WHERE last = 'ADMISSION' AND patient_id IS DISTINCT FROM $p""", {"d": ctx.day, "p": a.patient_id})
+    placed = {pid for pid, *_ in assigned}
+    cohort: dict[tuple[str, str], int] = {}
+    for pid, fac, code in inpatients:
+        options = wards_for(p, code or "")
+        if options and pid not in placed:
+            key = (fac, options[int("".join(filter(str.isdigit, pid)) or 0) % len(options)])
+            cohort[key] = cohort.get(key, 0) + 1
+    here = np.array(facilities[a.from_facility])
+    out = []
+    for fac, name, ward, total, others, leaving, _ in sorted(beds, key=lambda b: (b[0], wards.index(b[2]))):
+        held = {bed for _, f, w, bed in assigned if (f, w) == (fac, ward)}
+        order = [b for b in sorted(range(1, total + 1), key=lambda b: zlib.crc32(f"{fac}/{ward}/{ctx.day}/{b}".encode()))
+                 if b not in held]
+        free = order[others + cohort.get((fac, ward), 0):]
+        km = _km(np.array([here[0], facilities[fac][0]]), np.array([here[1], facilities[fac][1]]))[0, 1]
+        out.append({"facility_id": fac, "name": name, "ward": ward, "beds_total": total, "free_now": len(free),
+                    "free_in_2d": min(total, len(free) + leaving), "bed": free[0] if free else None,
+                    "distance_km": round(float(km), 1)})
+    return {"wards": wards, "beds": out}
+
+
 def adherence_by_group(ctx: Context, a: AdherenceArgs) -> dict:
     p = _pathway(a.pathway_id)
     bands = " ".join(f"WHEN p.age BETWEEN {lo} AND {hi} THEN {_lit(label)}" for lo, hi, label in AGE_BANDS)
@@ -559,8 +630,7 @@ def _step(p: Pathway, step: str) -> Step:
     raise ToolError("unknown_step", f"step {step!r} is not in {p.pathway_id}; steps: {[s.id for s in p.steps]}")
 
 
-# name -> (arguments, function, description shown to the model). eligibility_candidates (option B) and
-# free_beds (Bed Finder) come with their gated extensions.
+# name -> (arguments, function, description shown to the model). eligibility_candidates comes with option B.
 TOOLS = {
     "compliance_by_step": (ComplianceArgs, compliance_by_step,
                            "Quota di scadenze di ogni step del percorso rispettate in tempo, negli ultimi 90 giorni."),
@@ -585,10 +655,12 @@ TOOLS = {
     "pathway_kpi": (KpiArgs, pathway_kpi,
                     "Indicatori del percorso di un giorno (pazienti, in linea, ritardi, riammissioni, azioni), per "
                     "l'ATS o per ASST."),
+    "free_beds": (FreeBedsArgs, free_beds,
+                  "Posti letto liberi oggi e tra 2 giorni nei reparti adatti a una diagnosi di ricovero, per ospedale."),
 }
 # Tools that code calls but the model is not offered (C36): the tool list is part of every Investigator cache
 # key (SPEC §8), so a new tool there would make every cached investigation miss.
-CODE_ONLY = {"pathway_kpi"}
+CODE_ONLY = {"pathway_kpi", "free_beds"}
 
 
 def _inline(node, defs: dict):

@@ -7,6 +7,7 @@ import { type Kpi, type Pathway, useApi } from './lib/api'
 import { type Key, type Lang, LangContext, translator } from './lib/i18n'
 import { type LeverRun, type StreamMessage, useStream } from './lib/stream'
 import Ask from './screens/Ask'
+import Beds, { type BedTarget } from './screens/Beds'
 import Compare from './screens/Compare'
 import Calls from './screens/Calls'
 import DemoBar from './components/DemoBar'
@@ -51,6 +52,7 @@ export default function App() {
   const [leverRun, setLeverRun] = useState<LeverRun | null>(null)
   const [feed, setFeed] = useState<FeedMessage[]>([])
   const [alarm, setAlarm] = useState<RegionalAlert | null>(null)
+  const [bedTarget, setBedTarget] = useState<BedTarget | null>(null)
   const t = translator(lang)
 
   useEffect(() => {
@@ -168,7 +170,22 @@ export default function App() {
               ) : screen === 'chiamate' ? (
                 <Calls day={day} />
               ) : screen === 'pazienti' ? (
-                <Patient day={day} scenario={scenario} pathway={pathway ?? null} />
+                <Patient
+                  day={day}
+                  scenario={scenario}
+                  pathway={pathway ?? null}
+                  onAdmission={(target) => {
+                    setBedTarget(target)
+                    go('letti')
+                  }}
+                />
+              ) : screen === 'letti' ? (
+                <Beds
+                  key={bedTarget ? `${bedTarget.run}-${bedTarget.patientId}-${bedTarget.day}` : `s${scenario}`}
+                  day={day}
+                  scenario={scenario}
+                  target={bedTarget?.run.startsWith(`s${scenario}_`) ? bedTarget : null}
+                />
               ) : (
                 <p className="placeholder">{t('placeholder.screen', { screen: t(`nav.${screen}` as Key) })}</p>
               )}

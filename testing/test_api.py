@@ -253,3 +253,34 @@ def test_approvals_and_autonomy_write_the_audit_log(client):
     assert json.loads(log[0][4]) == {"setting": "autonomy", "type": "reschedule", "level": 3, "before": 2}
     baseline = demo.read("s2_baseline", lambda cur: cur.execute("SELECT count(*) FROM audit_log").fetchall()[0][0])
     assert baseline == 0  # the arm without CarePath has no agents and no settings
+
+
+def test_bed_finder_on_request_in_the_run_without_carepath(client):
+    # C42, demo step 9c: last in this file, since the tests above find the baseline arm without actions
+    day = client.post("/api/sim/pause").json()["day"]
+    body = {"patient_id": "p_00002", "run": "s2_baseline", "diagnosis": "428.0", "facility_id": "osp_A"}
+    with client.websocket_connect("/api/stream") as ws:
+        ws.receive_json()
+        out = client.post("/api/admissions", json=body).json()
+        pushed = ws.receive_json()
+    row = out["action"]
+    assert out["admission"] == {"run_id": "s2_baseline", "patient_id": "p_00002", "day": day, "facility_id": "osp_A"}
+    assert (row["agent"], row["type"], row["status"]) == ("bed_finder", "bed_assignment", "executed")
+    assert row["action_id"].startswith("act_s2_baseline_") and row["payload"]["candidates"] == out["candidates"]
+    assert (pushed["type"], pushed["payload"]["action_id"]) == ("action", row["action_id"])
+    # undo and approve go to the action's own run, in the doctor's name
+    undone = client.post(f"/api/actions/{row['action_id']}/undo").json()
+    assert undone == {"action_id": row["action_id"], "status": "undone"}
+    assert client.put("/api/settings/autonomy", json={"type": "bed_assignment", "level": 2}).status_code == 200
+    proposed = client.post("/api/admissions", json=body).json()["action"]
+    assert proposed["status"] == "proposed"
+    assert client.post(f"/api/actions/{proposed['action_id']}/approve").json()["status"] == "executed"
+    rows = {a["action_id"]: a for a in client.get("/api/actions", params={"run": "s2_baseline"}).json()}
+    assert (rows[row["action_id"]]["status"], rows[proposed["action_id"]]["decided_by"]) == ("undone", "doctor")
+    assert client.get("/api/settings").json()["autonomy"]["bed_assignment"]["level"] == 2  # both arms (C42)
+    client.put("/api/settings/autonomy", json={"type": "bed_assignment", "level": 3})
+    # Without a diagnosis the patient's admission of the day is used; none here
+    assert client.post("/api/admissions", json={"patient_id": "p_00002", "run": "s2_baseline"}).status_code == 422
+    assert client.post("/api/admissions", json=body | {"diagnosis": "250.0"}).status_code == 422  # no ward for it
+    assert client.post("/api/admissions", json=body | {"run": "s3_baseline"}).status_code == 404
+    assert client.post("/api/admissions", json=body | {"day": day + 1}).status_code == 422

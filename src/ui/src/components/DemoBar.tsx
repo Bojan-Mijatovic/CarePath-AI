@@ -65,7 +65,8 @@ export default function DemoBar({
         r: reset,
         v: onReveal,
       }
-      const action = keys[e.key]
+      // The key left of 1 by its place, not its character: on an Italian or Serbian layout it types \ or ‚
+      const action = e.code === 'Backquote' ? keys['`'] : keys[e.key]
       if (action) {
         e.preventDefault()
         action()

@@ -63,6 +63,25 @@ def test_jump_back_gives_the_same_days(demo):
         demo.jump(DAYS)
 
 
+def test_the_day_read_during_a_jump_back_waits_for_it(demo):
+    # The API reads demo.day for its status while another request jumps back; the rebuild takes the runs out,
+    # and an unlocked read raised KeyError (3 Nov 2026)
+    import threading
+
+    demo.jump(START + 4)
+    errors = []
+    jumping = threading.Thread(target=lambda: demo.jump(START + 1))
+    jumping.start()
+    while jumping.is_alive():
+        try:
+            assert demo.day in (START + 1, START + 4)
+        except KeyError as e:
+            errors.append(e)
+    jumping.join()
+    assert not errors
+    assert demo.day == START + 1
+
+
 def test_capacity_table_follows_the_simulator(demo):
     run = demo.runs["s2_agents"]
     table = demo.read("s2_agents", lambda con: con.execute(

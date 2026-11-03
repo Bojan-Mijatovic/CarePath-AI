@@ -22,7 +22,7 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
-from agents import actions, tools
+from agents import actions, bed_finder, tools
 from engine import pathway as pathway_model
 from engine.db import create_run, open_run, tool_cursor
 from agents.monitoring import Monitoring
@@ -41,7 +41,7 @@ FIXTURES = Path(__file__).resolve().parent
 SCENARIO, SEED, DAYS = 2, 42, 63
 PATHWAY_ID = "hf_lombardia_v1"
 RUNS = {"s2_baseline": False, "s2_agents": True}
-MARIA, CALL_DAY, ALARM_DAY = "p_00001", 31, 35
+MARIA, CALL_DAY, ALARM_DAY, BED_DAY = "p_00001", 31, 35, 47
 CALL_ID, RESCHEDULE_ID = "act_s2_agents_1", "act_s2_agents_2"
 WAIT_ARGS = {"pathway_id": PATHWAY_ID, "step": "echo", "period_days": 7}
 FREE_ARGS = {"service": "echo"}
@@ -140,6 +140,7 @@ def build_runs(runs_dir: Path) -> dict:
         create_run(run_id, runs_dir=runs_dir, overwrite=True)
         with open_run(run_id, runs_dir) as con:
             load_reference_tables(con, ref, patients, mmg)
+            append(con, "bed_occupancy", sim.bed_occupancy())
             for events in sim.warm_up():
                 append(con, "events", events)
             state = StateEngine(con, hf)
@@ -216,7 +217,22 @@ def export(runs_dir: Path, live: dict) -> dict[str, object]:
         out["tools/free_slots.json"] = live["free"]
         out["tools/error.json"] = tools.call(tools.Context("s2_agents", tools.Query(con), last), "wait_by_hospital",
                                              {"pathway_id": PATHWAY_ID, "step": "ecg"})
-    return out
+    return out | admission(runs_dir)
+
+
+def admission(runs_dir: Path) -> dict[str, object]:
+    """C42, demo step 9c: Bed Finder for Maria's admission of day 47 without CarePath, on a copy of the run, so
+    the run itself stays without actions. The tool result is the one before the assignment."""
+    with tempfile.TemporaryDirectory() as tmp:
+        shutil.copy(runs_dir / "s2_baseline.duckdb", Path(tmp) / "s2_baseline.duckdb")
+        with open_run("s2_baseline", Path(tmp)) as con:
+            code, facility = con.execute("SELECT code, facility_id FROM events WHERE patient_id = $p AND day = $d AND "
+                                         "event_type = 'ADMISSION'", {"p": MARIA, "d": BED_DAY}).fetchall()[0]
+            args = {"pathway_id": PATHWAY_ID, "diagnosis": code, "from_facility": facility, "patient_id": MARIA}
+            free = tools.call(tools.Context("s2_baseline", tools.Query(tool_cursor(con)), BED_DAY), "free_beds", args)
+            result = bed_finder.admit(con, "s2_baseline", pathway_model.load(PATHWAY_ID), BED_DAY, MARIA, code, facility)
+    head = {"run_id": "s2_baseline", "patient_id": MARIA, "day": BED_DAY, "facility_id": facility}
+    return {"tools/free_beds.json": free, f"api/admission_{MARIA}_s2_baseline.json": {"admission": head} | result}
 
 
 def text(obj) -> str:

@@ -175,6 +175,7 @@ CALLS = [
     ("readmissions_by_comune", {}),
     ("risk_drivers", {}),
     ("compare_segments", {"a": {"lives_alone": True}, "b": {}, "metric": "on_time_fraction"}),
+    ("free_beds", {"diagnosis": "428.0", "from_facility": "osp_A"}),  # C42: wards from the pathway file
 ]
 
 

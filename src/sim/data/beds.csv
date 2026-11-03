@@ -1,0 +1,10 @@
+facility_id,ward,beds_total
+osp_A,cardiologia,40
+osp_A,medicina_interna,80
+osp_A,endocrinologia,16
+osp_B,cardiologia,28
+osp_B,medicina_interna,56
+osp_B,endocrinologia,10
+osp_C,cardiologia,20
+osp_C,medicina_interna,40
+osp_C,endocrinologia,8

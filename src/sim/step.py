@@ -58,6 +58,15 @@ class Effect(Frozen):
     review: float   # a decompensation caught early is treated without an admission
 
 
+class Beds(Frozen):
+    """Hospital beds taken by patients outside the simulated cohort (C42): a share of each ward's beds that
+    drifts from day to day (AR(1) noise), and their mean stay, which gives the discharges expected in 2 days."""
+    occupancy: dict[str, float]  # per ward
+    noise_sd: float
+    noise_ar: float
+    stay_days: float
+
+
 class SimParams(Frozen):
     """Behaviour of synthetic patients; values in src/sim/config/*.json, documented in src/sim/README.md §9."""
     warmup_days: int
@@ -89,6 +98,7 @@ class SimParams(Frozen):
     reading_noise_kg: float
     lab_log_mean: float               # lognormal lab value, median about 400
     lab_log_sd: float
+    beds: Beds
     effects: dict[str, Effect]        # per action type of SPEC §7.2 that reaches a patient (step 2.13)
 
 
@@ -179,6 +189,8 @@ class Simulator:
         self.res_fac = cap.facility_id.map(fac_index).to_numpy()
         self.res_service = cap.service.to_numpy(object)
         horizon = p.warmup_days + days + 400
+        self.horizon = horizon
+        self.beds = ref["beds"].reset_index(drop=True)
         self.cap = np.repeat(cap.slots_per_day.to_numpy()[:, None], horizon, axis=1)  # scenarios edit this
         self.booked = np.zeros_like(self.cap)
         self.ref_fac = patients.ref_facility_id.map(fac_index).to_numpy()
@@ -538,4 +550,25 @@ class Simulator:
             "day": (d + self.first_day).astype(np.int32),
             "slots_total": self.cap.ravel(),
             "slots_booked": self.booked.ravel(),
+        })
+
+    def bed_occupancy(self) -> pd.DataFrame:
+        """SPEC §3.2 `bed_occupancy` over the whole horizon (C42): the beds of each ward that patients outside
+        the cohort take. It depends on nothing the cohort does, so it is written once, when the run is made;
+        the cohort's own inpatients come from its ADMISSION and DISCHARGE events (free_beds)."""
+        b = self.p.beds
+        total = self.beds.beds_total.to_numpy()
+        rate = self.beds.ward.map(b.occupancy).to_numpy(float)
+        shocks = component_rng(self.seed, "beds").normal(0.0, b.noise_sd, (self.horizon, len(total)))
+        noise = np.zeros_like(shocks)
+        for d in range(1, self.horizon):  # a few hundred days, once per run
+            noise[d] = b.noise_ar * noise[d - 1] + shocks[d]
+        occupied = np.clip(np.rint(total * (rate + noise)), 0, total).astype(np.int32)
+        days = np.arange(self.horizon) + self.first_day
+        return pd.DataFrame({
+            "day": np.repeat(days, len(total)).astype(np.int32),
+            "facility_id": np.tile(self.beds.facility_id.to_numpy(object), self.horizon),
+            "ward": np.tile(self.beds.ward.to_numpy(object), self.horizon),
+            "occupied": occupied.ravel(),
+            "expected_discharges_next_2d": np.rint(occupied.ravel() * 2 / b.stay_days).astype(np.int32),
         })

@@ -1,0 +1,147 @@
+{
+  "admission": {
+    "run_id": "s2_baseline",
+    "patient_id": "p_00001",
+    "day": 47,
+    "facility_id": "osp_A"
+  },
+  "candidates": [
+    {
+      "facility_id": "osp_A",
+      "name": "Ospedale A",
+      "ward": "cardiologia",
+      "beds_total": 40,
+      "free_now": 1,
+      "free_in_2d": 6,
+      "bed": 40,
+      "distance_km": 0.0,
+      "same_facility": true,
+      "ward_label": {
+        "it": "Cardiologia",
+        "en": "Cardiology"
+      }
+    },
+    {
+      "facility_id": "osp_A",
+      "name": "Ospedale A",
+      "ward": "medicina_interna",
+      "beds_total": 80,
+      "free_now": 15,
+      "free_in_2d": 28,
+      "bed": 26,
+      "distance_km": 0.0,
+      "same_facility": true,
+      "ward_label": {
+        "it": "Medicina interna",
+        "en": "Internal medicine"
+      }
+    },
+    {
+      "facility_id": "osp_B",
+      "name": "Ospedale B",
+      "ward": "cardiologia",
+      "beds_total": 28,
+      "free_now": 7,
+      "free_in_2d": 10,
+      "bed": 17,
+      "distance_km": 61.0,
+      "same_facility": false,
+      "ward_label": {
+        "it": "Cardiologia",
+        "en": "Cardiology"
+      }
+    }
+  ],
+  "action": {
+    "action_id": "act_s2_baseline_1",
+    "agent": "bed_finder",
+    "type": "bed_assignment",
+    "patient_id": "p_00001",
+    "scope": {
+      "facility_id": "osp_A"
+    },
+    "pathway_id": "hf_lombardia_v1",
+    "payload": {
+      "day": 47,
+      "from_facility": "osp_A",
+      "facility_id": "osp_A",
+      "facility_name": "Ospedale A",
+      "ward": "cardiologia",
+      "ward_label": {
+        "it": "Cardiologia",
+        "en": "Cardiology"
+      },
+      "bed": 40,
+      "choice": 0,
+      "candidates": [
+        {
+          "facility_id": "osp_A",
+          "name": "Ospedale A",
+          "ward": "cardiologia",
+          "beds_total": 40,
+          "free_now": 1,
+          "free_in_2d": 6,
+          "bed": 40,
+          "distance_km": 0.0,
+          "same_facility": true,
+          "ward_label": {
+            "it": "Cardiologia",
+            "en": "Cardiology"
+          }
+        },
+        {
+          "facility_id": "osp_A",
+          "name": "Ospedale A",
+          "ward": "medicina_interna",
+          "beds_total": 80,
+          "free_now": 15,
+          "free_in_2d": 28,
+          "bed": 26,
+          "distance_km": 0.0,
+          "same_facility": true,
+          "ward_label": {
+            "it": "Medicina interna",
+            "en": "Internal medicine"
+          }
+        },
+        {
+          "facility_id": "osp_B",
+          "name": "Ospedale B",
+          "ward": "cardiologia",
+          "beds_total": 28,
+          "free_now": 7,
+          "free_in_2d": 10,
+          "bed": 17,
+          "distance_km": 61.0,
+          "same_facility": false,
+          "ward_label": {
+            "it": "Cardiologia",
+            "en": "Cardiology"
+          }
+        }
+      ]
+    },
+    "rationale": {
+      "it": "Letto 40 in cardiologia, Ospedale A: libero ora, nello stesso ospedale del pronto soccorso, quindi senza trasferimento. Il reparto accoglie la diagnosi di ricovero del medico.",
+      "en": "Bed 40 in cardiology, Ospedale A: free now, in the emergency department's own hospital, so no transfer. The ward takes the doctor's admission diagnosis."
+    },
+    "evidence": [
+      {
+        "tool": "free_beds",
+        "args": {
+          "pathway_id": "hf_lombardia_v1",
+          "diagnosis": "428.0",
+          "from_facility": "osp_A",
+          "patient_id": "p_00001"
+        },
+        "run_id": "s2_baseline",
+        "day": 47
+      }
+    ],
+    "autonomy_level": 3,
+    "status": "executed",
+    "created_day": 47,
+    "executed_day": 47,
+    "decided_by": "auto"
+  }
+}

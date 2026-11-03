@@ -114,7 +114,7 @@ def test_stream_messages(built):
 
 def test_tool_envelopes(built):
     _, f = built
-    for name in ("wait_by_hospital", "free_slots"):
+    for name in ("wait_by_hospital", "free_slots", "free_beds"):
         result = f[f"tools/{name}.json"]
         assert list(result) == ["data", "source"]
         assert list(result["source"]) == ["tool", "args", "run_id", "day"]
@@ -124,6 +124,25 @@ def test_tool_envelopes(built):
     assert err["code"] in TOOL_ERRORS
     wait = f["tools/wait_by_hospital.json"]["data"]
     assert max(wait, key=wait.get) == "Ospedale B"  # scenario 2's echo bottleneck (pattern 1)
+
+
+def test_bed_finder_admission(built):
+    # C42, demo step 9c: Maria's admission of day 47 without CarePath, at Ospedale A's emergency department
+    runs, f = built
+    beds = f["tools/free_beds.json"]["data"]
+    assert list(beds) == ["wards", "beds"]
+    assert list(beds["beds"][0]) == ["facility_id", "name", "ward", "beds_total", "free_now", "free_in_2d", "bed",
+                                     "distance_km"]
+    out = f[f"api/admission_{MARIA}_s2_baseline.json"]
+    assert list(out) == ["admission", "candidates", "action"]
+    assert out["admission"] == {"run_id": "s2_baseline", "patient_id": MARIA, "day": 47, "facility_id": "osp_A"}
+    row = out["action"]
+    assert list(row) == columns(runs, "actions")
+    assert (row["type"], row["status"], row["payload"]["facility_id"]) == ("bed_assignment", "executed", "osp_A")
+    assert row["payload"]["candidates"] == out["candidates"] and len(out["candidates"]) == 3
+    assert row["payload"]["ward"] in beds["wards"]
+    bilingual(row["rationale"])
+    bilingual(row["payload"]["ward_label"])
 
 
 def test_views_have_the_spec_columns(built):

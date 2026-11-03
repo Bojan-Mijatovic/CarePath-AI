@@ -33,5 +33,6 @@ uv run python testing/fixtures/scenario.py   # rewrite every JSON file here (abo
 | `stream/report.json`, `api/reports_s2_agents.json` | `report` and `GET /api/reports` (C36): the Reporter's reports of days 29 and 59 | real; the template, since the fixture run's day 59 is not the demo's and the model's prose is not cached for it |
 | `api/settings_s2_agents.json` | `GET /api/settings` (SPEC §7.2, §10, C30): the autonomy levels | real: the defaults, since nobody changed a level |
 | `tools/wait_by_hospital.json`, `tools/free_slots.json`, `tools/error.json` | tool result envelope and error (SPEC §6) | real: `agents.tools` called on the live run on day 35 (`free_slots` sees that day's bookings, so a finished run gives other numbers for day 35) |
+| `tools/free_beds.json`, `api/admission_p_00001_s2_baseline.json` | `free_beds` (SPEC §6, C42) and `POST /api/admissions` (SPEC §10, C42): Bed Finder for Maria's admission of day 47 without CarePath (demo step 9c) | real: on a copy of the baseline run, so the run itself keeps no action; the tool result is the one before the assignment |
 
 Patient alerts name `p_00001`, not "Maria R.": the data has no names.

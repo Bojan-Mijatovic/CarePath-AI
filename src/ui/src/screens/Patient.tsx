@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { type Pathway, type Patient360, stepOf, type TimelineEvent, useApi } from '../lib/api'
 import { formatNumber, formatPercent, label, useLang } from '../lib/i18n'
+import type { BedTarget } from './Beds'
 
 const MARIA = 'p_00001'
 
@@ -11,10 +12,13 @@ export default function Patient({
   day,
   scenario,
   pathway,
+  onAdmission,
 }: {
   day: number | null
   scenario: number | null
   pathway: Pathway | null
+  /** An admission's link to Posti letto (demo step 9c, C42) */
+  onAdmission: (target: BedTarget) => void
 }) {
   const { lang, t } = useLang()
   const [draft, setDraft] = useState(MARIA)
@@ -132,6 +136,15 @@ export default function Patient({
                   {eventDetail(i) && ` · ${eventDetail(i)}`}
                 </span>
                 {i.source === 'agent_action' && <span className="timeline-tag">{t('patient.agent')}</span>}
+                {i.event_type === 'ADMISSION' && scenario !== null && (
+                  <button
+                    type="button"
+                    className="timeline-link"
+                    onClick={() => onAdmission({ run: `s${scenario}_${arm}`, patientId: p.patient_id, day: i.day })}
+                  >
+                    {t('patient.bed')}
+                  </button>
+                )}
               </li>
             ),
           )}
