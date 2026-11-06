@@ -24,6 +24,19 @@ function evidence(t: Translator, items: Record<string, unknown>[]): string {
   return [...new Set(names)].join(' · ')
 }
 
+/** One evidence item in full, as the audit log keeps it: the tool call with its arguments, the rule or deadline,
+ * or the what-if run, with the run and day. The tool's result is not in the evidence (SPEC §7.1). */
+function proof(t: Translator, e: Record<string, unknown>): string {
+  const at = typeof e.run_id === 'string' ? ` · ${t('feed.proofAt', { run: e.run_id, day: String(e.day ?? '–') })}` : ''
+  const value = (v: unknown) => (typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v))
+  if (typeof e.tool === 'string') {
+    const args = Object.entries((e.args ?? {}) as Record<string, unknown>).map(([k, v]) => `${k}=${value(v)}`)
+    return `${e.tool}(${args.join(', ')})${at}`
+  }
+  if (typeof e.whatif === 'string') return `${t('feed.whatif')}: ${e.whatif} · ${value(e.levers)} · ${t('feed.proofMonths', { months: String(e.months ?? '–') })}${at}`
+  return `${evidence(t, [e])}${at}`
+}
+
 /** The "Attività agenti · live" side panel (delivery plan steps 1.25 and 2.29, D45): what the agents do, from
  * /api/stream. An action shows its type, its agent, whether it ran on its own, waits for the manager or was
  * undone, its rationale and its evidence; an executed one can be undone (SPEC §7.3: the action is marked
@@ -33,6 +46,7 @@ export default function ActivityFeed({ messages, day }: { messages: FeedMessage[
   const { lang, t } = useLang()
   const [busy, setBusy] = useState<string | null>(null)
   const [failed, setFailed] = useState<string | null>(null)
+  const [opened, setOpened] = useState<string | null>(null) // the action whose evidence is shown in full
   const live = messages.some((m) => m.day === day)
   const { data: today } = useApi<Action[]>(day !== null && !live ? `/api/actions?day=${day}` : null, day)
   const backfill: FeedMessage[] = live
@@ -98,7 +112,28 @@ export default function ActivityFeed({ messages, day }: { messages: FeedMessage[
               <div>
                 <div className="feed-head">{head}</div>
                 <div className="feed-body">{body}</div>
-                {extra && <div className="feed-evidence">{extra}</div>}
+                {extra && action && (
+                  <button
+                    type="button"
+                    className="feed-evidence"
+                    aria-expanded={opened === action.action_id}
+                    onClick={() => setOpened(opened === action.action_id ? null : action.action_id)}
+                  >
+                    {opened === action.action_id ? '▾' : '▸'} {extra}
+                  </button>
+                )}
+                {action && opened === action.action_id && (
+                  <div className="feed-proof">
+                    <div>{t('feed.proofTitle')}</div>
+                    <ul>
+                      {action.evidence.map((e, k) => (
+                        <li key={k}>
+                          <code>{proof(t, e)}</code>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 <div className="feed-day">
                   {t('feed.day', { day: m.day })}
                   <Origin kind={origin} />

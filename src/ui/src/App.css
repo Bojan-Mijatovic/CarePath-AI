@@ -1023,6 +1023,73 @@ body.guided .demobar {
   margin-top: 10px;
 }
 
+/* The Investigator's four stages; the one at work stands out, in the colour of who does it */
+.ask-flow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  --stage: var(--ink-muted);
+  --stage-soft: var(--canvas);
+}
+
+.ask-flow li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.ask-flow strong {
+  font-size: 14px;
+}
+
+.ask-flow .ask-flow-code {
+  --stage: var(--primary);
+  --stage-soft: var(--primary-soft);
+}
+
+.ask-flow .ask-flow-model {
+  --stage: var(--llm);
+  --stage-soft: var(--llm-soft);
+}
+
+.ask-flow li.done {
+  border-color: var(--stage);
+  color: var(--ink-soft);
+}
+
+.ask-flow li.active {
+  border-color: var(--stage);
+  background: var(--stage-soft);
+  color: var(--ink);
+  animation: guide-spot 1.6s ease-in-out infinite;
+}
+
+.ask-flow li.done strong,
+.ask-flow li.active strong {
+  color: var(--stage);
+}
+
+@media (max-width: 720px) {
+  .ask-flow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask-flow li.active {
+    animation: none;
+  }
+}
+
 .ask-prepared {
   margin: 8px 0 0;
   padding: 6px 10px;
@@ -1488,8 +1555,38 @@ body.guided .demobar {
 
 .feed-evidence {
   margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.feed-evidence:hover {
+  text-decoration: underline;
+}
+
+.feed-proof {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--primary);
+  background: var(--primary-soft);
   color: var(--ink-soft);
   font-size: 12px;
+}
+
+.feed-proof ul {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+
+.feed-proof code {
+  font-family: var(--mono);
+  font-size: 11px;
+  overflow-wrap: anywhere;
 }
 
 .feed-item.undone .feed-body {

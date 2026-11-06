@@ -4,6 +4,13 @@ import { type Investigation, send, useApi } from '../lib/api'
 import { useLang } from '../lib/i18n'
 
 const STEP_MS = 700 // one step after another, as the prototype shows them
+// D66: the Investigator's work in four stages, each in the colour of who does it (as the Origin labels)
+const FLOW = [
+  ['question', 'neutral'],
+  ['tools', 'code'],
+  ['words', 'model'],
+  ['check', 'code'],
+] as const
 
 /** Demo step 5 (prototype "Chiedi"): the investigation of the latest regional alarm, step by step, each step
  * with the tool it called, the code's summary of its result and the claims it supports (SPEC §6, C24). The
@@ -19,7 +26,7 @@ export default function Ask({ day }: { day: number | null }) {
 
   useEffect(() => {
     if (!inv) return
-    const total = inv.steps.length
+    const total = inv.steps.length + 2 // the tool calls, then the model's sentences, then the Verifier
     const timer = window.setInterval(() => {
       setShown((s) => {
         if (s.id !== inv.investigation_id) return { id: inv.investigation_id, steps: 1 }
@@ -43,8 +50,13 @@ export default function Ask({ day }: { day: number | null }) {
         <p className="placeholder">{t('ask.empty')}</p>
       </div>
     )
-  const steps = shown.id === inv.investigation_id ? inv.steps.slice(0, shown.steps) : []
-  const done = steps.length === inv.steps.length
+  // The order the Investigator works in: its tool calls one by one, then its claims and conclusion, then the
+  // Verifier repeating each call (C33)
+  const tick = shown.id === inv.investigation_id ? shown.steps : 0
+  const steps = inv.steps.slice(0, tick)
+  const written = tick > inv.steps.length
+  const checked = tick > inv.steps.length + 1
+  const stage = checked ? 4 : written ? 2 : 1
 
   return (
     <div className="ask">
@@ -56,6 +68,17 @@ export default function Ask({ day }: { day: number | null }) {
         <h2 className="ask-question">{inv.question[lang]}</h2>
         {/* D14: the demo shows what the local model wrote at the warm-up; the audience is told so, not left to guess */}
         {cache?.mode === 'cache_only' && <p className="ask-prepared">{t('ask.prepared')}</p>}
+      </section>
+      <section className="panel" aria-labelledby="h-flow">
+        <h2 id="h-flow">{t('ask.flow')}</h2>
+        <ol className="ask-flow">
+          {FLOW.map(([key, kind], k) => (
+            <li key={key} className={`ask-flow-${kind}${k < stage ? ' done' : k === stage ? ' active' : ''}`}>
+              <strong>{t(`ask.flow.${key}`)}</strong>
+              <span>{t(`ask.flow.${key}.sub`)}</span>
+            </li>
+          ))}
+        </ol>
       </section>
       <section className="panel" aria-labelledby="h-steps">
         <h2 id="h-steps">{t('ask.steps')}</h2>
@@ -69,19 +92,19 @@ export default function Ask({ day }: { day: number | null }) {
                 <div className="ask-step-head">
                   <span className="ask-step-n">{t('ask.step', { step: s.step })}</span>
                   <code className="ask-tool">{s.tool}</code>
-                  <span className={`ask-badge ask-badge-${badge}`}>{t(`ask.${badge}`)}</span>
+                  {checked && <span className={`ask-badge ask-badge-${badge}`}>{t(`ask.${badge}`)}</span>}
                 </div>
                 <div className="ask-summary">
                   {s.result_summary[lang]}
                   <Origin kind="code" />
                 </div>
-                {claims.length > 0 && (
+                {written && claims.length > 0 && (
                   <div className="ask-origin">
                     <Origin kind="model" />
                   </div>
                 )}
                 <ul className="ask-claims">
-                  {claims.map((c, i) => (
+                  {(written ? claims : []).map((c, i) => (
                     <li key={i}>
                       {c.text[lang]}
                       {c.issues?.map((issue, j) => (
@@ -97,7 +120,7 @@ export default function Ask({ day }: { day: number | null }) {
           })}
         </ol>
       </section>
-      {done && (
+      {written && (
         <section className="panel" aria-labelledby="h-conclusion">
           <h2 id="h-conclusion">
             {t('ask.conclusion')}
