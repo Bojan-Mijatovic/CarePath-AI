@@ -26,7 +26,8 @@ def alarm_investigations(tmp_path_factory):
     from pathlib import Path
 
     manifest = json.loads((Path(__file__).resolve().parents[1] / "demo/cache/manifest.json").read_text(encoding="utf-8"))
-    questions = {s["scenario"]: s["questions"] for s in manifest["scenarios"]}
+    questions = {int(n): q for n, q in manifest.get("test_questions", {}).items()}  # scenarios out of the demo (D67)
+    questions |= {s["scenario"]: s["questions"] for s in manifest["scenarios"]}
     population, out = Population(), {}
     llm.configure(mode="cache_only", log_path=None)
     try:

@@ -27,7 +27,10 @@ export default function WhatIf({ scenario, pathway }: { scenario: number | null;
         setMs(performance.now() - started)
         setError(null)
       })
-      .catch((e: unknown) => setError(String(e)))
+      .catch((e: unknown) => {
+        setResult(null) // a situation without a grid must not keep the last one's numbers
+        setError(String(e))
+      })
   }, [])
   useEffect(() => {
     if (scenario !== null) void fetchResult(1) // the scenario's facility and lever day, for the slider's label
@@ -38,6 +41,16 @@ export default function WhatIf({ scenario, pathway }: { scenario: number | null;
   }
 
   if (scenario === null || pathway === null) return <p className="placeholder">{t('overview.waiting')}</p>
+  // 503: the situation on screen has no grid, as it opens no wait alarm or asks for no capacity (D67, proposed)
+  if (!result && error?.includes('503'))
+    return (
+      <div className="whatif">
+        <section className="panel" aria-labelledby="h-whatif">
+          <h2 id="h-whatif">{t('whatif.title')}</h2>
+          <p className="placeholder">{t('whatif.none')}</p>
+        </section>
+      </div>
+    )
   const step = result ? pathway.steps.find((s) => s.service === result.service) : undefined
   const n = (x: number) => formatNumber(lang, x)
   const wait = (r: WhatIfRun) => (r.wait_days === null ? '–' : t('compare.days', { days: formatNumber(lang, r.wait_days, 1) }))

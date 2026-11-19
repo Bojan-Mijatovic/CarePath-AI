@@ -1,20 +1,50 @@
 {
-  "note": "LLM outputs the demo shows (D17, SPEC §8), in demo order (D44). Played by testing/cache_warmup.py; testing/test_cache_complete.py fails on any miss. Every other text is a template filled by code. capacity_proposal: Intervention's proposal on the alarm day in the model's words (step 2.27, C34). report_days: the monthly reports the demo shows in the model's words (step 2.14, C36); the others are the template.",
-  "updated": "2026-11-02",
-  "minutes_per_investigation": [5, 7],
+  "note": "LLM outputs the demo shows (D17, SPEC §8), in demo order (D67, proposed: normal 0, closure 4, investment 3). Played by testing/cache_warmup.py; testing/test_cache_complete.py fails on any miss. Every other text is a template filled by code. alarm_day: the day the demo stops on its wait alarm (null: no alarm); approve: the action types the operator approves on that day, which the play approves too (D63). capacity_proposal: Intervention's proposal on the alarm day in the model's words (step 2.27, C34). report_days: the monthly reports the demo shows in the model's words (step 2.14, C36); the others are the template. Scenarios 1 and 2 are no longer in the demo; their cached texts stay valid for their keys. test_questions: the Chiedi questions of scenarios no longer in the demo, which the acceptance tests still ask (AC1, AC10, AC13).",
+  "updated": "2026-11-13",
+  "minutes_per_investigation": [
+    5,
+    7
+  ],
   "scenarios": [
     {
-      "scenario": 2,
-      "alarm_day": 33,
-      "alarm_investigations": 3,
-      "capacity_proposal": true,
-      "report_days": [59],
+      "scenario": 0,
+      "alarm_day": null,
+      "alarm_investigations": 0,
+      "capacity_proposal": false,
+      "approve": [],
+      "report_days": [
+        59
+      ],
+      "questions": []
+    },
+    {
+      "scenario": 4,
+      "alarm_day": 36,
+      "alarm_investigations": 1,
+      "capacity_proposal": false,
+      "approve": [
+        "reschedule"
+      ],
       "questions": [
         "Quale ospedale ha l'attesa più lunga per l'ecocardiogramma nell'ultima settimana?",
-        "L'Ospedale A ha un problema di attese per l'ecocardiogramma rispetto agli altri ospedali?"
+        "L'Ospedale B ha un problema di attese per l'ecocardiogramma rispetto agli altri ospedali?"
       ]
     },
-    {"scenario": 1, "alarm_day": 19, "alarm_investigations": 3, "capacity_proposal": true, "questions": []},
-    {"scenario": 3, "alarm_day": 29, "alarm_investigations": 3, "capacity_proposal": true, "questions": []}
-  ]
+    {
+      "scenario": 3,
+      "alarm_day": 29,
+      "alarm_investigations": 3,
+      "capacity_proposal": true,
+      "questions": [],
+      "approve": [
+        "capacity_proposal"
+      ]
+    }
+  ],
+  "test_questions": {
+    "2": [
+      "Quale ospedale ha l'attesa più lunga per l'ecocardiogramma nell'ultima settimana?",
+      "L'Ospedale A ha un problema di attese per l'ecocardiogramma rispetto agli altri ospedali?"
+    ]
+  }
 }

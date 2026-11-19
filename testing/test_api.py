@@ -55,10 +55,12 @@ def test_pathway_is_the_spec_file(tmp_path):
 
 
 def test_whatif_reads_the_grid_without_the_runs(tmp_path):
-    # C27, D48: the precomputed grid of the scenario on screen (scenario 2 first, D44); no run is needed.
-    client = make_client(tmp_path)
+    # C27, D48: the precomputed grid of the scenario on screen; no run is needed. The demo opens on the normal
+    # situation, which has no wait alarm and so no grid (D67, proposed); the investment, scenario 3, has one.
+    assert make_client(tmp_path).post("/api/whatif", json={"levers": {"extra_slots": 1}, "months": 6}).status_code == 503
+    client = make_client(tmp_path, Demo(tmp_path / "runs", scenarios=(3,)))
     out = client.post("/api/whatif", json={"levers": {"extra_slots": 2}, "months": 6}).json()
-    assert out["scenario"] == 2 and out["levers"] == {"extra_slots": 2} and out["precomputed"] is True
+    assert out["scenario"] == 3 and out["levers"] == {"extra_slots": 2} and out["precomputed"] is True
     assert out["avoided_readmissions"] == out["baseline"]["readmissions"] - out["lever"]["readmissions"]
     assert "kpi" not in out["lever"]
     assert out["pne"]["day"] == 364 and out["pne"]["reference"]["rate"] > 0  # C35, before the runs too
@@ -142,11 +144,15 @@ def test_worklist_by_day(client):
     assert {"age", "lives_alone", "comune_name"} <= set(today[0])  # who to call (C37)
 
 
-def test_chiedi_suggests_the_manifest_s_questions(client):
+def test_chiedi_suggests_the_manifest_s_questions(client, tmp_path):
     # C40: the questions that have an answer in the demo, on their day; the console holds none of its own
+    # Scenario 2 is no longer in the demo (D67, proposed), so it has none; scenario 4, the closure, has two
     manifest = json.loads((story.STORY_DIR.parent / "cache" / "manifest.json").read_text(encoding="utf-8"))
-    s2 = next(s for s in manifest["scenarios"] if s["scenario"] == 2)
-    assert client.get("/api/questions").json() == {"scenario": 2, "day": s2["alarm_day"], "questions": s2["questions"]}
+    assert client.get("/api/questions").json() == {"scenario": 2, "day": None, "questions": []}
+    s4 = next(s for s in manifest["scenarios"] if s["scenario"] == 4)
+    closure = make_client(tmp_path, Demo(tmp_path / "runs", scenarios=(4,)))
+    assert closure.get("/api/questions").json() == {"scenario": 4, "day": s4["alarm_day"], "questions": s4["questions"]}
+    assert len(s4["questions"]) == 2
 
 
 def test_the_actions_of_a_day(client):
@@ -284,3 +290,15 @@ def test_bed_finder_on_request_in_the_run_without_carepath(client):
     assert client.post("/api/admissions", json=body | {"diagnosis": "250.0"}).status_code == 422  # no ward for it
     assert client.post("/api/admissions", json=body | {"run": "s3_baseline"}).status_code == 404
     assert client.post("/api/admissions", json=body | {"day": day + 1}).status_code == 422
+
+
+def test_the_situations_side_by_side(client):
+    # C43 (D67, proposed): one column per scenario of the demo, both arms on the latest day all runs reached
+    out = client.get("/api/situations").json()
+    day = client.post("/api/sim/pause").json()["day"]
+    assert out["day"] <= day and [s["scenario"] for s in out["situations"]] == [2]
+    s = out["situations"][0]
+    assert s["with"]["run_id"].startswith("s2_agents") and s["without"]["run_id"] == "s2_baseline"
+    assert s["with"]["patients"] == s["without"]["patients"] and isinstance(s["with_purchase"], bool)
+    assert all(a["day"] <= out["day"] for a in s["alarms"]) and all(d["day"] <= out["day"] for d in s["decisions"])
+    assert len(s["waits"]) == min(len(s["alarms"]), 1)

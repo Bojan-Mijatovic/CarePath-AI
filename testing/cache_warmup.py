@@ -44,9 +44,11 @@ def play(runs_dir: Path, ui_dir: Path, ready_s: int = READY_S) -> dict:
         for s in manifest["scenarios"]:
             n = s["scenario"]
             c.post(f"/api/sim/scenario/{n}").raise_for_status()
-            c.post(f"/api/sim/jump/{s['alarm_day']}").raise_for_status()
+            alarm_day = s["alarm_day"]  # None: a situation without an alarm (D67, proposed) stays on its start day
+            if alarm_day is not None:
+                c.post(f"/api/sim/jump/{alarm_day}").raise_for_status()
             found = [i for i in c.get("/api/investigations", params={"run": f"s{n}_agents"}).json()
-                     if i["day"] <= s["alarm_day"]]
+                     if alarm_day is not None and i["day"] <= alarm_day]
             answers = []
             for q in s["questions"]:
                 started = time.perf_counter()
@@ -55,16 +57,12 @@ def play(runs_dir: Path, ui_dir: Path, ready_s: int = READY_S) -> dict:
                                 r.json() if r.status_code == 200 else r.text))
             proposals = [a for a in c.get("/api/actions", params={"run": f"s{n}_agents"}).json()
                          if a["type"] == "capacity_proposal"]
-            # The operator's actions of demo/SCRIPT.md on the alarm day, in its order: approve the proposal, then
-            # (scenario 2, steps 5b and 6) the MMG notice and Riprogrammazione at "Da sola". They change the run
-            # from the next day, so a later cached text (the day-59 report) must be warmed after them (C41)
-            for p in proposals:
-                c.post(f"/api/actions/{p['action_id']}/approve").raise_for_status()
-            if n == manifest["scenarios"][0]["scenario"]:
-                for a in c.get("/api/actions", params={"run": f"s{n}_agents", "status": "proposed"}).json():
-                    if a["type"] == "notify_mmg":
-                        c.post(f"/api/actions/{a['action_id']}/approve").raise_for_status()
-                c.put("/api/settings/autonomy", json={"type": "reschedule", "level": 3}).raise_for_status()
+            # The operator's actions of demo/SCRIPT.md on the alarm day: approve the manifest's action types (the
+            # capacity proposal in scenario 3, the move of the waiting patients in scenario 4). They change the run
+            # from the next day, so a later cached text (a report) must be warmed after them (C41)
+            for a in c.get("/api/actions", params={"run": f"s{n}_agents", "status": "proposed"}).json():
+                if a["type"] in s.get("approve", []):
+                    c.post(f"/api/actions/{a['action_id']}/approve").raise_for_status()
             for day in s.get("report_days", []):  # step 2.14: after the questions, which are keyed by the alarm day
                 # the days before it from the cache only: alarms on the way (scenario 2, days 35 and 49) are not
                 # in the demo, and a warm-up must not ask the model to investigate them (D17)

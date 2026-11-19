@@ -131,6 +131,10 @@ class Live:
         while True:
             if self.demo.speed == 0:
                 if self.demo.ready and await asyncio.to_thread(self.demo.catch_up):  # one day of the lever run
+                    lever = self.demo.lever_run()
+                    if lever is not None and lever.day == self.demo.day:
+                        # caught up: a tick says so, so the screens that read the lever run read it again (C43)
+                        self.publish([await self.tick_message()])
                     continue
                 self.resume.clear()
                 await self.resume.wait()
@@ -236,6 +240,12 @@ def create_app(demo: Demo | None = None, tick_seconds: float = 2.0, ui_dir: Path
             return demo.reveal(scenario)
         except ValueError as e:
             raise HTTPException(404, str(e)) from None
+
+    @api.get("/situations")
+    def situations() -> dict:
+        """C43 (D67, proposed): the demo's three situations side by side on the latest day all their runs reached."""
+        live.need_ready()
+        return demo.situations()
 
     @api.get("/kpi")
     def kpi(run: str | None = None, pathway_id: str | None = None, level: str | None = None,

@@ -1,0 +1,7 @@
+{
+  "scenario": 4,
+  "events": [
+    {"type": "capacity", "facility_id": "osp_B", "service": "echo", "slots_per_day": 0, "from_day": 30, "to_day": 59, "unplanned": true},
+    {"type": "capacity", "facility_id": "osp_B", "service": "cardio_visit", "slots_per_day": 0, "from_day": 30, "to_day": 59, "unplanned": true}
+  ]
+}

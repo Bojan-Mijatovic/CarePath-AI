@@ -10,7 +10,7 @@ from sim.population import generate_patients, load_reference
 from sim.step import Simulator, load_scenario
 
 DAYS = 60
-RUNS = [(seed, scenario) for seed, scenario in zip((1, 2, 3, 4, 5), (1, 2, 3, 1, 2))]  # x 2 arms = 10 runs
+RUNS = [(seed, scenario) for seed, scenario in zip((1, 2, 3, 4, 5), (1, 2, 3, 0, 4))]  # x 2 arms = 10 runs; 0 and 4 are D67's situations
 KEEP = ["day", "event_type", "code", "value", "facility_id", "source", "action_id"]
 
 

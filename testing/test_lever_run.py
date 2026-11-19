@@ -62,6 +62,15 @@ def test_the_lever_run_is_the_agents_run_until_the_lever(demo):
     kpi = lambda run_id: [r for r in demo.read(run_id, lambda c: queries.kpi(c, HF.pathway_id, "ats", None))
                           if r["day"] < first]
     assert kpi(run.run_id) == kpi("s2_agents")
+    # D68 (proposed): event for event, bookings included; a lever written in from the start booked its new slots
+    # weeks early (scenario 3: echo waits of 17 days before the lever instead of 29-33) and never opened its alarm.
+    # Action ids carry the run id, so they and the event ids are left out.
+    events = lambda run_id: demo.read(run_id, lambda c: c.execute(
+        "SELECT * EXCLUDE (event_id, action_id) FROM events WHERE day < $d ORDER BY ALL", {"d": first}).fetchall())
+    assert events(run.run_id) == events("s2_agents")
+    alarm = lambda run_id: demo.read(run_id, lambda c: c.execute(
+        "SELECT day, facility_id FROM alerts WHERE level = 'regional' AND facility_id IS NOT NULL ORDER BY day").fetchall())
+    assert alarm(run.run_id)[:1] == alarm("s2_agents")[:1]
     after = lambda run_id: {r["facility_id"]: r["slots_total"]
                             for r in demo.read(run_id, lambda c: queries.capacity(c, HF.pathway_id, "echo", 36))}
     assert after(run.run_id)["osp_B"] > after("s2_agents")["osp_B"]

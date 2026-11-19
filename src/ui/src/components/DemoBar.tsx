@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { send, type SimStatus, useApi } from '../lib/api'
-import { useLang } from '../lib/i18n'
+import { type Key, useLang } from '../lib/i18n'
+import { SITUATIONS } from '../lib/situations'
 
-const ORDER = [2, 1, 3] // D44: the demo walks the scenarios in this order
 type Mode = 'cache_only' | 'cache_first'
 
 /** The operator's hidden demo bar (delivery plan step 2.20, Solution Plan §11): scenario, pause, speed, jump to a
@@ -66,9 +66,9 @@ export default function DemoBar({
       if (e.ctrlKey || e.metaKey || e.altKey || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return
       const keys: Record<string, () => void> = {
         '`': () => setOpen((o) => !o),
-        '1': () => run('POST', '/api/sim/scenario/1'),
-        '2': () => run('POST', '/api/sim/scenario/2'),
-        '3': () => run('POST', '/api/sim/scenario/3'),
+        '1': () => run('POST', `/api/sim/scenario/${SITUATIONS[0]}`),
+        '2': () => run('POST', `/api/sim/scenario/${SITUATIONS[1]}`),
+        '3': () => run('POST', `/api/sim/scenario/${SITUATIONS[2]}`),
         ' ': () => setSpeed(speed === 0 ? 1 : 0),
         f: () => setSpeed(4),
         j: () => {
@@ -94,9 +94,9 @@ export default function DemoBar({
   return (
     <aside className="demobar" aria-label={t('bar.title')}>
       <div className="demobar-row">
-        {ORDER.map((n) => (
+        {SITUATIONS.map((n) => (
           <button key={n} type="button" onClick={() => run('POST', `/api/sim/scenario/${n}`)}>
-            {t('bar.scenario', { n })}
+            {t(`situation.${n}` as Key)}
           </button>
         ))}
       </div>

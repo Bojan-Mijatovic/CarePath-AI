@@ -3,7 +3,7 @@ import comuniUrl from '../../assets/comuni.geojson?url'
 
 /** The comuni of the ATS from ISTAT boundaries (delivery plan 1.11, D16): local, no basemap. */
 export type Comune = { istat: string; name: string; asst: string; d: string }
-export type Geo = { comuni: Comune[]; width: number; height: number }
+export type Geo = { comuni: Comune[]; width: number; height: number; point: (lon: number, lat: number) => [number, number] }
 
 type Feature = {
   properties: { comune_istat: string; name: string; asst_id: string }
@@ -21,14 +21,15 @@ function project(features: Feature[]): Geo {
   const [minLon, maxLon, minLat, maxLat] = [Math.min(...lons), Math.max(...lons), Math.min(...lats), Math.max(...lats)]
   const k = Math.cos((((minLat + maxLat) / 2) * Math.PI) / 180)
   const scale = (GEO_WIDTH - 2 * PAD) / ((maxLon - minLon) * k)
-  const xy = ([lon, lat]: number[]) => `${(PAD + (lon - minLon) * k * scale).toFixed(1)},${(PAD + (maxLat - lat) * scale).toFixed(1)}`
+  const point = (lon: number, lat: number): [number, number] => [PAD + (lon - minLon) * k * scale, PAD + (maxLat - lat) * scale]
+  const xy = ([lon, lat]: number[]) => point(lon, lat).map((v) => v.toFixed(1)).join(',')
   const comuni = features.map((f) => ({
     istat: f.properties.comune_istat,
     name: f.properties.name,
     asst: f.properties.asst_id,
     d: f.geometry.coordinates.flat().map((ring) => `M${ring.map(xy).join('L')}Z`).join(''),
   }))
-  return { comuni, width: GEO_WIDTH, height: Math.ceil((maxLat - minLat) * scale) + 2 * PAD }
+  return { comuni, width: GEO_WIDTH, height: Math.ceil((maxLat - minLat) * scale) + 2 * PAD, point }
 }
 
 let cache: Promise<Geo> | undefined

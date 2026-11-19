@@ -125,8 +125,12 @@ class CapacityChange(Frozen):
 
 class CapacityEvent(CapacityChange):
     """A known change of the world, such as a renovation (0 slots for a period) or new devices (D46).
-    Unlike the patterns it is no secret: it is not part of scenario_truth, and capacity_slots shows it."""
+    Unlike the patterns it is no secret: it is not part of scenario_truth, and capacity_slots shows it.
+    An `unplanned` one (D67, proposed), such as a clinic that has to close, is known to nobody before
+    `from_day`: the slots change on that day, and the bookings it no longer has room for are cancelled and
+    asked for again the same day."""
     type: Literal["capacity"]
+    unplanned: bool = False
 
 
 class LowAdherence(Frozen):
@@ -145,13 +149,26 @@ class RuralDropout(Frozen):
 
 
 class Scenario(Frozen):
-    """One envelope (Solution Plan §11): same pattern types as the others, different places."""
+    """One envelope (Solution Plan §11): same pattern types as the others, different places. Scenarios 1–3
+    hide all three patterns; a demo situation (D67, proposed) may hide none and carry only events: scenario 0
+    is the normal situation, scenario 4 an unplanned closure."""
     scenario: int
-    echo_bottleneck: CapacityChange  # pattern 1: fewer slots at one hospital ...
-    echo_free_capacity: CapacityChange  # ... and spare slots at another
-    low_adherence: LowAdherence
-    rural_dropout: RuralDropout
+    echo_bottleneck: CapacityChange | None = None  # pattern 1: fewer slots at one hospital ...
+    echo_free_capacity: CapacityChange | None = None  # ... and spare slots at another
+    low_adherence: LowAdherence | None = None
+    rural_dropout: RuralDropout | None = None
     events: list[CapacityEvent] = Field(default_factory=list)  # applied after the patterns, in order
+
+    @model_validator(mode="after")
+    def bottleneck_pair(self):
+        if (self.echo_bottleneck is None) != (self.echo_free_capacity is None):
+            raise ValueError("echo_bottleneck and echo_free_capacity come together")
+        return self
+
+    @property
+    def hides_patterns(self) -> bool:
+        """True for a scenario with scenario_truth (1–3): every pattern is set."""
+        return None not in (self.echo_bottleneck, self.low_adherence, self.rural_dropout)
 
 
 def load_scenario(n: int) -> Scenario:
@@ -238,6 +255,8 @@ class Simulator:
         self.base_weight = np.clip(rng.normal(p.weight_mean_kg, p.weight_sd_kg, n), 45, 140)
         self.telemon_start_p = np.full(n, p.p_telemon_start)
         self.telemon_dropout_p = np.full(n, p.telemon_dropout_daily)
+        self.unplanned: list[CapacityEvent] = []  # events nobody knows before their first day (D67, proposed)
+        self.moves: dict[str, tuple] = {}  # action id -> the bookings its reschedule moved, for an undo (SPEC §7.3)
 
         # Maria is scripted (step 1.19): her state is set so no random process ever touches her.
         self.fac_index = fac_index
@@ -334,32 +353,108 @@ class Simulator:
         moved = idx[better]
         self.appt_day[step.id][moved] = new[better]
         self.appt_res[step.id][moved] = r_to
+        self.moves[action_id] = (step, moved, old[better], r_from, r_to, new[better])
         return [(moved, "BOOKING", step.service, new[better].astype(float), np.full(len(moved), self.res_fac[r_to]),
                  action_id)]
+
+    def undo_actions(self, day: int, actions: pd.DataFrame) -> pd.DataFrame:
+        """The compensating events of actions undone on `day` (SPEC §7.3). A reschedule's patients whose moved
+        booking still stands and is still to come go back to their own facility: the old day if it is still to
+        come and free, else its first free slot (`_book`), as BOOKING events with the undone action's id. A call,
+        a reminder or a notice has already reached its patients, so it has no compensating event."""
+        chunks = []
+        for a in actions.itertuples():
+            if a.type != "reschedule" or a.action_id not in self.moves:
+                continue
+            step, idx, old, r_from, r_to, new = self.moves.pop(a.action_id)
+            still = (self.appt_res[step.id][idx] == r_to) & (self.appt_day[step.id][idx] == new) & (new > day)
+            idx, old, new = idx[still], old[still], new[still]
+            if not len(idx):
+                continue
+            np.add.at(self.booked[r_to], new - self.first_day, -1)
+            back = np.full(len(idx), NO_DAY)
+            for d in np.unique(old[old > day + self.p.booking_lead_days - 1]):  # the old day, where it is still free
+                at = np.flatnonzero(old == d)
+                room = max(int(self.cap[r_from, d - self.first_day] - self.booked[r_from, d - self.first_day]), 0)
+                back[at[:room]] = d
+                self.booked[r_from, d - self.first_day] += len(at[:room])
+            rest = np.flatnonzero(back == NO_DAY)
+            if len(rest):
+                back[rest] = self._book(day, np.full(len(rest), r_from))
+            ok = back != NO_DAY
+            self.appt_day[step.id][idx] = back
+            self.appt_res[step.id][idx] = np.where(ok, r_from, -1)
+            chunks.append((idx[ok], "BOOKING", step.service, back[ok].astype(float), np.full(ok.sum(), self.res_fac[r_from]),
+                           a.action_id))
+        return self._frame(day, chunks)
 
     def apply_capacity(self, changes: list[CapacityChange]) -> None:
         """Set each change's slots over its window, in order, so a later change wins where two overlap."""
         for change in changes:
-            r = np.flatnonzero((self.fac_id[self.res_fac] == change.facility_id) & (self.res_service == change.service))
-            if len(r) != 1:
-                raise ValueError(f"no capacity row for {change.facility_id} {change.service}")
+            r = self._resource(change.facility_id, change.service)
             end = None if change.to_day is None else max(change.to_day + 1 - self.first_day, 0)
-            self.cap[r[0], max(change.from_day - self.first_day, 0):end] = change.slots_per_day
+            self.cap[r, max(change.from_day - self.first_day, 0):end] = change.slots_per_day
 
     def apply_scenario(self, scenario: Scenario, mmg: pd.DataFrame) -> None:
-        """Inject the three patterns of one scenario (step 1.17), then its events (D46). Call before the
-        warm-up."""
-        self.apply_capacity([scenario.echo_bottleneck, scenario.echo_free_capacity, *scenario.events])
+        """Inject the patterns of one scenario (step 1.17), then its planned events (D46); its unplanned
+        events wait for their first day (`_unplanned`). Call before the warm-up."""
+        pair = [scenario.echo_bottleneck, scenario.echo_free_capacity] if scenario.echo_bottleneck else []
+        self.apply_capacity(pair + [e for e in scenario.events if not e.unplanned])
+        self.schedule([e for e in scenario.events if e.unplanned])
         low = scenario.low_adherence
-        coop = pd.Series(self.mmg_id).map(mmg.set_index("mmg_id").coop_id).to_numpy()
-        if not (coop == low.coop_id).any():
-            raise ValueError(f"{low.coop_id} has no patients")
-        self.collect_q[coop == low.coop_id] *= low.collect_multiplier
+        if low is not None:
+            coop = pd.Series(self.mmg_id).map(mmg.set_index("mmg_id").coop_id).to_numpy()
+            if not (coop == low.coop_id).any():
+                raise ValueError(f"{low.coop_id} has no patients")
+            self.collect_q[coop == low.coop_id] *= low.collect_multiplier
         rural = scenario.rural_dropout
-        hit = (np.isin(self.comune, rural.comuni) & (self.age >= rural.min_age) & self.lives_alone
-               & (self.distance_km > rural.min_distance_km))
-        self.telemon_dropout_p[hit] *= rural.dropout_multiplier
-        self.telemon_start_p[hit] *= rural.start_multiplier
+        if rural is not None:
+            hit = (np.isin(self.comune, rural.comuni) & (self.age >= rural.min_age) & self.lives_alone
+                   & (self.distance_km > rural.min_distance_km))
+            self.telemon_dropout_p[hit] *= rural.dropout_multiplier
+            self.telemon_start_p[hit] *= rural.start_multiplier
+
+    def schedule(self, changes: list[CapacityChange]) -> None:
+        """Capacity changes that nobody knows before their first day (D67, D68, both proposed): an unplanned event
+        of a scenario, or a what-if lever, a purchase that starts on its day. Until then the run is the one without
+        them; on that day `_unplanned` sets their slots (and cancels what a cut has no room for)."""
+        for c in changes:
+            if c.from_day < 0:
+                raise ValueError(f"a scheduled change starts on day 0 or later, not {c.from_day}")
+            self._resource(c.facility_id, c.service)  # an unknown place fails now, not on its day
+            self.unplanned.append(c if isinstance(c, CapacityEvent) else
+                                  CapacityEvent(type="capacity", unplanned=True, **c.model_dump()))
+
+    def _resource(self, facility_id: str, service: str) -> int:
+        r = np.flatnonzero((self.fac_id[self.res_fac] == facility_id) & (self.res_service == service))
+        if len(r) != 1:
+            raise ValueError(f"no capacity row for {facility_id} {service}")
+        return int(r[0])
+
+    def _unplanned(self, day: int) -> None:
+        """Unplanned events that start today (D67, proposed): set their slots, then cancel the bookings on
+        their window beyond the new slots of a day, keeping the first patients in patient order, as `_book`
+        serves them; those patients ask for a slot again today (step 4 of `step`). No event records a
+        cancellation: the new BOOKING does."""
+        for e in [e for e in self.unplanned if e.from_day == day]:
+            self.apply_capacity([e])
+            r = self._resource(e.facility_id, e.service)
+            last = self.horizon + self.first_day - 1 if e.to_day is None else e.to_day
+            for s in self.cap_steps:
+                appt = self.appt_day[s.id]
+                idx = np.flatnonzero((self.appt_res[s.id] == r) & (appt >= day) & (appt <= last))
+                if not len(idx):
+                    continue
+                idx = idx[np.lexsort((idx, appt[idx]))]  # by day, then patient order
+                days = appt[idx]
+                first = np.r_[0, np.flatnonzero(np.diff(days)) + 1]
+                rank = np.arange(len(idx)) - np.repeat(first, np.diff(np.r_[first, len(idx)]))
+                room = self.cap[r, days - self.first_day]
+                gone = idx[rank >= room]
+                np.add.at(self.booked[r], appt[gone] - self.first_day, -1)
+                appt[gone] = NO_DAY
+                self.appt_res[s.id][gone] = -1
+                self.book_on[s.id][gone] = day
 
     def _u(self, component: str, day: int) -> np.ndarray:
         return component_rng(self.seed, f"{component}:{day}").random(self.n)
@@ -402,6 +497,10 @@ class Simulator:
         def emit(idx, event_type, code=None, value=None, fac=None, action_id=None):
             if len(idx):
                 chunks.append((idx, event_type, code, value, fac, action_id))
+
+        # 0. An unplanned event that starts today cancels the bookings it has no room for (D67, proposed).
+        if self.unplanned:
+            self._unplanned(day)
 
         # 1. Discharges, then the post-discharge steps they open.
         out = np.flatnonzero(self.in_hosp & (self.discharge_day == day))

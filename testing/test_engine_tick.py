@@ -2,7 +2,7 @@
 
 import pytest
 
-from engine.tick import Demo
+from engine.tick import DEMO_ORDER, Demo
 
 START, DAYS = 5, 30
 
@@ -106,14 +106,15 @@ def test_at_x1_the_clock_stops_on_the_wait_alarm(tmp_path):
 
 
 def test_a_reset_opens_on_the_first_scenario_again(tmp_path):
-    # D44: the demo opens on scenario 2; a reset after another scenario must too (found by testing/demo_dryrun.py)
-    d = Demo(tmp_path, scenarios=(1, 2), start_day=2, days=DAYS, whatif_dir=None)
+    # The demo opens on the first situation of DEMO_ORDER (D67, proposed; it was scenario 2 under D44), whatever
+    # the order of `scenarios`; a reset after another one must too (found by testing/demo_dryrun.py)
+    d = Demo(tmp_path, scenarios=(4, 0), start_day=2, days=DAYS, whatif_dir=None)
     d.start()
     try:
-        assert d.scenario == 2
-        d.choose(1)
+        assert d.scenario == 0
+        d.choose(4)
         d.start()
-        assert d.scenario == 2
+        assert d.scenario == 0
     finally:
         d.close()
 
@@ -126,5 +127,38 @@ def test_runs_stop_at_the_horizon(tmp_path):
         assert d.advance()[0]["day"] == DAYS - 1
         assert d.advance() == []
         assert d.speed == 0
+    finally:
+        d.close()
+
+
+def test_the_demo_walks_the_three_situations(tmp_path):
+    # D67 (proposed): normal (0), unplanned closure (4), investment (3); only scenarios with a truth reveal.
+    d = Demo(tmp_path, whatif_dir=None)
+    try:
+        assert d.scenarios == DEMO_ORDER == (0, 4, 3)
+        assert d.scenario == 0
+        for n in (0, 4):
+            with pytest.raises(ValueError, match="nothing to reveal"):
+                d.reveal(n)
+    finally:
+        d.close()
+
+
+def test_the_situations_side_by_side_are_of_one_day(tmp_path):
+    # C43 (D67, proposed): each situation keeps its own day; the comparison takes the latest day all runs reached,
+    # in the demo's order, and lists the agents arm's wait alarms and the manager's decisions up to it.
+    d = Demo(tmp_path, scenarios=(4, 0), start_day=2, days=DAYS, whatif_dir=None)
+    d.start()
+    try:
+        d.choose(4)
+        d.jump(6)
+        out = d.situations()
+        assert out["day"] == 2
+        assert [s["scenario"] for s in out["situations"]] == [0, 4]
+        assert [s["day_on_screen"] for s in out["situations"]] == [2, 6]
+        for s in out["situations"]:
+            assert s["with"]["run_id"] == f"s{s['scenario']}_agents" and s["without"]["run_id"] == f"s{s['scenario']}_baseline"
+            assert 0 < s["without"]["on_track_pct"] <= 1 and s["with"]["patients"] == s["without"]["patients"]
+            assert s["alarms"] == [] and s["decisions"] == [] and s["waits"] == []  # no wait alarm by day 2, nobody decided
     finally:
         d.close()

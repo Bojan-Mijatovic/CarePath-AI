@@ -129,15 +129,18 @@ def decide(con: duckdb.DuckDBPyConnection, day: int, action_id: str, approve: bo
     return row
 
 
-def undo(con: duckdb.DuckDBPyConnection, day: int, action_id: str, actor: str = MANAGER) -> dict:
-    """Undo an executed action: status `undone` and an `undone` entry. KeyError if there is no such action,
-    ValueError if it was not executed."""
+def undo(con: duckdb.DuckDBPyConnection, day: int, action_id: str, actor: str = MANAGER, emit=None) -> dict:
+    """Undo an executed action: status `undone`, an `undone` entry, and `emit([row])`, the simulator's hook
+    for its compensating event (SPEC §7.3): a reschedule's patients go back. KeyError if there is no such
+    action, ValueError if it was not executed."""
     row = _row(con, action_id)
     if row["status"] != "executed":
         raise ValueError(f"action {action_id} is {row['status']}; only an executed action can be undone")
     row["status"] = "undone"
     con.execute("UPDATE actions SET status = 'undone' WHERE action_id = $id", {"id": action_id})
     _audit(con, day, action_id, "undone", actor, {})
+    if emit is not None:
+        emit([row])
     return row
 
 

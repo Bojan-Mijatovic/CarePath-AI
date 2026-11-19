@@ -1,114 +1,101 @@
-import Origin from '../components/Origin'
-import { type MapRow, useApi } from '../lib/api'
+import { type MapRow } from '../lib/api'
 import { useGeo } from '../lib/geo'
 import { formatPercent, type Key, useLang } from '../lib/i18n'
 import type { AlertPayload } from '../lib/stream'
 
-type Band = 'high' | 'medium' | 'low' | 'none'
-
-/** The prototype's bands; `alarm` (C18) is the low band with at least 10 patients. */
-function band(row: MapRow | undefined): Band {
-  const a = row?.adherence_pct
-  if (a === null || a === undefined) return 'none'
-  return a >= 0.7 ? 'high' : a >= 0.5 ? 'medium' : 'low'
-}
-
 export type RegionalAlert = { day: number; payload: AlertPayload }
 
-/** Demo step 4 (prototype "Mappa"): adherence by comune, recoloured every day, and the regional alarm. */
-export default function MapScreen({
-  day,
-  pathwayId,
-  alert,
-  onInvestigation,
+/** A hospital drawn on the map: the facilities of the pathway step with a wait threshold, today. */
+export type Site = { facility_id: string; name: string; lat: number; lon: number; state: 'alarm' | 'closed' | 'new' | 'open' }
+
+const BANDS = ['b0', 'b1', 'b2', 'b3', 'b4'] as const
+
+/** The mockup's five bands of the share on their care plan: under 70%, then steps of 5 points. */
+function band(row: MapRow | undefined): string {
+  const a = row?.adherence_pct
+  if (a === null || a === undefined) return 'none'
+  return a < 0.7 ? 'b0' : a < 0.75 ? 'b1' : a < 0.8 ? 'b2' : a < 0.85 ? 'b3' : 'b4'
+}
+
+/** Demo step 4 (prototype "Mappa") as in the console mockup: the share on their care plan by comune, with or
+ * without CarePath, recoloured every day, and the hospitals of the step with a wait threshold. */
+export default function MapPanel({
+  rows,
+  arm,
+  setArm,
+  sites,
+  selected,
 }: {
-  day: number | null
-  pathwayId: string | null
-  alert: RegionalAlert | null
-  onInvestigation: () => void
+  rows: MapRow[] | undefined
+  arm: 'with' | 'without'
+  setArm: (arm: 'with' | 'without') => void
+  sites: Site[]
+  selected: string | null
 }) {
   const { lang, t } = useLang()
   const { geo, error: geoError } = useGeo()
-  const { data: rows, error } = useApi<MapRow[]>(pathwayId ? `/api/map?pathway_id=${pathwayId}` : null, day)
-  if (error) return <p className="placeholder">{t('error.load', { detail: error })}</p>
-  if (!rows || (!geo && !geoError)) return <p className="placeholder">{t('loading')}</p>
-
-  const byIstat = new Map(rows.map((r) => [r.comune_istat, r]))
-  const names = new Map((geo?.comuni ?? []).map((c) => [c.istat, c.name]))
-  const name = (istat: string) => names.get(istat) ?? istat
+  const byIstat = new Map((rows ?? []).map((r) => [r.comune_istat, r]))
   const pct = (r: MapRow) => (r.adherence_pct === null ? '–' : formatPercent(lang, r.adherence_pct, 0))
-  const alarms = rows.filter((r) => r.alarm).sort((a, b) => (a.adherence_pct ?? 0) - (b.adherence_pct ?? 0))
+  const states = [...new Set(sites.map((s) => s.state))].filter((s) => s !== 'open')
 
   return (
-    <div className="mapscreen">
-      {alert && (
-        <div className="alarm-banner" role="alert" data-spot="alarm">
-          <div className="alarm-text">
-            <div className="alarm-head">
-              {t('map.regional', { day: alert.day })}
-              <Origin kind="code" />
-            </div>
-            <div>{alert.payload.text[lang]}</div>
-          </div>
-          {alert.payload.investigation_id && (
-            <button type="button" className="alarm-open" onClick={onInvestigation}>
-              {t('map.open')}
+    <section className="panel map-panel" aria-labelledby="h-map">
+      <div className="panel-head">
+        <h2 id="h-map">{t('map.title')}</h2>
+        <div className="segmented" role="group" aria-label={t('map.arms')}>
+          {(['with', 'without'] as const).map((a) => (
+            <button key={a} type="button" aria-pressed={arm === a} onClick={() => setArm(a)}>
+              {t(`map.${a}`)}
             </button>
-          )}
+          ))}
         </div>
-      )}
-      <div className="legend">
-        <span>{t('map.legend')}</span>
-        {(['high', 'medium', 'low', 'none'] as const).map((b) => (
-          <span key={b} className="legend-item">
-            <span className={`swatch band-${b}`} aria-hidden="true" />
-            {t(`map.${b}` as Key)}
-          </span>
-        ))}
-        <span className="legend-item">
-          <span className="swatch outline" aria-hidden="true" />
-          {t('map.outline')}
-        </span>
       </div>
-      {geo ? (
+      {!rows || (!geo && !geoError) ? (
+        <p className="placeholder">{t('loading')}</p>
+      ) : geo ? (
         <svg className="map" viewBox={`0 0 ${geo.width} ${geo.height}`} role="img" aria-label={t('map.label')}>
-          {/* Comuni in alarm last, so their outline is not covered by a neighbour. */}
-          {[...geo.comuni]
-            .sort((a, b) => Number(byIstat.get(a.istat)?.alarm ?? false) - Number(byIstat.get(b.istat)?.alarm ?? false))
-            .map((c) => {
-              const r = byIstat.get(c.istat)
-              return (
-                <path key={c.istat} d={c.d} className={`band-${band(r)}${r?.alarm ? ' alarm-outline' : ''}`}>
-                  <title>{r && r.adherence_pct !== null ? t('map.tip', { name: c.name, pct: pct(r) }) : t('map.tipNone', { name: c.name })}</title>
-                </path>
-              )
-            })}
+          {geo.comuni.map((c) => {
+            const r = byIstat.get(c.istat)
+            return (
+              <path key={c.istat} d={c.d} className={`band-${band(r)}`}>
+                <title>{r && r.adherence_pct !== null ? t('map.tip', { name: c.name, pct: pct(r) }) : t('map.tipNone', { name: c.name })}</title>
+              </path>
+            )
+          })}
+          {geo.comuni
+            .filter((c) => c.istat === selected)
+            .map((c) => (
+              <path key="selected" d={c.d} className="selected" />
+            ))}
+          {sites.map((s) => {
+            const [x, y] = geo.point(s.lon, s.lat)
+            return (
+              <g key={s.facility_id} className={`site site-${s.state}`}>
+                <circle cx={x} cy={y} r={s.state === 'open' ? 7 : 10} />
+                <text x={x} y={y - 15} textAnchor="middle">
+                  {s.name}
+                </text>
+              </g>
+            )
+          })}
         </svg>
       ) : (
-        <>
-          {/* The cut-order fallback (delivery plan §8): the comune table, as in the prototype. */}
-          <p className="placeholder">{t('map.geoError', { detail: geoError ?? '' })}</p>
-          <Tiles rows={rows} name={name} pct={pct} />
-        </>
+        <p className="placeholder">{t('map.geoError', { detail: geoError ?? '' })}</p>
       )}
-      <section className="panel" aria-labelledby="h-alarms">
-        <h2 id="h-alarms">{t('map.alarms', { count: alarms.length })}</h2>
-        {alarms.length === 0 && <p className="placeholder">{t('map.noAlarms')}</p>}
-        <Tiles rows={alarms} name={name} pct={pct} />
-      </section>
-    </div>
-  )
-}
-
-function Tiles({ rows, name, pct }: { rows: MapRow[]; name: (istat: string) => string; pct: (r: MapRow) => string }) {
-  return (
-    <ul className="tiles">
-      {rows.map((r) => (
-        <li key={r.comune_istat} className={`tile band-${band(r)}${r.alarm ? ' alarm-outline' : ''}`}>
-          <div className="tile-name">{name(r.comune_istat)}</div>
-          <div>{pct(r)}</div>
-        </li>
-      ))}
-    </ul>
+      <div className="legend">
+        {BANDS.map((b) => (
+          <span key={b} className="legend-item">
+            <span className={`swatch band-${b}`} aria-hidden="true" />
+            {t(`map.${b}`)}
+          </span>
+        ))}
+        {states.map((s) => (
+          <span key={s} className="legend-item">
+            <span className={`dot site-${s}`} aria-hidden="true" />
+            {t(`map.dot.${s}` as Key)}
+          </span>
+        ))}
+      </div>
+    </section>
   )
 }

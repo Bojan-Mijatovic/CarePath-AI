@@ -14,26 +14,25 @@ export type Step = {
   optional?: boolean
 }
 
-/** demo/SCRIPT.md, stage by stage, with its days (D66). */
+/** demo/SCRIPT.md, stage by stage, with its days (D66). The three situations of D67 (proposed), in the order of
+ * engine.tick.DEMO_ORDER: the normal one (scenario 0), an unplanned closure (4), an investment (3). The days are
+ * measured on seed 42: scenario 4's wait alarm opens on day 36, scenario 3's on day 29. */
 export const STEPS: readonly Step[] = [
-  { key: 'maria', scenario: 2, screen: 'storia' },
-  { key: 'overview', scenario: 2, screen: 'panoramica', watch: ['feed'] },
-  { key: 'map', scenario: 2, screen: 'mappa', run: { speed: 1, until: 33 }, spots: ['alarm'], watch: ['feed'] },
-  { key: 'ask', scenario: 2, screen: 'chiedi' },
-  { key: 'approve', scenario: 2, screen: 'panoramica', spots: ['approve-capacity_proposal', 'approve-notify_mmg'] },
-  { key: 'autonomy', scenario: 2, screen: 'confronto', spots: ['autonomy-reschedule-3'] },
-  { key: 'fast', scenario: 2, screen: 'confronto', run: { speed: 4, until: 62 } },
-  { key: 'lever', scenario: 2, screen: 'confronto', spots: ['compare-lever'] },
-  { key: 'whatif', scenario: 2, screen: 'whatif', spots: ['whatif'] },
-  { key: 'calls', scenario: 2, screen: 'chiamate' },
-  { key: 'patient', scenario: 2, screen: 'pazienti', spots: ['patient-arm'] },
-  { key: 'bed', scenario: 2, screen: 'letti', spots: ['bed-request'], optional: true },
-  { key: 'other', scenario: 1, screen: 'chiedi' },
-  { key: 'approveOther', scenario: 1, screen: 'panoramica', spots: ['approve-capacity_proposal'] },
-  { key: 'fastOther', scenario: 1, screen: 'confronto', run: { speed: 4, until: 43 }, spots: ['compare-lever'] },
-  { key: 'third', scenario: 3, screen: 'mappa', run: { speed: 1, until: 29 }, spots: ['alarm'], watch: ['feed'] },
-  { key: 'ask', scenario: 3, screen: 'chiedi' },
-  { key: 'approveOther', scenario: 3, screen: 'panoramica', spots: ['approve-capacity_proposal'] },
-  { key: 'fastOther', scenario: 3, screen: 'confronto', run: { speed: 4, until: 49 }, spots: ['compare-lever'] },
-  { key: 'reveal', scenario: 3, screen: 'rivelazione' },
+  { key: 'maria', scenario: 0, screen: 'storia' },
+  { key: 'overview', scenario: 0, screen: 'dashboard', watch: ['feed'] },
+  { key: 'calls', scenario: 0, screen: 'pazienti' },
+  { key: 'fast', scenario: 0, screen: 'analisi', run: { speed: 4, until: 60 } },
+  { key: 'patient', scenario: 0, screen: 'pazienti', spots: ['patient-arm'] },
+  { key: 'bed', scenario: 0, screen: 'pazienti', spots: ['bed-request'], optional: true },
+  { key: 'closure', scenario: 4, screen: 'dashboard', run: { speed: 1, until: 36 }, spots: ['alarm'], watch: ['feed'] },
+  { key: 'ask', scenario: 4, screen: 'ospedali' },
+  { key: 'approveMove', scenario: 4, screen: 'agenti', spots: ['approve-reschedule'] },
+  { key: 'fastClosure', scenario: 4, screen: 'analisi', run: { speed: 4, until: 60 } },
+  { key: 'investment', scenario: 3, screen: 'dashboard', run: { speed: 1, until: 29 }, spots: ['alarm'], watch: ['feed'] },
+  { key: 'ask', scenario: 3, screen: 'ospedali' },
+  { key: 'approveOther', scenario: 3, screen: 'agenti', spots: ['approve-capacity_proposal'] },
+  { key: 'fastOther', scenario: 3, screen: 'analisi', run: { speed: 4, until: 60 }, spots: ['compare-lever'] },
+  { key: 'whatif', scenario: 3, screen: 'analisi', spots: ['whatif'] },
+  // the closing comparison: nothing to click, a spot so the guide scrolls to it
+  { key: 'situations', scenario: 3, screen: 'analisi', spots: ['situations'] },
 ]

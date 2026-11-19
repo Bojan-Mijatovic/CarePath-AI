@@ -15,6 +15,23 @@ export type Kpi = {
   est_readmission_cost_eur: number | null
 }
 
+/** GET /api/situations (C43, D67 proposed): the demo's situations side by side on one day. */
+export type Situations = {
+  day: number
+  situations: {
+    scenario: number
+    day_on_screen: number
+    /** "with" is the run with the purchase the manager approved (C34) */
+    with_purchase: boolean
+    with: Kpi & { run_id: string }
+    without: Kpi & { run_id: string }
+    alarms: { day: number; facility_id: string; facility: string; step: string; closed_day: number | null }[]
+    decisions: { day: number; type: string; decision: 'approved' | 'rejected' | 'undone'; patients: number }[]
+    /** the first wait alarm's service: the mean wait of its bookings at every facility from the alarm's day */
+    waits: { step: string; from_day: number; with: number | null; without: number | null }[]
+  }[]
+}
+
 export type Action = {
   action_id: string
   agent: string
@@ -122,6 +139,8 @@ export type CapacityRow = {
   day: number
   facility_id: string
   name: string
+  lat: number
+  lon: number
   slots_total: number | null
   slots_booked: number | null
   use_pct: number | null

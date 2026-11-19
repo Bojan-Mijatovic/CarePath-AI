@@ -19,7 +19,9 @@ def test_the_demo_plays_from_the_cache(demo_played):
 @pytest.mark.demo
 def test_alarm_investigations_are_on_their_alarm_day(demo_played):
     """Each scenario's echo investigation is on its alarm day and the group alarms' on day 0 (C26), so the
-    manifest's days are the ones the demo jumps to."""
+    manifest's days are the ones the demo jumps to. A situation without hidden patterns has no group alarm, and
+    the normal one no alarm at all (D67, proposed)."""
     for s in json.loads(cache_warmup.MANIFEST.read_text(encoding="utf-8"))["scenarios"]:
         days = sorted(i["day"] for i in demo_played[s["scenario"]]["investigations"])
-        assert days == [0, 0, s["alarm_day"]], (s["scenario"], days)
+        expected = [] if s["alarm_day"] is None else [0] * (s["alarm_investigations"] - 1) + [s["alarm_day"]]
+        assert days == expected, (s["scenario"], days)

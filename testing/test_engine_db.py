@@ -73,7 +73,7 @@ def test_spec_run_ids_are_accepted(run_id, tmp_path):
     assert run_path(run_id, tmp_path).name == f"{run_id}.duckdb"
 
 
-@pytest.mark.parametrize("run_id", ["s4_agents", "s2_other", "../s2_agents", "s2_agents_a/b"])
+@pytest.mark.parametrize("run_id", ["s5_agents", "s2_other", "../s2_agents", "s2_agents_a/b"])
 def test_bad_run_ids_are_rejected(run_id, tmp_path):
     with pytest.raises(ValueError):
         run_path(run_id, tmp_path)

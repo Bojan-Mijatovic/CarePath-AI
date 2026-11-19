@@ -17,7 +17,7 @@ import duckdb
 
 RUNS_DIR = Path(__file__).resolve().parents[2] / "runs"
 CHECKPOINT_THRESHOLD = "1GB"  # open_run: no checkpoint in the middle of a demo
-RUN_ID = re.compile(r"^s[1-3]_(agents|baseline)(_[A-Za-z0-9+\-]+)?$")
+RUN_ID = re.compile(r"^s[0-4]_(agents|baseline)(_[A-Za-z0-9+\-]+)?$")
 
 EVENT_TYPES = ("DISCHARGE", "ADMISSION", "VISIT", "IMAGING", "LAB", "DISPENSE", "TELEMON_START",
                "TELEMON_READING", "BOOKING", "CALL", "REMINDER")

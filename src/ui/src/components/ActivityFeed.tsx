@@ -1,53 +1,33 @@
-import { useState } from 'react'
-import { type Action, send, useApi } from '../lib/api'
-import { agentName, label, type Translator, useLang } from '../lib/i18n'
+import { type Action, useApi } from '../lib/api'
+import { label, type Key, useLang } from '../lib/i18n'
 import type { StreamMessage } from '../lib/stream'
-import Origin, { type OriginKind } from './Origin'
 
 type FeedMessage = Exclude<StreamMessage, { type: 'tick' }>
 const BACKFILL = 10 // as many actions as a tick pushes (C32)
 const ORDER: Record<string, number> = { capacity_proposal: 0, reschedule: 1, notify_mmg: 2, call_task: 3, reminder: 4 }
 
-/** The tools or the rules behind an action (SPEC §7.1 `evidence`), in a few words. */
-function evidence(t: Translator, items: Record<string, unknown>[]): string {
-  const names = items.map((e) =>
-    typeof e.tool === 'string'
-      ? e.tool
-      : typeof e.whatif === 'string'
-        ? t('feed.whatif')
-        : typeof e.rule === 'string'
-          ? t('feed.rule', { id: e.rule })
-          : typeof e.step === 'string'
-            ? t('feed.deadline', { id: e.step })
-            : t('feed.openDays', { days: String(e.open_days ?? '') }),
-  )
-  return [...new Set(names)].join(' · ')
-}
-
-/** One evidence item in full, as the audit log keeps it: the tool call with its arguments, the rule or deadline,
- * or the what-if run, with the run and day. The tool's result is not in the evidence (SPEC §7.1). */
-function proof(t: Translator, e: Record<string, unknown>): string {
-  const at = typeof e.run_id === 'string' ? ` · ${t('feed.proofAt', { run: e.run_id, day: String(e.day ?? '–') })}` : ''
-  const value = (v: unknown) => (typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v))
-  if (typeof e.tool === 'string') {
-    const args = Object.entries((e.args ?? {}) as Record<string, unknown>).map(([k, v]) => `${k}=${value(v)}`)
-    return `${e.tool}(${args.join(', ')})${at}`
-  }
-  if (typeof e.whatif === 'string') return `${t('feed.whatif')}: ${e.whatif} · ${value(e.levers)} · ${t('feed.proofMonths', { months: String(e.months ?? '–') })}${at}`
-  return `${evidence(t, [e])}${at}`
-}
-
-/** The "Attività agenti · live" side panel (delivery plan steps 1.25 and 2.29, D45): what the agents do, from
- * /api/stream. An action shows its type, its agent, whether it ran on its own, waits for the manager or was
- * undone, its rationale and its evidence; an executed one can be undone (SPEC §7.3: the action is marked
- * undone in the audit log; the compensating event in the simulation is not built). After a jump or a
- * reconnect the stream has nothing of the day yet, so the panel reads the day's actions from the API. */
-export default function ActivityFeed({ messages, day }: { messages: FeedMessage[]; day: number | null }) {
+/** The agents' activity of the day (delivery plan steps 1.25 and 2.29, D45), as in the console mockup: one row per
+ * message from /api/stream, its type, its text and its state. A row with an action opens it in full on the right
+ * (D67, proposed), where it can be approved, rejected or undone (SPEC §7.3). After a jump or a reconnect the stream
+ * has nothing of the day yet, so the panel reads the day's actions from the API. */
+export default function ActivityFeed({
+  messages,
+  day,
+  past = false,
+  onOpen,
+  openId = null,
+}: {
+  messages: FeedMessage[]
+  day: number | null
+  /** `day` is a past day looked back at: only that day's actions, from the API */
+  past?: boolean
+  /** opens an action in full */
+  onOpen?: (a: Action) => void
+  /** the action open in full, marked in the list */
+  openId?: string | null
+}) {
   const { lang, t } = useLang()
-  const [busy, setBusy] = useState<string | null>(null)
-  const [failed, setFailed] = useState<string | null>(null)
-  const [opened, setOpened] = useState<string | null>(null) // the action whose evidence is shown in full
-  const live = messages.some((m) => m.day === day)
+  const live = !past && messages.some((m) => m.day === day)
   const { data: today } = useApi<Action[]>(day !== null && !live ? `/api/actions?day=${day}` : null, day)
   const backfill: FeedMessage[] = live
     ? []
@@ -55,105 +35,55 @@ export default function ActivityFeed({ messages, day }: { messages: FeedMessage[
         .sort((a, b) => Number(b.status === 'proposed') - Number(a.status === 'proposed') || (ORDER[a.type] ?? 9) - (ORDER[b.type] ?? 9))
         .slice(0, BACKFILL)
         .map((a) => ({ type: 'action', scenario: 0, day: day ?? a.created_day, payload: a }))
-  const items = live ? messages : [...backfill, ...messages]
-
-  const undo = (id: string) => {
-    setBusy(id)
-    setFailed(null)
-    send('POST', `/api/actions/${id}/undo`) // the changed action comes back on the stream
-      .catch(() => setFailed(id))
-      .finally(() => setBusy(null))
-  }
+  const items = live ? messages : past ? backfill : [...backfill, ...messages]
 
   return (
-    <aside className="feed" aria-labelledby="h-feed" data-spot="feed">
+    <section className="panel feed inline" aria-labelledby="h-feed">
       <h2 id="h-feed">
         <span className="live-dot" aria-hidden="true" />
         {t('feed.title')}
+        {day !== null && ` · ${t('feed.day', { day })}`}
       </h2>
       {items.length === 0 && <p className="placeholder">{t('feed.empty')}</p>}
-      <ol className="feed-items">
+      <ol className="feed-rows">
         {items.map((m, i) => {
-          let head: string
-          let body: string
-          let extra: string | null = null
-          let waiting = false
-          let action: Action | null = null
-          let origin: OriginKind = 'code' // Monitoring's alarms and the Investigator's tool summaries are code's
-          if (m.type === 'action') origin = m.payload.payload.wording === 'model' ? 'model' : 'code'
-          else if (m.type === 'report' && m.payload.wording === 'model') origin = 'model'
           if (m.type === 'action') {
-            action = m.payload
-            waiting = action.status === 'proposed'
-            const status =
-              action.status === 'executed'
-                ? t('feed.level', { level: action.autonomy_level })
-                : label(t, 'feed.status', action.status)
-            head = `${agentName(action.agent)} · ${label(t, 'action', action.type)} · ${status}`
-            body = action.patient_id ? `${action.patient_id}: ${action.rationale[lang]}` : action.rationale[lang]
-            extra = action.evidence.length ? t('feed.evidence', { list: evidence(t, action.evidence) }) : null
-          } else if (m.type === 'alert') {
-            head = `Monitoring · ${t(m.payload.level === 'regional' ? 'feed.alertRegional' : 'feed.alertPatient')}`
-            body = m.payload.text[lang]
-          } else if (m.type === 'report') {
-            head = `Reporter · ${m.payload.title[lang]}`
-            body = t('feed.report', { from: m.payload.from_day, to: m.day })
-          } else {
-            head = `Investigator · ${t('feed.step', { step: m.payload.step })}`
-            body = `${m.payload.tool}: ${m.payload.result_summary[lang]}`
+            const a = m.payload
+            const status = a.status === 'executed' ? t('feed.level', { level: a.autonomy_level }) : label(t, 'feed.status', a.status)
+            const text = a.patient_id ? `${a.patient_id}: ${a.rationale[lang]}` : a.rationale[lang]
+            return (
+              <li key={a.action_id}>
+                <button
+                  type="button"
+                  className={`feed-row status-${a.status}`}
+                  aria-pressed={openId === a.action_id}
+                  title={t('details.open')}
+                  onClick={() => onOpen?.(a)}
+                >
+                  <span className={`chip type-${a.type}`}>{label(t, 'action', a.type)}</span>
+                  <span className="feed-text">{text}</span>
+                  <span className="feed-status">{status}</span>
+                </button>
+              </li>
+            )
           }
-          const undone = action?.status === 'undone'
+          const [kind, text] =
+            m.type === 'alert'
+              ? [t(m.payload.level === 'regional' ? 'feed.alertRegional' : 'feed.alertPatient'), m.payload.text[lang]]
+              : m.type === 'report'
+                ? ['Reporter', `${m.payload.title[lang]} · ${t('feed.report', { from: m.payload.from_day, to: m.day })}`]
+                : [`Investigator · ${t('feed.step', { step: m.payload.step })}`, `${m.payload.tool}: ${m.payload.result_summary[lang]}`]
           return (
-            <li
-              key={action ? action.action_id : `${m.day}-${m.type}-${i}`}
-              className={waiting || m.type === 'alert' ? 'feed-item warn' : undone ? 'feed-item undone' : 'feed-item'}
-            >
-              <span className="feed-dot" aria-hidden="true" />
-              <div>
-                <div className="feed-head">{head}</div>
-                <div className="feed-body">{body}</div>
-                {extra && action && (
-                  <button
-                    type="button"
-                    className="feed-evidence"
-                    aria-expanded={opened === action.action_id}
-                    onClick={() => setOpened(opened === action.action_id ? null : action.action_id)}
-                  >
-                    {opened === action.action_id ? '▾' : '▸'} {extra}
-                  </button>
-                )}
-                {action && opened === action.action_id && (
-                  <div className="feed-proof">
-                    <div>{t('feed.proofTitle')}</div>
-                    <ul>
-                      {action.evidence.map((e, k) => (
-                        <li key={k}>
-                          <code>{proof(t, e)}</code>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div className="feed-day">
-                  {t('feed.day', { day: m.day })}
-                  <Origin kind={origin} />
-                  {action?.status === 'executed' && (
-                    <button
-                      type="button"
-                      className="feed-undo"
-                      disabled={busy !== null}
-                      onClick={() => undo(action.action_id)}
-                    >
-                      {t('feed.undo')}
-                    </button>
-                  )}
-                  {failed === action?.action_id && <span className="feed-failed">{t('feed.undoFailed')}</span>}
-                </div>
+            <li key={`${m.day}-${m.type}-${i}`}>
+              <div className={`feed-row kind-${m.type}`}>
+                <span className={`chip kind-${m.type}`}>{kind}</span>
+                <span className="feed-text">{text}</span>
+                <span className="feed-status">{t(`feed.kind.${m.type}` as Key)}</span>
               </div>
             </li>
           )
         })}
       </ol>
-    </aside>
+    </section>
   )
 }

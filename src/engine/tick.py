@@ -31,7 +31,7 @@ from engine import reveal as reveal_model
 from engine.db import RUNS_DIR, create_run, open_run
 from engine.risk import HIGH_RISK, RiskModel
 from engine.state import StateEngine
-from sim import feedback
+from sim import feedback, truth
 from sim.population import generate_patients, load_reference
 from sim.run import append, load_reference_tables
 from sim.step import CapacityChange, Simulator, load_scenario
@@ -42,7 +42,11 @@ HORIZON_DAYS = 365
 PATHWAY_ID = "hf_lombardia_v1"  # the pathway on screen
 ARMS = ("agents", "baseline")
 SPEEDS = (0, 1, 4)  # pause, ×1 = 1 day per 2 s, ×4 = 2 days per s (SPEC §9)
-DEMO_ORDER = (2, 1, 3)  # D44: the demo walks the scenarios in this order, scenario 2 with the full flow
+# D67 (proposed), replacing D44's (2, 1, 3): the demo walks three situations in this order, the normal one
+# (scenario 0, no hidden problem), an unplanned closure (4) and an investment (3, where buying a device is the
+# answer). Scenarios 1–3 stay for the acceptance tests (AC1, AC13) and can still be run.
+DEMO_ORDER = (0, 4, 3)
+DEMO_SCENARIOS = DEMO_ORDER
 
 
 class Population:
@@ -58,8 +62,9 @@ class Population:
 class Run:
     def __init__(self, run_id: str, population: Population, runs_dir: Path = RUNS_DIR, days: int = HORIZON_DAYS,
                  levers: tuple[CapacityChange, ...] = (), proposal: dict | None = None):
-        """`levers` are capacity changes on top of the scenario (what-if, step 2.5): before their first day
-        the run is the same as without them, day by day, since every random draw is per day (AC14).
+        """`levers` are capacity changes on top of the scenario (what-if, step 2.5), known from their first day
+        (D68, proposed): before it the run is the same as without them, event for event, since every random draw
+        is per day (AC14) and no booking can see the new slots.
         `proposal` is the lever Intervention proposes on the wait alarm (`whatif.proposed_lever`, step 2.27);
         it changes no event of the run, only its actions."""
         p = population
@@ -68,7 +73,9 @@ class Run:
         self.pathway_id = p.pathway.pathway_id
         self.sim = Simulator(p.seed, p.patients, p.ref, p.pathway, days=days)
         self.sim.apply_scenario(load_scenario(self.scenario), p.mmg)
-        self.sim.apply_capacity(list(levers))
+        # D68 (proposed): a lever is a purchase that starts on its day, unknown before it; written into the
+        # capacity from the start, the lever run booked into its new slots weeks early and never opened its alarm
+        self.sim.schedule(list(levers))
         create_run(run_id, runs_dir=runs_dir, overwrite=True)
         self.con = open_run(run_id, runs_dir)
         load_reference_tables(self.con, p.ref, p.patients, p.mmg)
@@ -143,6 +150,13 @@ class Run:
         if rows:
             append(self.con, "events", feedback.apply(self.run_id, rows))
 
+    def undo_feedback(self, rows: list[dict]) -> None:
+        """actions.undo's `emit`: the compensating events of the undone actions, on today (SPEC §7.3)."""
+        events = feedback.undo(self.run_id, rows, self.day)
+        if len(events):
+            append(self.con, "events", events)
+            self._write_capacity()
+
     def advance_to(self, day: int) -> None:
         while self.day < day:
             self.tick()
@@ -153,7 +167,7 @@ class Run:
 
 
 class Demo:
-    def __init__(self, runs_dir: Path = RUNS_DIR, scenarios: tuple[int, ...] = (1, 2, 3), start_day: int = START_DAY,
+    def __init__(self, runs_dir: Path = RUNS_DIR, scenarios: tuple[int, ...] = DEMO_SCENARIOS, start_day: int = START_DAY,
                  days: int = HORIZON_DAYS, seed: int = SEED, whatif_dir: Path | None = whatif.WHATIF_DIR,
                  lever_runs: bool = True):
         """`whatif_dir` holds the grids the proposed levers and lever runs come from; None leaves both out.
@@ -177,8 +191,7 @@ class Demo:
         return [f"s{scenario}_{arm}" for arm in ARMS] + ([lever["run_id"]] if lever and self.with_lever_runs else [])
 
     def lever_run(self) -> Run | None:
-        lever = self.levers.get(self.scenario)
-        return self.runs.get(lever["run_id"]) if lever else None
+        return self.lever_run_of(self.scenario)
 
     def catch_up(self) -> bool:
         """One day of the lever run of the scenario on screen if it is behind; True if it did one. The clock
@@ -284,11 +297,55 @@ class Demo:
             return investigations.on_question(run.con, run.run_id, run.state.pathway, run.day, self.scenario, question)
 
     def reveal(self, scenario: int) -> dict:
-        """GET /api/reveal/{scenario}: the agents arm's own alarms next to scenario_truth (Rivelazione, C37)."""
+        """GET /api/reveal/{scenario}: the agents arm's own alarms next to scenario_truth (Rivelazione, C37).
+        Only scenarios that hide patterns have a truth; a demo situation without one is a ValueError (404)."""
         if scenario not in self.scenarios:
             raise ValueError(f"scenario is one of {self.scenarios}")
+        if scenario not in truth.SCENARIOS:
+            raise ValueError(f"scenario {scenario} hides no pattern, so it has nothing to reveal")
         with self.lock, self.runs[f"s{scenario}_agents"].con.cursor() as cur:
             return reveal_model.reveal(cur, self.population.pathway, scenario)
+
+    def situations(self) -> dict:
+        """GET /api/situations (C43, D67 proposed): the demo's situations side by side on one day, the latest that
+        every run shown has reached, so the numbers are of the same day. Per situation the ATS KPI without CarePath
+        (baseline arm) and with it (the agents arm, or its lever run once the manager approved the purchase, C34),
+        with the agents arm's wait alarms and the manager's decisions up to that day."""
+        with self.lock:
+            shown = {n: (self.runs[f"s{n}_baseline"],
+                         self.lever_run_of(n) if n in self.approved and self.lever_run_of(n) else self.runs[f"s{n}_agents"])
+                     for n in sorted(self.scenarios, key=lambda n: (n not in DEMO_ORDER, DEMO_ORDER.index(n) if n in DEMO_ORDER else n))}
+            day = min(r.day for pair in shown.values() for r in pair)
+            pathway_id = self.population.pathway.pathway_id
+            out = []
+            for n, (without, with_cp) in shown.items():
+                def kpi(run: Run) -> dict:
+                    with run.con.cursor() as cur:
+                        return {"run_id": run.run_id, **(queries.kpi_headline(cur, day, pathway_id) or {})}
+                # Alarms and decisions of the agents arm, where Monitoring raised them and the manager took them. With a
+                # purchase, that arm's alarm closes as it would without the purchase, so the column shows the wait
+                # since that alarm and no open or closed state of another run.
+                with self.runs[f"s{n}_agents"].con.cursor() as cur:
+                    events = queries.situation_events(cur, day, pathway_id)
+                alarms, decisions = events["alarms"], events["decisions"]
+                purchase = with_cp is not self.runs[f"s{n}_agents"]
+                if purchase:
+                    alarms = [a | {"closed_day": None} for a in alarms]
+                waits = []
+                for a in alarms[:1]:  # the first wait alarm: its service's mean wait since that day, both arms
+                    service = next(s.service for s in self.population.pathway.steps if s.id == a["step"])
+                    def wait(run: Run) -> float | None:
+                        with run.con.cursor() as cur:
+                            return queries.service_wait(cur, service, a["day"], day)
+                    waits.append({"step": a["step"], "from_day": a["day"], "with": wait(with_cp), "without": wait(without)})
+                out.append({"scenario": n, "day_on_screen": self.runs[f"s{n}_agents"].day, "without": kpi(without),
+                            "with": kpi(with_cp), "with_purchase": purchase, "alarms": alarms, "decisions": decisions,
+                            "waits": waits})
+            return {"day": day, "situations": out}
+
+    def lever_run_of(self, scenario: int) -> Run | None:
+        lever = self.levers.get(scenario)
+        return self.runs.get(lever["run_id"]) if lever else None
 
     def autonomy(self) -> dict[str, dict]:
         """GET /api/settings: per action type the level in force on the scenario on screen, its default, and
@@ -319,7 +376,9 @@ class Demo:
             kind = run.con.execute("SELECT type FROM actions WHERE action_id = $id", {"id": action_id}).fetchall()
             actor = bed_finder.DOCTOR if kind and kind[0][0] == bed_finder.ACTION else actions.MANAGER
             if decision == "undo":
-                row = actions.undo(run.con, run.day, action_id, actor)
+                row = actions.undo(run.con, run.day, action_id, actor, run.undo_feedback)
+                if row["type"] == "capacity_proposal":
+                    self.approved.discard(run.scenario)  # the console turns back to the run without the purchase
             else:
                 row = actions.decide(run.con, run.day, action_id, decision == "approve", run.feedback, actor)
                 if row["type"] == "capacity_proposal" and row["status"] == "executed":

@@ -1,26 +1,32 @@
-/* Design tokens from the UI prototype (docs/CarePath-AI-UI-demo-srpski.html).
-   System fonts until IBM Plex is bundled locally (delivery plan, step 4.4): no CDN. */
+/* Design tokens of the console mockup (D67, proposed), on the UI prototype's palette
+   (docs/CarePath-AI-UI-demo-srpski.html). System fonts, Inter first where it is installed: no CDN. */
 :root {
-  --ink: #14212b;
-  --ink-muted: #5b6b78;
-  --ink-soft: #3d4c57;
+  --ink: #14232b;
+  --ink-muted: #5b6b75;
+  --ink-soft: #3d4f59;
   --surface: #ffffff;
   --canvas: #f4f6f8;
+  --soft: #f7f9fb;
   --line: #dde3e8;
+  --line-soft: #eef1f4;
+  --header-bg: #163440;
+  --header-muted: #b9ccd4;
+  --header-line: #4c6f7d;
   --nav-bg: #10262f;
   --nav-ink: #e8eef1;
   --nav-muted: #a9bcc6;
   --nav-active: #1e3c48;
   --brand: #7fd1c7;
   --primary: #2457c5;
-  --primary-soft: #eaf0fb;
+  --primary-soft: #e8eefb;
   --warning: #b45309;
-  --ok: #1f7a4d;
-  --ok-soft: #e6f4ec;
-  --llm: #6b3fa0;
-  --llm-soft: #f2ecfa;
+  --warning-soft: #fdf1e4;
+  --ok: #0b5d57;
+  --ok-soft: #e6f4f1;
+  --llm: #5b21b6;
+  --llm-soft: #f4f0fc;
 
-  --sans: system-ui, 'Segoe UI', sans-serif;
+  --sans: Inter, 'Segoe UI', system-ui, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 14px/1.45 var(--sans);
@@ -31,4 +37,5 @@
 
 body {
   margin: 0;
+  background: var(--canvas);
 }

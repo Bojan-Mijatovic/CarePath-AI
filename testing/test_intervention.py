@@ -155,3 +155,33 @@ def test_the_demo_says_when_the_proposal_is_approved(tmp_path):
     finally:
         demo.close()
         llm.configure()
+
+
+def test_undo_takes_back_a_move_and_a_purchase(tmp_path):
+    """SPEC §7.3: an undone reschedule writes its compensating BOOKING events, the patients back at their own
+    facility; an undone capacity proposal turns the console back to the run without the purchase (C34)."""
+    llm.configure(mode="cache_only", log_path=None)
+    demo = Demo(tmp_path, scenarios=(2,), start_day=33, days=40)
+    try:
+        demo.start()
+        found = dict(demo.read("s2_agents", lambda c: c.execute(
+            "SELECT type, action_id FROM actions WHERE status = 'proposed' AND type IN ('reschedule', 'capacity_proposal')").fetchall()))
+        demo.decide(found["capacity_proposal"], "approve")
+        assert demo.tick_message()["payload"]["lever_run"]["approved"] is True
+        messages = demo.decide(found["capacity_proposal"], "undo")
+        assert messages[0]["payload"]["status"] == "undone"
+        assert messages[1]["payload"]["lever_run"]["approved"] is False
+
+        rid = found["reschedule"]
+        payload = demo.decide(rid, "approve")[0]["payload"]["payload"]
+        bookings = lambda: demo.read("s2_agents", lambda c: c.execute(
+            "SELECT facility_id, count(*) FROM events WHERE event_type = 'BOOKING' AND action_id = $a GROUP BY 1",
+            {"a": rid}).fetchall())
+        moved = dict(bookings())
+        assert set(moved) == {payload["to_facility"]}
+        assert demo.decide(rid, "undo")[0]["payload"]["status"] == "undone"
+        back = dict(bookings())
+        assert back[payload["from_facility"]] == moved[payload["to_facility"]]  # every one still to come went back
+    finally:
+        demo.close()
+        llm.configure()

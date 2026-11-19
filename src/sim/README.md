@@ -199,7 +199,7 @@ A `reschedule` lists patients and moves each one's booking for the service from 
 
 ## 10. Scenarios (step 1.17)
 
-`scenarios/{1,2,3}.json`, validated by `sim.step.Scenario`, applied with `Simulator.apply_scenario` before the warm-up. `uv run carepath-sim s2_baseline` reads scenario 2 from the run id. The population is the same in all three; only the places of the patterns change. JSON instead of the planned YAML: same format and validation as `config/baseline.json`, no new dependency.
+`scenarios/{1,2,3}.json` (and the demo's situations `0.json` and `4.json`, below), validated by `sim.step.Scenario`, applied with `Simulator.apply_scenario` before the warm-up. `uv run carepath-sim s2_baseline` reads scenario 2 from the run id. The population is the same in all three; only the places of the patterns change. JSON instead of the planned YAML: same format and validation as `config/baseline.json`, no new dependency.
 
 | | Scenario 1 | Scenario 2 | Scenario 3 |
 |---|---|---|---|
@@ -214,7 +214,18 @@ A `reschedule` lists patients and moves each one's booking for the service from 
 "events": [{"type": "capacity", "facility_id": "osp_A", "service": "echo", "slots_per_day": 0, "from_day": 40, "to_day": 60}]
 ```
 
-Patterns are the hidden truth that `sim.truth` copies to `demo/truth/`; events are not, and `capacity_slots` shows them to the tools. The three demo scenarios have no events (D44), so their runs are unchanged byte for byte. What-if levers (step 2.5) reuse `Simulator.apply_capacity`.
+Patterns are the hidden truth that `sim.truth` copies to `demo/truth/`; events are not, and `capacity_slots` shows them to the tools. Scenarios 1–3 have no events (D44), so their runs are unchanged byte for byte. What-if levers (step 2.5) reuse `Simulator.apply_capacity`.
+
+**The demo's situations** (D67, SPEC C43, proposed). A scenario's patterns are optional, so a scenario may hide none. Scenario 0 (`0.json`) is the **normal situation**: no pattern and no event, the same run event for event as a simulator without a scenario. Scenario 4 (`4.json`) is an **unplanned closure**: Ospedale B's `echo` and `cardio_visit` at 0 slots on days 30–59. An event with `"unplanned": true` is known to nobody before its `from_day` (day 0 or later): until then the run is the one without it, and patients book into its window. On `from_day` the slots change, the bookings of the window beyond the new slots of a day are cancelled (the first patients in patient order keep theirs, as `_book` serves them) and those patients ask for a slot again that day. No event records the cancellation; the new `BOOKING` does. Scenario 3 is the **investment**, as it is. Measured, seed 42, to day 70:
+
+| | Scenario 0, normal | Scenario 4, closure |
+|---|---|---|
+| Regional alarms | none | echo wait at Ospedale B, day 36 |
+| Echo wait at Ospedale B, bookings of days 30–45 | 2.6 days | 30.5 days |
+| On track on day 60, agents vs baseline | 80.6% vs 70.8% | 80.5% vs 70.7% |
+| 30-day readmissions from day 0 to day 60, agents vs baseline | 57 vs 73 | 57 vs 73 |
+
+In scenario 4, Intervention proposes on day 36 to move 24 patients from Ospedale B to Ospedale A; approved that day, they wait 4.3 days, and the alarm closes on day 37 instead of day 50.
 
 The start days are set so the bottleneck's echo wait reaches about six weeks around day 35, when the alarm should fire (delivery plan step 2.8). Measured, seed 42, bookings made on days 30–40:
 

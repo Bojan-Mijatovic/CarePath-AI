@@ -108,6 +108,30 @@ def test_a_reschedule_moves_bookings_to_an_earlier_slot_elsewhere(world):
     assert sim.booked.sum() == booked_before  # every slot taken at osp_C was given back at osp_A
 
 
+def test_an_undone_reschedule_takes_its_patients_back(world):
+    # SPEC §7.3: undo writes a compensating event. The patients the reschedule moved and who still wait go back to
+    # their own facility, on their old day where it is still free, as BOOKING events with the undone action's id.
+    day = 30
+    sim = sim_at(world, day, scenario=1)
+    r_a = next(r for r in np.flatnonzero(sim.res_service == "echo") if sim.fac_id[sim.res_fac[r]] == "osp_A")
+    waiting = np.flatnonzero((sim.appt_res["echo"] == r_a) & (sim.appt_day["echo"] > day + 20))
+    old = sim.appt_day["echo"][waiting].copy()
+    booked_before = sim.booked.copy()
+    action = scoped("reschedule", [], {"service": "echo", "from_facility": "osp_A", "to_facility": "osp_B",
+                                       "patients": list(sim.patient_id[waiting])}).assign(executed_day=day)
+    sim.apply_actions(day, action)
+    moved = waiting[sim.appt_res["echo"][waiting] != r_a]
+    assert len(moved) > 10
+    rec = sim.undo_actions(day, action)
+    assert (sim.appt_res["echo"][waiting] == r_a).all()
+    assert (sim.appt_day["echo"][waiting] == old).all()  # nobody took their old slots on the same day
+    assert (sim.booked == booked_before).all()
+    assert len(rec) == len(moved) and set(rec.facility_id) == {"osp_A"} and set(rec.action_id) == set(action.action_id)
+    assert len(sim.undo_actions(day, action)) == 0  # an action is undone once
+    calls = scoped("call_task", [], {"patients": list(sim.patient_id[waiting[:3]])}).assign(executed_day=day)
+    assert len(sim.undo_actions(day, calls)) == 0  # a call has already reached its patients
+
+
 @pytest.mark.parametrize("bad, message", [
     ([{**action("call_task"), "type": "teleport"}], "unknown action types"),
     ([{k: v for k, v in action("call_task").items() if k != "executed_day"}], "need the columns"),

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Step | Delivery plan 2.24 (R5) |
-| Version | v1.1, 2 Nov 2026: the demo bar's hotkeys and no envelope (2.20), the PNE forecast (2.6), the monthly report (2.14), Lista chiamate and Rivelazione (2.20). v1.2, 3 Nov 2026: step 9c, Posti letto, optional (D64). v1.3, 3 Nov 2026: the guide bar (D66, proposed). v1.4, 3 Nov 2026: who-made-it labels, "Dietro le quinte", the system slide, the Investigator's stages, the evidence in full (D66, proposed). v2 after Attività agenti (2.29); final timings at the rehearsals (4.6) |
+| Version | v1.1, 2 Nov 2026: the demo bar's hotkeys and no envelope (2.20), the PNE forecast (2.6), the monthly report (2.14), Lista chiamate and Rivelazione (2.20). v1.2, 3 Nov 2026: step 9c, Posti letto, optional (D64). v1.3, 3 Nov 2026: the guide bar (D66, proposed). v1.4, 3 Nov 2026: who-made-it labels, "Dietro le quinte", the system slide, the Investigator's stages, the evidence in full (D66, proposed). v2 after Attività agenti (2.29); final timings at the rehearsals (4.6). v3 draft, 13 Nov 2026: three situations (D67, proposed). v3.1 draft, 19 Nov 2026: the console without the guide bar, the operator's own buttons |
 | Sources | Solution Plan §11 (steps 1–10, trigger sentences); D21 (pacing), D24 (the opening), D44 (no envelope, scenarios 2, 1, 3), D45 (closed loop), D53 (reschedule after the alarm) |
 | Target | 7 minutes, Italian audience. Trigger sentences are said in Italian; the Italian colleague reviews them before the first rehearsal |
 
@@ -22,7 +22,7 @@ The hidden demo bar (step 2.20) stays as the fallback. Its hotkeys work while it
 
 | Key | Does |
 |---|---|
-| `1` `2` `3` | the scenario on screen (it stays paused) |
+| `1` `2` `3` | the situation on screen (it stays paused): v3 Normal, A · Closure, B · Investment (scenarios 0, 4, 3); in v2 they were scenarios 1, 2, 3 |
 | space | pause, or ×1 when paused |
 | `f` | ×4 |
 | `j` | jump to a day (type it, Enter); backwards replays from day 0, about 60 s: avoid |
@@ -33,7 +33,39 @@ The hidden demo bar (step 2.20) stays as the fallback. Its hotkeys work while it
 | → or PageDown, ← or PageUp | the guide's next or previous stage |
 | `g` | show or hide the guide bar |
 
-## The flow
+## The flow, v3 draft: three situations (D67, proposed)
+
+Not yet rehearsed and not yet agreed: until D67 is agreed at a sync, the v2 flow below is the demo's. Since 13 Nov 2026 the console has the layout of the lead's console mockup and **no guide bar** (the lead asked for it): the presenter walks the stages below with the header (situation, Pausa, ×1, ×4) and the page tabs (Cruscotto, Pazienti, Ospedali, Agenti, Analisi, Impostazioni). `src/ui/src/lib/guide.ts` still lists the 16 stages but is no longer shown; at ×4 nothing stops the clock on the script's day, so pause it by hand. The Operator column below names the console's own buttons (updated 19 Nov 2026); the header's ◀ ▶ look at past days and are not the guide's. Before the audience comes in, v3: the API prepares seven runs (scenarios 0, 4 and 3, both arms, and scenario 3's lever run; start-up time not yet measured) and the console opens on Cruscotto, normal situation, day 23, paused; the green dot in the header means connected. Keys `1` `2` `3` choose the situations in this order; each keeps its own day. The Italian lines need the Italian colleague's review. Days measured on seed 42 (13 Nov 2026); times are targets to time at the rehearsals.
+
+| # | Situation | Trigger (it) | Screen | Operator | The app does |
+|---|---|---|---|---|---|
+| 1 | Normal (0) | "Vi presento la signora Maria… Ma chi verifica, ogni giorno, che il suo PAI venga eseguito?" | Pazienti | tab Pazienti; "Senza CarePath" on Maria | her story without CarePath, recorded in advance |
+| 2 | Normal | "Una giornata normale. Nessun imprevisto: gli agenti seguono ogni paziente, ogni giorno." | Cruscotto | tab Cruscotto | day 23, paused; the agents' work of the day; one MMG notice waits |
+| 3 | Normal | "Chi chiamiamo oggi? Prima chi rischia di più." | Pazienti | tab Pazienti | today's list, ranked by risk, with the reasons |
+| 4 | Normal | "La stessa regione, senza e con CarePath." | Analisi | tab Analisi; ×4, then Pausa on day 60 | on day 60: on track 80.6% with the agents vs 70.8% without; 57 vs 73 readmissions in 30 days since day 0 |
+| 5 | Normal | "Torniamo da Maria." | Pazienti | tab Pazienti; "Senza CarePath" and back | her day 31 call with CarePath; her day 47 admission without |
+| 5b | Normal, **optional** | "Il ricovero lo decide il medico; dove, lo trova l'IA in un istante." | Pazienti, below Maria | "Trova il posto letto" | Ospedale A, cardiology, bed 40 |
+| 6 | A · Closure (4) | "Ora un imprevisto: l'ambulatorio di cardiologia dell'Ospedale B chiude per un mese, senza preavviso." | Cruscotto | "A · Chiusura non prevista" in the header; ×1 (the clock stops by itself on day 36) | from day 30 Ospedale B's appointments are cancelled; on day 36 the echo wait alarm opens at Ospedale B |
+| 7 | A | "Non solo cosa, ma perché." | Ospedali | the line under the header, "Allarme dal giorno 36 · apri", or a suggested question | the investigation of the alarm (**cache to warm**, see below) |
+| 8 | A | "L'agente propone di spostare chi aspetta troppo. Decidiamo noi." | Agenti | tab Agenti; "Approva" on the reschedule | 24 patients move from Ospedale B to Ospedale A, waiting 4.3 days; the alarm closes the next day (day 37, against day 50 without the approval) |
+| 9 | A | "Senza CarePath i pazienti aspettano la riapertura." | Analisi | tab Analisi; ×4, then Pausa on day 60 | the two arms side by side through the closure |
+| 10 | B · Investment (3) | "Un altro caso: all'Ospedale C l'ecocardiografia ha meno posti di quanti ne servono." | Cruscotto | "B · Investimento pianificato" in the header; ×1 (stops by itself on day 29) | the echo wait alarm at Ospedale C |
+| 11 | B | "Perché?" | Ospedali | the line under the header, "Allarme dal giorno 29 · apri" | the investigation (cached) |
+| 12 | B | "Qui spostare non basta: l'agente propone di comprare capacità. La spesa la decide la direzione." | Agenti | tab Agenti; "Approva" on the capacity proposal | the console turns to the run with the new slots (C34) |
+| 13 | B | "Prima e dopo l'acquisto." | Analisi | tab Analisi; ×4, then Pausa on day 60; "Prima / dopo i nuovi posti" | the mean echo wait at Ospedale C over the 6 months from day 30: 56.1 days without the purchase, 7.5 with +1 slot a day (D68) (`demo/whatif/scenario_3.json`) |
+| 14 | B | "E se compriamo di più? Misurato con il vostro indicatore PNE." | Analisi, below | the slider | +0 to +4 slots, from the precomputed grid |
+| 15 | All three | "Tre situazioni, lo stesso sistema. Ecco cosa è cambiato in ognuna." | Analisi, last panel | — | the three situations on day 60–61: on track with and without CarePath, readmissions, cost avoided, the alarms, the decisions and the echo wait after each alarm (closure 7.9 vs 9.8 days, purchase 5.0 vs 10.4) |
+
+**Rule: approve only what the script approves, on the alarm's day**: the reschedule on day 36 in A, the capacity proposal on day 29 in B. The cache is warmed after exactly these (`demo/cache/manifest.json`, `approve`).
+
+**Before the first rehearsal of v3**, on a laptop with the models: `uv run python testing/cache_warmup.py --live` fills scenario 4's investigation and its two Chiedi questions and scenario 0's day-59 report (about 20–30 minutes), then `uv run python testing/cache_hashes.py` and `uv run pytest -m demo`. Until then step 7 shows no investigation and the report is the template.
+
+Not in v3: Rivelazione (no situation but B hides patterns; the `v` key still opens it for scenario 3).
+
+## The flow, v2 (D44, in force until D67 is agreed)
+
+The console in this working copy no longer has the v2 screens (they are sections of the six pages, D67) nor scenarios 1 and 2 in the demo: v2 runs on the console and engine before D67.
+
 
 Times are the target per block. **System** is what the app takes, measured on 2 Nov 2026 by driving the real API on the team laptop; everything else is speech and has to be timed with a stopwatch at the rehearsals.
 
@@ -78,7 +110,7 @@ Times are the target per block. **System** is what the app takes, measured on 2 
 
 | Gap | Effect on the script | Comes with |
 |---|---|---|
-| Undo of an effect | "Annulla" in Attività agenti marks an action undone in the audit log; it does not move a rescheduled patient back (SPEC §7.3) | not planned |
+| Undo of an effect | "Annulla" in Attività agenti marks an action undone in the audit log; since 13 Nov 2026 (D67 work) an undone reschedule takes its patients back to their own hospital and an undone purchase turns the console back to the run without it (SPEC §7.3). A call or a notice is only marked. Not in the script: an undo changes the run, and a later cached text (a report) may then show the template | built, not in the script |
 | Rule proposal after the investigation (5a) | not in the demo: Rule Advisor did not enter at checkpoint 2.23 | — |
 | A call script on the call list | the Daily Worklist (phase 3) did not enter | — |
 | Maria's days with CarePath | Solution Plan §11 and the prototype say call on day 31, drug on 33, HbA1c on 40; the agents' own rules call her on day 43 (the weight gain), drug on 45, HbA1c on 52. The script says what the app shows | the lead (R1) decides whether to keep the agents' days |

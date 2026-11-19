@@ -42,3 +42,10 @@ def apply(run_id: str, actions: pd.DataFrame | list[dict]) -> pd.DataFrame:
     if not days:
         return pd.DataFrame(columns=EVENT_COLUMNS)
     return _runs[run_id].apply_actions(int(days.pop()), actions)
+
+
+def undo(run_id: str, actions: pd.DataFrame | list[dict], day: int) -> pd.DataFrame:
+    """The compensating events (SPEC §7.3) of the actions undone on `day` in `run_id`."""
+    if run_id not in _runs:
+        raise KeyError(f"run {run_id} is not registered")
+    return _runs[run_id].undo_actions(day, pd.DataFrame(actions))

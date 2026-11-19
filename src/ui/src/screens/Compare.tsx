@@ -15,11 +15,14 @@ export default function Compare({
   scenario,
   pathway,
   leverRun,
+  viewDay = null,
 }: {
   day: number | null
   scenario: number | null
   pathway: Pathway | null
   leverRun: LeverRun | null
+  /** a past day to look back at (read only); null: today */
+  viewDay?: number | null
 }) {
   const { lang, t } = useLang()
   const [mode, setMode] = useState<Mode>('arms')
@@ -37,8 +40,8 @@ export default function Compare({
   const kpiPath = (run: string | undefined) =>
     run && pathway ? `/api/kpi?run=${encodeURIComponent(run)}&level=ats&pathway_id=${pathway.pathway_id}` : null
   const capPath = (run: string | undefined) =>
-    run && step ? `/api/capacity?service=${step.service}&run=${encodeURIComponent(run)}` : null
-  const refresh = `${day}-${lever?.day ?? ''}`
+    run && step ? `/api/capacity?service=${step.service}&run=${encodeURIComponent(run)}${viewDay === null ? '' : `&day=${viewDay}`}` : null
+  const refresh = `${day}-${lever?.day ?? ''}-${viewDay ?? ''}`
   const kpiA = useApi<KpiRow[]>(kpiPath(runs?.[0]), refresh)
   const kpiB = useApi<KpiRow[]>(kpiPath(runs?.[1]), refresh)
   const capA = useApi<CapacityRow[]>(capPath(runs?.[0]), refresh)
@@ -47,8 +50,9 @@ export default function Compare({
   if (day === null || runs === null || pathway === null) return <p className="placeholder">{t('overview.waiting')}</p>
   const error = kpiA.error ?? kpiB.error ?? capA.error ?? capB.error
   if (error) return <p className="placeholder">{t('error.load', { detail: error })}</p>
-  const a = kpiA.data?.at(-1)
-  const b = kpiB.data?.at(-1)
+  const pick = (rows: KpiRow[] | undefined) => (viewDay === null ? rows?.at(-1) : rows?.find((r) => r.day === viewDay))
+  const a = pick(kpiA.data)
+  const b = pick(kpiB.data)
   const n = (x: number) => formatNumber(lang, x)
   const signed = (x: number, digits = 0) => `${x > 0 ? '+' : '−'}${formatNumber(lang, Math.abs(x), digits)}`
   const slots = lever?.run_id.split('+').at(-1) ?? ''

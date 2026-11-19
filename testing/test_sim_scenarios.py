@@ -130,3 +130,81 @@ def test_a_renovation_moves_bookings_after_it(world):
     slots = sim.capacity_slots()
     window = slots[(slots.facility_id == "osp_A") & (slots.service == "echo") & slots.day.between(5, 25)]
     assert (window.slots_total == 0).all()  # tools see it through capacity_slots: the event is no secret
+
+
+# The demo's situations (D67, proposed): 0 is the normal one, 4 an unplanned closure; 3 stays the investment.
+
+def test_the_situations_hide_no_pattern():
+    normal, closure = load_scenario(0), load_scenario(4)
+    assert (normal.scenario, closure.scenario) == (0, 4)
+    assert not normal.hides_patterns and not normal.events
+    assert not closure.hides_patterns
+    assert {(e.facility_id, e.service, e.from_day, e.to_day, e.slots_per_day, e.unplanned) for e in closure.events} == {
+        ("osp_B", "echo", 30, 59, 0, True), ("osp_B", "cardio_visit", 30, 59, 0, True)}
+    assert all(s.hides_patterns for s in SCENARIOS)
+    with pytest.raises(ValidationError, match="come together"):
+        Scenario(scenario=9, echo_bottleneck=SCENARIOS[0].echo_bottleneck)
+
+
+def _events(world, scenario: Scenario | None, days: int) -> tuple[Simulator, pd.DataFrame]:
+    ref, patients, mmg, hf = world
+    sim = Simulator(42, patients, ref, hf, days=days)
+    if scenario is not None:
+        sim.apply_scenario(scenario, mmg)
+    return sim, pd.concat(sim.warm_up() + [sim.step(d) for d in range(days)], ignore_index=True)
+
+
+def test_the_normal_situation_is_the_world_without_patterns(world):
+    _, plain = _events(world, None, 40)
+    _, normal = _events(world, load_scenario(0), 40)
+    pd.testing.assert_frame_equal(plain, normal)
+
+
+def test_an_unplanned_closure_is_known_to_nobody_before_its_first_day(world):
+    # Day for day the same as the normal situation until day 30; from then the bookings of its window move.
+    _, normal = _events(world, load_scenario(0), 70)
+    sim, closed = _events(world, load_scenario(4), 70)
+    pd.testing.assert_frame_equal(normal[normal.day < 30], closed[closed.day < 30])
+    before = normal[(normal.event_type == "BOOKING") & (normal.code == "echo") & (normal.facility_id == "osp_B")
+                    & (normal.day < 30) & normal.value.between(30, 59)]
+    assert len(before) > 0  # bookings were made into the window before anyone knew
+
+    echo_b = closed[(closed.event_type == "BOOKING") & (closed.code == "echo") & (closed.facility_id == "osp_B")]
+    assert not echo_b[echo_b.day >= 30].value.between(30, 59).any()  # nothing is booked into the closure
+    again = echo_b[echo_b.day == 30]
+    assert len(again) >= len(before) and (again.value >= 60).all()  # asked again on day 30, after it
+    for code, event in (("echo", "IMAGING"), ("cardio_visit", "VISIT")):
+        at_b = closed[(closed.event_type == event) & (closed.facility_id == "osp_B")]
+        assert not at_b.day.between(30, 59).any(), code
+    slots = sim.capacity_slots()
+    window = slots[(slots.facility_id == "osp_B") & slots.service.isin(["echo", "cardio_visit"]) & slots.day.between(30, 59)]
+    assert (window.slots_total == 0).all() and (window.slots_booked == 0).all()
+
+
+def test_a_partial_unplanned_cut_keeps_the_first_patients(world):
+    # 1 slot a day left instead of 3: per day the first booking in patient order stays, the others ask again.
+    ref, patients, mmg, hf = world
+    cut = CapacityEvent(type="capacity", facility_id="osp_B", service="echo", slots_per_day=1, from_day=30,
+                        to_day=59, unplanned=True)
+    sim = Simulator(42, patients, ref, hf, days=40)
+    sim.apply_scenario(Scenario(scenario=0, events=[cut]), mmg)
+    sim.warm_up()
+    for d in range(30):
+        sim.step(d)
+    row = np.flatnonzero((sim.fac_id[sim.res_fac] == "osp_B") & (sim.res_service == "echo"))[0]
+    window = slice(30 - sim.first_day, 60 - sim.first_day)
+    held = sim.booked[row, window].copy()
+    assert held.max() > 1
+    sim.step(30)
+    after = sim.booked[row, window]
+    assert (after <= 1).all()
+    assert (after[held >= 1] == 1).all()  # a day that had bookings keeps one; the others may take a request again
+
+
+def test_an_unplanned_event_must_be_known_to_the_simulator(world):
+    ref, patients, mmg, hf = world
+    for bad, match in ((dict(facility_id="osp_Z"), "osp_Z"), (dict(from_day=-5), "day 0 or later")):
+        event = CapacityEvent(**{"type": "capacity", "facility_id": "osp_B", "service": "echo", "slots_per_day": 0,
+                                 "from_day": 30, "unplanned": True, **bad})
+        with pytest.raises(ValueError, match=match):
+            Simulator(42, patients, ref, hf, days=10).apply_scenario(Scenario(scenario=0, events=[event]), mmg)

@@ -45,7 +45,7 @@ def capacity(con: duckdb.DuckDBPyConnection, pathway_id: str, service: str, day:
     """GET /api/capacity (C28): per facility of a service, over the 7 days up to `day` (the run's last day by
     default), the share of slots used and the wait from booking to booked day of the pathway's patients.
     The mean is wait_by_hospital's with period_days 7, the number the alarm and the agents see; median and
-    p90 are of integer days, so exact (SPEC §2)."""
+    p90 are of integer days, so exact (SPEC §2). `lat`, `lon` place the facility on the map (C43)."""
     return rows(con, f"""
         WITH d AS (SELECT coalesce($d, (SELECT max(day) FROM kpi_daily)) AS day),
         slots AS (
@@ -60,7 +60,8 @@ def capacity(con: duckdb.DuckDBPyConnection, pathway_id: str, service: str, day:
             WHERE e.event_type = 'BOOKING' AND e.code = $s AND e.day BETWEEN d.day - {CAPACITY_WINDOW_DAYS - 1} AND d.day
               AND e.patient_id IN (SELECT patient_id FROM pathway_state WHERE pathway_id = $pw AND enrolled_day <= d.day)
             GROUP BY 1)
-        SELECT (SELECT day FROM d) AS day, f.facility_id, f.name, s.slots_total, s.slots_booked,
+        SELECT (SELECT day FROM d) AS day, f.facility_id, f.name, round(f.lat, 5) AS lat, round(f.lon, 5) AS lon,
+               s.slots_total, s.slots_booked,
                round(s.slots_booked / nullif(s.slots_total, 0), 4) AS use_pct,
                coalesce(w.bookings, 0) AS bookings, w.wait_mean, w.wait_median, w.wait_p90
         FROM slots s JOIN facilities f USING (facility_id) LEFT JOIN waits w USING (facility_id)
@@ -131,3 +132,30 @@ def patient_360(con: duckdb.DuckDBPyConnection, patient_id: str) -> dict | None:
                     ["event_id", "event_type", "code", "value", "facility_id", "facility_name", "source"]):
             del item[key]
     return {"patient": found[0], "pathways": pathways, "timeline": timeline}
+
+
+def situation_events(con: duckdb.DuckDBPyConnection, day: int, pathway_id: str) -> dict:
+    """GET /api/situations (C43, D67 proposed): up to `day`, the run's wait alarms (opened, and closed if by then)
+    and the manager's decisions on actions, from the audit log, with the patients each one listed."""
+    alarms = rows(con, """
+        SELECT a.day, a.facility_id, f.name AS facility, a.step, CASE WHEN a.closed_day <= $d THEN a.closed_day END AS closed_day
+        FROM alerts a JOIN facilities f USING (facility_id)
+        WHERE a.level = 'regional' AND a.facility_id IS NOT NULL AND a.pathway_id = $pw AND a.day <= $d
+        ORDER BY a.day, a.alert_id""", {"d": day, "pw": pathway_id})
+    decisions = rows(con, """
+        SELECT l.ts_day AS day, a.type, l.event AS decision,
+               coalesce(json_array_length(a.payload->'patients'), 0)::INTEGER AS patients
+        FROM audit_log l JOIN actions a USING (action_id)
+        WHERE l.actor = 'manager' AND l.event IN ('approved', 'rejected', 'undone') AND l.ts_day <= $d
+        ORDER BY l.ts_day, a.action_id, l.event""", {"d": day})
+    return {"alarms": alarms, "decisions": decisions}
+
+
+def service_wait(con: duckdb.DuckDBPyConnection, service: str, from_day: int, to_day: int) -> float | None:
+    """GET /api/situations (C43): the mean wait, booking to booked day, of every booking of a service made from
+    `from_day` to `to_day`, at every facility: a patient moved elsewhere still counts, with the new wait."""
+    found = con.execute("""
+        SELECT round(avg(value - day), 1) FROM events
+        WHERE event_type = 'BOOKING' AND code = $s AND day BETWEEN $a AND $b""",
+                        {"s": service, "a": from_day, "b": to_day}).fetchall()
+    return found[0][0]

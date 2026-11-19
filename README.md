@@ -76,7 +76,7 @@ Takes about 15 minutes plus model downloads. No admin rights needed.
    uv run carepath-api
    ```
 
-   Open <http://127.0.0.1:8000>: the console opens on Maria's story; "Avvia la simulazione", then an envelope, leads to Panoramica, where "Giorno N" goes up every 2 seconds from day 23 and "connesso" shows in the top bar. The API needs about 30–70 s after start-up to prepare the runs (nine with the lever runs of step 2.28); an envelope chosen earlier shows a 503.
+   Open <http://127.0.0.1:8000>: the console opens on Cruscotto, in the normal situation, on day 23, paused, with the six pages as tabs under a dark header that chooses the situation (Situazione normale, A · Chiusura non prevista, B · Investimento pianificato) and runs the clock (Pausa, ×1, ×4); a green dot in the header means connected. The API needs about 30–70 s after start-up to prepare the runs (seven: the agents and baseline arms of scenarios 0, 4 and 3, and scenario 3's lever run of step 2.28); until then the API answers 503.
 
 ## Commands
 

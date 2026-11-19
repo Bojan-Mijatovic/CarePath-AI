@@ -3,29 +3,14 @@ import { type Action, type Kpi, type Pathway, type Report, send, useApi } from '
 import { agentName, formatEuro, formatNumber, formatPercent, label, useLang } from '../lib/i18n'
 import Origin from '../components/Origin'
 
-/** Demo step 3 (prototype "Pregled"): headline numbers of the day, the approval queue, the PNE indicator, and
- * the Reporter's latest monthly report (step 2.14). */
-export default function Overview({ day, kpi, pathway }: { day: number | null; kpi: Kpi | null; pathway: Pathway | null }) {
+/** Demo step 3 (prototype "Pregled"), in three parts since the six pages of D67 (proposed): the day's headline
+ * numbers and the PNE indicator (Dashboard), the approval queue and the Reporter's latest monthly report (step
+ * 2.14; Agents). */
+export function Headline({ day, kpi, pathway }: { day: number | null; kpi: Kpi | null; pathway: Pathway | null }) {
   const { lang, t } = useLang()
-  const [decisions, setDecisions] = useState(0)
-  const [busy, setBusy] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const { data: proposed } = useApi<Action[]>('/api/actions?status=proposed', `${day}-${decisions}`)
-  const { data: reports } = useApi<Report[]>('/api/reports', day) // the Reporter's monthly reports (C36)
   if (day === null || kpi === null || pathway === null) return <p className="placeholder">{t('overview.waiting')}</p>
-  const report = (reports ?? []).find((r) => r.day <= day)
   const reference = pathway.readmission_reference
-  const queue = (proposed ?? []).filter((a) => a.created_day <= day)
   const n = (x: number) => formatNumber(lang, x)
-  // The manager's decision goes to the action service, which writes it to the audit log (step 2.18).
-  const decide = (id: string, decision: 'approve' | 'reject') => {
-    setBusy(id)
-    setError(null)
-    send('POST', `/api/actions/${id}/${decision}`)
-      .then(() => setDecisions((k) => k + 1))
-      .catch(() => setError(t('approvals.failed')))
-      .finally(() => setBusy(null))
-  }
 
   return (
     <div className="overview">
@@ -56,38 +41,6 @@ export default function Overview({ day, kpi, pathway }: { day: number | null; kp
         </div>
       </div>
       <div className="panels">
-        <section className="panel wide" aria-labelledby="h-approvals">
-          <h2 id="h-approvals">
-            {t('approvals.title')}
-            <Origin kind="person" />
-          </h2>
-          {queue.length === 0 && <p className="placeholder">{t('approvals.empty')}</p>}
-          {error && <p className="placeholder">{error}</p>}
-          {queue.map((a) => (
-            <div key={a.action_id} className="approval">
-              <div className="approval-text">
-                <div className="approval-title">{label(t, 'action', a.type)}</div>
-                <div className="approval-meta">
-                  {t('approvals.meta', { agent: agentName(a.agent), level: a.autonomy_level, day: a.created_day })}
-                  <Origin kind={a.payload.wording === 'model' ? 'model' : 'code'} />
-                </div>
-                <p className="approval-rationale">{a.rationale[lang]}</p>
-              </div>
-              <button
-                type="button"
-                className="primary"
-                data-spot={`approve-${a.type}`}
-                disabled={busy !== null}
-                onClick={() => decide(a.action_id, 'approve')}
-              >
-                {t('approvals.approve')}
-              </button>
-              <button type="button" disabled={busy !== null} onClick={() => decide(a.action_id, 'reject')}>
-                {t('approvals.reject')}
-              </button>
-            </div>
-          ))}
-        </section>
         <section className="panel" aria-labelledby="h-pne">
           <h2 id="h-pne">
             {t('pne.title')}
@@ -115,21 +68,92 @@ export default function Overview({ day, kpi, pathway }: { day: number | null; kp
             </div>
           )}
         </section>
-        {report && (
-          <section className="panel wide" aria-labelledby="h-report">
-            <h2 id="h-report">{t('report.title', { month: report.month })}</h2>
-            <div className="card-sub">
-              {t('report.sub', { from: report.from_day, to: report.day })}
-              <Origin kind={report.wording === 'model' ? 'model' : 'code'} />
-            </div>
-            <div className="report-text">
-              {report.text[lang].split('\n').map((line, i) => (
-                <p key={i}>{line}</p>
-              ))}
-            </div>
-          </section>
-        )}
       </div>
+    </div>
+  )
+}
+
+export function Approvals({ day, onOpen }: { day: number | null; onOpen?: (a: Action) => void }) {
+  const { lang, t } = useLang()
+  const [decisions, setDecisions] = useState(0)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const { data: proposed } = useApi<Action[]>('/api/actions?status=proposed', `${day}-${decisions}`)
+  if (day === null) return <p className="placeholder">{t('overview.waiting')}</p>
+  const queue = (proposed ?? []).filter((a) => a.created_day <= day)
+  // The manager's decision goes to the action service, which writes it to the audit log (step 2.18).
+  const decide = (id: string, decision: 'approve' | 'reject') => {
+    setBusy(id)
+    setError(null)
+    send('POST', `/api/actions/${id}/${decision}`)
+      .then(() => setDecisions((k) => k + 1))
+      .catch(() => setError(t('approvals.failed')))
+      .finally(() => setBusy(null))
+  }
+  return (
+    <div className="panels">
+        <section className="panel wide" aria-labelledby="h-approvals">
+          <h2 id="h-approvals">
+            {t('approvals.title')}
+            <Origin kind="person" />
+          </h2>
+          {queue.length === 0 && <p className="placeholder">{t('approvals.empty')}</p>}
+          {error && <p className="placeholder">{error}</p>}
+          {queue.map((a) => (
+            <div key={a.action_id} className="approval">
+              <div className="approval-text">
+                <div className="approval-title">{label(t, 'action', a.type)}</div>
+                <div className="approval-meta">
+                  {t('approvals.meta', { agent: agentName(a.agent), level: a.autonomy_level, day: a.created_day })}
+                  <Origin kind={a.payload.wording === 'model' ? 'model' : 'code'} />
+                </div>
+                <p className="approval-rationale">{a.rationale[lang]}</p>
+              </div>
+              <div className="approval-buttons">
+              <button
+                type="button"
+                className="primary"
+                data-spot={`approve-${a.type}`}
+                disabled={busy !== null}
+                onClick={() => decide(a.action_id, 'approve')}
+              >
+                {t('approvals.approve')}
+              </button>
+              <button type="button" disabled={busy !== null} onClick={() => decide(a.action_id, 'reject')}>
+                {t('approvals.reject')}
+              </button>
+              {onOpen && (
+                <button type="button" className="outline" onClick={() => onOpen(a)}>
+                  {t('details.open')}
+                </button>
+              )}
+              </div>
+            </div>
+          ))}
+        </section>
+    </div>
+  )
+}
+
+export function LatestReport({ day }: { day: number | null }) {
+  const { lang, t } = useLang()
+  const { data: reports } = useApi<Report[]>('/api/reports', day) // the Reporter's monthly reports (C36)
+  const report = day === null ? undefined : (reports ?? []).find((r) => r.day <= day)
+  if (!report) return null
+  return (
+    <div className="panels">
+      <section className="panel wide" aria-labelledby="h-report">
+        <h2 id="h-report">{t('report.title', { month: report.month })}</h2>
+        <div className="card-sub">
+          {t('report.sub', { from: report.from_day, to: report.day })}
+          <Origin kind={report.wording === 'model' ? 'model' : 'code'} />
+        </div>
+        <div className="report-text">
+          {report.text[lang].split('\n').map((line, i) => (
+            <p key={i}>{line}</p>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }

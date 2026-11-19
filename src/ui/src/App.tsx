@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
+import ActionDetails from './components/ActionDetails'
 import ActivityFeed from './components/ActivityFeed'
 import Autonomy from './components/Autonomy'
-import Guide from './components/Guide'
+import Controls from './components/Controls'
 import LangSwitch from './components/LangSwitch'
-import { type Kpi, type Pathway, type SimStatus, useApi } from './lib/api'
-import { STEPS } from './lib/guide'
-import { type Key, type Lang, LangContext, translator } from './lib/i18n'
+import { type Action, type Investigation, type Kpi, type KpiRow, type Pathway, type SimStatus, useApi } from './lib/api'
+import { formatNumber, type Key, type Lang, LangContext, translator } from './lib/i18n'
 import { type LeverRun, type StreamMessage, useStream } from './lib/stream'
 import Ask from './screens/Ask'
 import Beds, { type BedTarget } from './screens/Beds'
@@ -15,35 +15,28 @@ import Calls from './screens/Calls'
 import DemoBar from './components/DemoBar'
 import Reveal from './screens/Reveal'
 import Flows from './screens/Flows'
-import MapScreen, { type RegionalAlert } from './screens/MapScreen'
+import Hospitals from './screens/Hospitals'
+import Dashboard, { type Alarm } from './screens/Dashboard'
+import { type RegionalAlert } from './screens/MapScreen'
 import MariaStory from './screens/MariaStory'
-import Overview from './screens/Overview'
+import { Approvals, LatestReport } from './screens/Overview'
 import Patient from './screens/Patient'
+import Situations from './screens/Situations'
 import WhatIf from './screens/WhatIf'
 
-// Menu order follows the demo's (D66), Percorsi last as the demo does not show it; Maria's story (demo step 1)
-// and the reveal (step 10) are full screen. There is no envelope screen (D44): the guide and the operator's demo
-// bar pick the scenario.
-const SCREENS = ['panoramica', 'mappa', 'chiedi', 'confronto', 'whatif', 'chiamate', 'pazienti', 'letti', 'percorsi'] as const
-export type Screen = 'storia' | 'rivelazione' | (typeof SCREENS)[number]
-const ALL: readonly Screen[] = ['storia', 'rivelazione', ...SCREENS]
+// Six pages by domain as in the console mockup (D67, proposed): a dark header picks the situation and runs the
+// clock, the pages are tabs, a line under them says which situation is on screen. No guide bar: the lead asked for
+// the console without it (13 Nov 2026); the operator's hidden demo bar stays. Maria's story and the reveal are
+// still full screen, from their hash only.
+const PAGES = ['dashboard', 'pazienti', 'ospedali', 'agenti', 'analisi', 'impostazioni'] as const
+export type Screen = 'storia' | 'rivelazione' | (typeof PAGES)[number]
+const ALL: readonly Screen[] = ['storia', 'rivelazione', ...PAGES]
 const FEED_SIZE = 30
 const LANG_KEY = 'carepath.lang'
-const GUIDE_KEY = 'carepath.guide.step'
-
-// A reload keeps the guide's stage: taking the stages again would run their clocks
-function savedStep(): number {
-  try {
-    const n = Number(localStorage.getItem(GUIDE_KEY))
-    return Number.isInteger(n) && n >= 0 && n < STEPS.length ? n : 0
-  } catch {
-    return 0
-  }
-}
 
 function screenFromHash(): Screen {
   const id = location.hash.slice(1)
-  return (ALL as readonly string[]).includes(id) ? (id as Screen) : 'storia'
+  return (ALL as readonly string[]).includes(id) ? (id as Screen) : 'dashboard'
 }
 
 function savedLang(): Lang {
@@ -67,16 +60,9 @@ export default function App() {
   const [feed, setFeed] = useState<FeedMessage[]>([])
   const [alarm, setAlarm] = useState<RegionalAlert | null>(null)
   const [bedTarget, setBedTarget] = useState<BedTarget | null>(null)
-  const [guideStep, setGuideStep] = useState(savedStep)
+  const [detail, setDetail] = useState<Action | null>(null) // the action open in full on the Agents page
+  const [viewDay, setViewDay] = useState<number | null>(null) // a past day looked back at, read only; null: today
   const t = translator(lang)
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(GUIDE_KEY, String(guideStep))
-    } catch {
-      // a blocked store only loses the stage on a reload
-    }
-  }, [guideStep])
 
   useEffect(() => {
     const onHash = () => setScreen(screenFromHash())
@@ -98,6 +84,7 @@ export default function App() {
   }, [lang])
 
   const lastDay = useRef<number | null>(null)
+  const lastScenario = useRef<number | null>(null)
   const onMessage = useCallback((msg: StreamMessage) => {
     if (msg.type === 'tick') {
       // A day before the last one means the server started over (reset, jump back, reconnect).
@@ -107,7 +94,14 @@ export default function App() {
       }
       lastDay.current = msg.day
       setDay(msg.day)
+      if (lastScenario.current !== msg.scenario) {
+        setViewDay(null) // another situation: back to its today
+        setAlarm(null) // and its own alarm, if it has one (from its investigation, below)
+        setFeed([])
+      }
+      lastScenario.current = msg.scenario
       setScenario(msg.scenario)
+      if (msg.payload.speed) setViewDay(null) // the clock runs: the screens follow today again
       if (msg.payload.kpi) setKpi(msg.payload.kpi)
       if (msg.payload.speed !== undefined) setSpeed(msg.payload.speed)
       setLeverRun(msg.payload.lever_run ?? null)
@@ -127,24 +121,39 @@ export default function App() {
   const pathwayId = kpi?.pathway_id ?? null
   // Names come from the pathway file, so the console names no disease itself (AC17).
   const { data: pathway } = useApi<Pathway>(pathwayId ? `/api/pathways/${pathwayId}` : null)
+  // Looking back (D67, proposed): a past day of the situation on screen, read only, from what the runs keep by day
+  const past = viewDay !== null && day !== null && viewDay < day ? viewDay : null
+  const shown = past ?? day
+  const { data: kpiRows } = useApi<KpiRow[]>(past !== null && pathwayId ? `/api/kpi?level=ats&pathway_id=${pathwayId}` : null, past)
+  const shownKpi = past === null ? kpi : (kpiRows?.find((r) => r.day === past) ?? null)
+  const look = (d: number) => setViewDay(day === null || d >= day ? null : Math.max(d, 0))
+  // The wait alarm of the situation on screen: the stream's, or after a reload or a switch its investigation's
+  const { data: investigations } = useApi<Investigation[]>(scenario !== null ? '/api/investigations' : null, `${scenario}-${day}`)
+  const investigated = (investigations ?? []).find((i) => i.alert_id !== null && day !== null && i.day <= day)
+  const shownAlarm: Alarm | null = alarm
+    ? { day: alarm.day, facility_id: alarm.payload.facility_id, text: alarm.payload.text[lang] }
+    : investigated
+      ? { day: investigated.day, facility_id: null, text: investigated.question[lang] }
+      : null
   const go = useCallback((next: Screen) => {
     window.history.pushState(null, '', `#${next}`) // pushState fires no hashchange, so set the screen too
     setScreen(next)
     window.scrollTo(0, 0) // a new screen from its top, not where the last one was scrolled to
   }, [])
-  // A click that does what the guide's next stage does moves the guide with it, unless that stage runs the clock
-  const follow = (next: Screen) => {
-    const coming = STEPS[guideStep + 1]
-    if (coming && !coming.run && coming.screen === next && coming.scenario === scenario) setGuideStep(guideStep + 1)
-    go(next)
-  }
+  const follow = go
   const onStatus = useCallback((status: SimStatus) => setSpeed(status.speed), [])
-  const restart = useCallback(() => setGuideStep(0), [])
+  // An action opened from the approvals or the feed, on any page, is shown in full on the Agents page
+  const openAction = (a: Action) => {
+    setDetail(a)
+    go('agenti')
+    window.requestAnimationFrame(() => document.getElementById('action-details')?.scrollIntoView({ behavior: 'smooth' }))
+  }
+  const restart = useCallback(() => setViewDay(null), [])
 
   let content
   const langSwitch = <LangSwitch onChange={setLang} />
   // The runs stand paused on day 23 (D21); the operator starts the clock on Mappa (demo step 4).
-  if (screen === 'storia') content = <MariaStory onStart={() => follow('panoramica')} langSwitch={langSwitch} />
+  if (screen === 'storia') content = <MariaStory onStart={() => follow('dashboard')} langSwitch={langSwitch} />
   else if (screen === 'rivelazione')
     content = (
       <Reveal
@@ -156,83 +165,143 @@ export default function App() {
       />
     )
   else {
+    const pending = kpi?.actions_pending ?? 0
     content = (
-      <div className="shell">
-        <nav className="nav" aria-label={t('nav.panoramica')}>
-          <div className="brand">
-            <strong>CarePath AI</strong>
-            <span>{t('brand.ats')}</span>
+      <div className="app">
+        <header className="header">
+          <div className="wrap">
+            <div className="brand">
+              <strong>CarePath AI</strong>
+              <span>
+                {pathway && kpi
+                  ? t('top.subtitle', { pathway: pathway.label[lang], patients: formatNumber(lang, kpi.patients) })
+                  : t('brand.ats')}
+                {' · '}
+                {t('top.synthetic')}
+              </span>
+            </div>
+            <Controls scenario={scenario} speed={speed} day={day} past={past} onStatus={onStatus} look={look} />
+            <div className="header-side">
+              <LangSwitch onChange={setLang} />
+              <span className={`connection-dot ${connection}`} role="status" title={t(`conn.${connection}`)} aria-label={t(`conn.${connection}`)} />
+            </div>
           </div>
-          <button type="button" className="nav-item" onClick={() => go('storia')}>
-            {t('nav.storia')}
-          </button>
-          {SCREENS.map((name) => (
-            <button
-              key={name}
-              type="button"
-              className={`nav-item${name === screen ? ' active' : ''}${name === 'percorsi' ? ' muted' : ''}`}
-              onClick={() => follow(name)}
-            >
-              {t(`nav.${name}` as Key)}
-            </button>
-          ))}
-          <div className="nav-footer">{t('nav.footer')}</div>
+        </header>
+        <nav className="tabs" aria-label={t('nav.menu')}>
+          <div className="wrap">
+            {PAGES.map((name) => (
+              <button key={name} type="button" aria-current={name === screen ? 'page' : undefined} onClick={() => follow(name)}>
+                {t(`nav.${name}` as Key)}
+                {name === 'agenti' && pending > 0 && <span className="badge">{pending}</span>}
+                {name === 'ospedali' && shownAlarm && <span className="badge warn">!</span>}
+              </button>
+            ))}
+          </div>
         </nav>
-
-        <main className="main">
-          <header className="topbar">
-            <h1>{t(`nav.${screen}` as Key)}</h1>
-            {pathway && <span className="tag">{pathway.label[lang]}</span>}
-            <span className="spacer" />
-            <span className="day">{day === null ? '–' : t('top.day', { day })}</span>
-            <span className="speed">{speed === 0 ? t('top.paused') : t('top.speed', { speed })}</span>
-            <span className="pill">{t('top.synthetic')}</span>
-            <LangSwitch onChange={setLang} />
-            <span className={`connection ${connection}`}>{t(`conn.${connection}`)}</span>
-          </header>
-          <div className="body">
-            <section className="content">
-              {screen === 'panoramica' ? (
-                <Overview day={day} kpi={kpi} pathway={pathway ?? null} />
-              ) : screen === 'mappa' ? (
-                <MapScreen day={day} pathwayId={pathwayId} alert={alarm} onInvestigation={() => follow('chiedi')} />
-              ) : screen === 'percorsi' ? (
-                <Flows day={day} pathwayId={pathwayId} />
-              ) : screen === 'chiedi' ? (
-                <Ask day={day} />
-              ) : screen === 'confronto' ? (
-                // Prototype step 6: autonomy on top, the comparison below it.
-                <div className="overview">
-                  <Autonomy day={day} />
-                  <Compare day={day} scenario={scenario} pathway={pathway ?? null} leverRun={leverRun} />
+        {scenario !== null && (
+          <div className="wrap">
+            <div className={`context${shownAlarm ? ' alarm' : ''}`}>
+              <strong>{t(`situation.${scenario}.name` as Key)}</strong>
+              <span>{t(`situation.${scenario}.desc` as Key)}</span>
+              {shownAlarm && (
+                <button type="button" onClick={() => follow('ospedali')}>
+                  {t('context.alarm', { day: shownAlarm.day })}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+        {past !== null && (
+          <div className="wrap">
+            <div className="lookback-banner" role="status">
+              {t('lookback.banner', { day: past, today: day ?? '' })}
+            </div>
+          </div>
+        )}
+        <main className="wrap page">
+          <h1>{t(`nav.${screen}` as Key)}</h1>
+          {screen === 'dashboard' ? (
+            <Dashboard
+              day={day}
+              past={past}
+              scenario={scenario}
+              kpi={shownKpi}
+              pathway={pathway ?? null}
+              alarm={shownAlarm}
+              leverRun={leverRun}
+              onAlarm={() => follow('ospedali')}
+              onAgents={() => follow('agenti')}
+            />
+          ) : screen === 'pazienti' ? (
+            <>
+              <div className="row patients">
+                <div className="col-2 maria">
+              <Patient
+                day={day}
+                scenario={scenario}
+                pathway={pathway ?? null}
+                onAdmission={(target) => {
+                  setBedTarget(target)
+                  window.requestAnimationFrame(() => document.getElementById('beds')?.scrollIntoView({ behavior: 'smooth' }))
+                }}
+              />
                 </div>
-              ) : screen === 'whatif' ? (
-                <WhatIf scenario={scenario} pathway={pathway ?? null} />
-              ) : screen === 'chiamate' ? (
-                <Calls day={day} />
-              ) : screen === 'pazienti' ? (
-                <Patient
-                  day={day}
-                  scenario={scenario}
-                  pathway={pathway ?? null}
-                  onAdmission={(target) => {
-                    setBedTarget(target)
-                    follow('letti')
-                  }}
-                />
-              ) : screen === 'letti' ? (
+                <div className="col-3">
+                  <Calls key={past ?? 'today'} day={shown} />
+                </div>
+              </div>
+              <div id="beds">
                 <Beds
                   key={bedTarget ? `${bedTarget.run}-${bedTarget.patientId}-${bedTarget.day}` : `s${scenario}`}
                   day={day}
                   scenario={scenario}
                   target={bedTarget?.run.startsWith(`s${scenario}_`) ? bedTarget : null}
                 />
-              ) : (
-                <p className="placeholder">{t('placeholder.screen', { screen: t(`nav.${screen}` as Key) })}</p>
-              )}
-            </section>
-            <ActivityFeed messages={feed} day={day} />
-          </div>
+              </div>
+            </>
+          ) : screen === 'ospedali' ? (
+            <>
+              <Hospitals day={shown} scenario={scenario} pathway={pathway ?? null} />
+              <Ask day={day} />
+            </>
+          ) : screen === 'agenti' ? (
+            <>
+              <div className="row agents">
+                <div className="col-left">
+                  <Approvals day={day} onOpen={openAction} />
+                  <ActivityFeed messages={feed} day={shown} past={past !== null} onOpen={openAction} openId={detail?.action_id ?? null} />
+                </div>
+                <div className="col-right">
+                  {detail ? (
+                    <ActionDetails action={detail} pathway={pathway ?? null} onClose={() => setDetail(null)} />
+                  ) : (
+                    <section className="panel details" aria-labelledby="h-details" id="action-details">
+                      <h2 id="h-details">{t('agents.detailsTitle')}</h2>
+                      <p className="placeholder">{t('agents.detailsHint')}</p>
+                    </section>
+                  )}
+                </div>
+              </div>
+              <LatestReport day={day} />
+            </>
+          ) : screen === 'analisi' ? (
+            <>
+              <Compare day={day} scenario={scenario} pathway={pathway ?? null} leverRun={leverRun} viewDay={past} />
+              <WhatIf scenario={scenario} pathway={pathway ?? null} />
+              <Situations day={day} leverDay={leverRun?.day ?? null} pathway={pathway ?? null} />
+              <Flows day={day} pathwayId={pathwayId} />
+            </>
+          ) : (
+            <>
+              <Autonomy day={day} />
+              <div className="panels">
+                <section className="panel" aria-labelledby="h-language">
+                  <h2 id="h-language">{t('top.language')}</h2>
+                  <LangSwitch onChange={setLang} />
+                </section>
+              </div>
+            </>
+          )}
         </main>
       </div>
     )
@@ -240,15 +309,6 @@ export default function App() {
   return (
     <LangContext value={lang}>
       {content}
-      <Guide
-        step={guideStep}
-        setStep={setGuideStep}
-        scenario={scenario}
-        day={day}
-        speed={speed}
-        go={go}
-        onStatus={onStatus}
-      />
       <DemoBar day={day} speed={speed} onReveal={() => go('rivelazione')} onStatus={onStatus} onReset={restart} />
     </LangContext>
   )
