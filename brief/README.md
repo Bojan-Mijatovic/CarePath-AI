@@ -1,3 +1,3 @@
 # brief
 
-Owner: R5. Team charter (step 0.1) and [problem brief](problem.md) (step 0.11).
+Owner: R5. The [problem brief](problem.md) (step 0.11). There is no team charter: one person works every role (step 0.1, D69).

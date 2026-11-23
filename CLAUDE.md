@@ -5,7 +5,7 @@ Rules for the AI assistant in this repo. They come from the [Solution Plan](docs
 ## 1. Sources and precedence
 
 1. **Solution Plan** (22 Oct 2026): what we build and why. It is the source of truth.
-2. **Decision register** (Delivery Plan §11, D11 onward): a decision marked *Decided* overrides the Solution Plan on that point. Current overrides: models are `qwen3:30b-instruct` and `qwen3:4b-instruct`, not 7–8B and 14B (D11); the console is React, not Angular or Streamlit (D13); demo LLM output is cache-only (D14); all work goes directly to `main` (D20); Pathway Builder is in option B (D23); the demo may be online (D25); the console is Italian and English, with cached LLM texts written in Italian and translated by the 4B model during the warm-up (D30, D31); there is no envelope, the demo walks the 3 scenarios in a fixed order (D44); Intervention moves bookings only after a regional wait alarm (D53); euros use an assumed 3,500 euros per readmission, labelled as such (D61); at ×1 the clock stops on the wait alarm's day and the warm-up plays the script's operator actions (D63); Bed Finder entered phase 4 as an exception to the freeze, on request only, with demo step 9c optional (D64). *Proposed* decisions are the working assumption, but not yet binding (open on 13 Nov 2026: D32–D43, D45–D52, D54–D60, D62, D65, D66, D67 and D68, SPEC v1.1–v1.30 with C14–C38, C40, C42 and C43).
+2. **Decision register** (Delivery Plan §11, D11 onward): a decision marked *Decided* overrides the Solution Plan on that point. Current overrides: models are `qwen3:30b-instruct` and `qwen3:4b-instruct`, not 7–8B and 14B (D11); the console is React, not Angular or Streamlit (D13); demo LLM output is cache-only (D14); all work goes directly to `main` (D20); Pathway Builder is in option B (D23); the demo may be online (D25); the console is Italian and English, with cached LLM texts written in Italian and translated by the 4B model during the warm-up (D30, D31); there is no envelope, the demo walks the 3 scenarios in a fixed order (D44); Intervention moves bookings only after a regional wait alarm (D53); euros use an assumed 3,500 euros per readmission, labelled as such (D61); at ×1 the clock stops on the wait alarm's day and the warm-up plays the script's operator actions (D63); Bed Finder entered phase 4 as an exception to the freeze, on request only, with demo step 9c optional (D64); one person, Bojan, works every role R1–R5, and commit `6a00ba0` (19 Nov 2026) is a colleague's, git account BojanKri (D69). *Proposed* decisions are the working assumption, but not yet binding (open on 13 Nov 2026: D32–D43, D45–D52, D54–D60, D62, D65, D66, D67 and D68, SPEC v1.1–v1.30 with C14–C38, C40, C42 and C43).
 3. **Delivery Plan**: how and when, step by step, with owners and gates.
 4. **SPEC.md**: the contracts. Nothing is built against an interface that is not in it.
 5. **UI prototype** ([CarePath-AI-UI-demo-srpski.html](docs/CarePath-AI-UI-demo-srpski.html)): screen layout and demo steps 1–10.
@@ -32,7 +32,7 @@ These come from the design principles and guardrails. Code that breaks one needs
 7. **Local and zero cost.** Models, data and the cache run on the laptop; no patient data goes to an external API; no telemetry, no paid tier. The network may be used for downloads and during the demo (D25). A new dependency needs a free licence, and I name it in the commit message.
 8. **Synthetic data only.** Hospital names are invented, the geography is real. Prompts carry aggregates and the top N patients, never the whole database. Logs contain nothing that could not leave the system if the data were real.
 9. **Determinism.** Every random draw comes from a generator seeded by `(run seed, component)`. Same seed, same run, byte for byte (AC14). No wall-clock time or unseeded randomness in the simulator or the engine. Tools, views and the API round every DOUBLE as in SPEC §2, because DuckDB's parallel aggregation of DOUBLE is not bit-stable.
-10. **Language.** Code, data, identifiers and docs are in English. Every string a user sees (UI, reports, call scripts, rationales) exists in Italian and English, Italian by default; the demo runs in Italian (D30). The Italian colleague reviews the Italian before rehearsals.
+10. **Language.** Code, data, identifiers and docs are in English. Every string a user sees (UI, reports, call scripts, rationales) exists in Italian and English, Italian by default; the demo runs in Italian (D30). Bojan reviews the Italian before rehearsals; there is no Italian colleague (D69).
 
 ## 4. LLM work
 
@@ -48,7 +48,7 @@ These come from the design principles and guardrails. Code that breaks one needs
 
 ## 5. Contracts, decisions and documents
 
-- Until `spec-v1` is tagged, I may propose SPEC edits in drafts. After the freeze, a contract change needs agreement at a sync, a decision-register entry, a SPEC version bump and updated fixtures in the same commit. I prepare the change; the team agrees it.
+- Until `spec-v1` is tagged, I may propose SPEC edits in drafts. After the freeze, a contract change needs agreement, a decision-register entry, a SPEC version bump and updated fixtures in the same commit. I prepare the change; Bojan agrees it (D69).
 - I mark a decision *Decided* only when the user says it is decided. Otherwise I add it as *Proposed* with the reason and the evidence.
 - When one document changes, I check the others for the same fact (Delivery Plan, SPEC, README) and update them together, so there is no contradiction between them.
 - Plan and SPEC text is plain English: short sentences, concrete numbers, links to sections, no filler. I keep "Last updated" current.
@@ -60,7 +60,7 @@ These come from the design principles and guardrails. Code that breaks one needs
 - Python 3.12, numpy, pandas and DuckDB, vectorised. No per-patient Python loops on the hot path (AC2: one day for 10,000 patients in under 1 s).
 - Every API path is under `/api`. The WebSocket envelope follows SPEC §10.
 - The console is React 19 + TypeScript on Vite with Node 24 through fnm (`fnm exec --using=24 npm ...`). `npm run lint` (oxlint) passes. The prototype is the layout reference.
-- Tests are written from the acceptance criteria. Acceptance tests carry `@pytest.mark.acceptance`; performance ACs have timers. Contract work gets fixtures in `testing/fixtures/`, so no role waits on another.
+- Tests are written from the acceptance criteria. Acceptance tests carry `@pytest.mark.acceptance`; performance ACs have timers. Contract work gets fixtures in `testing/fixtures/`, so a layer can be built and tested before the code that feeds it.
 - I match the surrounding code: its naming, comment density and idioms. No speculative abstractions and no LangGraph or Langfuse (D15).
 
 ## 7. Done, reporting and git
@@ -75,7 +75,7 @@ These come from the design principles and guardrails. Code that breaks one needs
 
 Everything serves the demo running 10 out of 10 times (AC9). In practice:
 
-- I do not change Maria's trajectory (`p_00001`, days 31, 33, 40 and 47) or the scenario patterns without the owner's (R1) agreement, and AC14 must still pass.
+- I do not change Maria's trajectory (`p_00001`, days 31, 33, 40 and 47) or the scenario patterns without Bojan's agreement (R1, D69), and AC14 must still pass.
 - I keep the cut order from Delivery Plan §8 (Solution Plan §4 with D22 and D23): Bed Finder → option B, including the Pathway Builder (manual JSON stays) → optional agents → parallel what-if (precomputed demo lever stays) → map (comune table stays). When time is short I suggest cutting, not stretching.
 - Demo pacing and performance budgets are in SPEC §9 (D21, D22). AC2 alone does not prove the demo works.
 - From week 4, feature freeze: only bug fixes.

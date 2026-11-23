@@ -11,7 +11,7 @@ AI agents that check every day whether 10,000 chronic patients in ATS della Val 
 
 | Path | Contents | Owner |
 |---|---|---|
-| `brief/` | team charter, problem brief | R5 |
+| `brief/` | problem brief | R5 |
 | `spec/` | `SPEC.md` contracts, pathway JSON, PDTA texts | R5 |
 | `src/sim/` | simulator, scenarios, Maria | R1 |
 | `src/engine/` | state engine, DuckDB views, Risk, what-if, PNE forecast | R2 |
@@ -131,7 +131,8 @@ On a laptop without an NVIDIA GPU, models run on the CPU and are too slow for li
 
 ## Working rules
 
-- Every task starts from `spec/SPEC.md`. Do not change a contract without agreeing it at the sync.
+- One person, Bojan Mijatović, works every role (R1–R5): the Owner column above names an area, not a person (D69). The one exception is commit `6a00ba0` (19 Nov 2026), made by a colleague under the git account BojanKri.
+- Every task starts from `spec/SPEC.md`. Do not change a contract without Bojan's agreement (D69).
 - Numbers and facts come from code; the LLM only phrases them.
 - Commit directly to `main`, no feature branches (decision D20). Pull and run `uv run pytest` before every push; Bojan approves each step's code before it is committed (D26).
 - Done means: reviewed, tests pass, its acceptance criterion is met, it works in the end-to-end flow.

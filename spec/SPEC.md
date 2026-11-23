@@ -3,14 +3,14 @@
 | | |
 |---|---|
 | Status | **v1.30** (draft: v1.30 is proposed, not agreed). v1.0 was frozen as tag `spec-v1` on 28 Oct 2026 (delivery plan, step 1.9); v1.1 adds C14 (D32, step 1.22), v1.2 adds C15 (D33, step 1.23), v1.3 adds C16 (D34, step 1.24), v1.4 adds C17 (D35, step 2.1), v1.5 adds C18 (D36, step 2.2), v1.6 adds C19 (D37, step 2.3), v1.7 adds C20 (D38, step 2.4), v1.8 adds C21 (D39, step 2.8), all proposed 28 Oct 2026; v1.9 adds C22 (D40, step 2.16), v1.10 adds C23 (D41, step 2.21), v1.11 adds C24 (D42, step 2.9), v1.12 adds C25 (D43, step 2.17), v1.13 adds C26 (D47, step 2.30), proposed 29 Oct 2026; v1.14 adds C27 (D48, step 2.5), v1.15 adds C28 (D49, step 2.28), v1.16 adds C29 (D50, step 2.10), v1.17 adds C30 (D51, step 2.18), v1.18 adds C31 (D52, step 2.12), v1.19 adds C32 (D54, step 2.13), proposed 30 Oct 2026; v1.20 adds C33 (D55, Verifier), v1.21 adds C34 (D56, step 2.27), v1.22 adds C35 (D57, step 2.6), v1.23 adds C36 (D58, step 2.14), v1.24 adds C37 (D59, step 2.20), v1.25 adds C38 (D60, step 2.29), proposed 2 Nov 2026; v1.26 adds C39 (D61, decided 2 Nov 2026); v1.27 adds C40 (D62, step 2.10), proposed 2 Nov 2026; v1.28 adds C41 (D63, decided 2 Nov 2026, phase 4); v1.29 adds C42 (D65, Bed Finder under D64), proposed 3 Nov 2026; v1.30 adds C43 (D67, the three situations), proposed 13 Nov 2026. Changes follow §0 |
-| Last updated | 19 Nov 2026 |
+| Last updated | 23 Nov 2026 |
 | Owner | R5. Every section has a co-owner who signs it off (§0) |
 | Sources | [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §6–§9 and §13; [Delivery Plan](../docs/DELIVERY_PLAN.md) |
-| Rule | Nobody builds against anything that is not in this file. Whoever waits on another part works with fixtures of the same shape (`testing/fixtures/`, step 1.23) |
+| Rule | Nobody builds against anything that is not in this file. A part built before the code that feeds it works with fixtures of the same shape (`testing/fixtures/`, step 1.23) |
 
 ## 0. Sign-off and change control
 
-Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he approves for the team); the TL reviewed the draft the same day.
+Every section was signed off by Bojan as lead on 28 Oct 2026, under D26; one person works every role, so a co-owner below names an area, not a person (D69). The TL reviewed the draft the same day.
 
 | Section | Co-owner | Signed off |
 |---|---|---|
@@ -24,7 +24,7 @@ Every section was signed off by Bojan as lead on 28 Oct 2026, under D26 (he appr
 | §10 API and WebSocket | R4 | ☑ 28 Oct 2026 |
 | §11 Acceptance criteria | all | ☑ 28 Oct 2026 |
 
-After `spec-v1`, a change needs: agreement at a sync, an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
+After `spec-v1`, a change needs: Bojan's agreement (D69), an entry in the decision register (delivery plan §11), a version bump at the top of this file, and updated fixtures in the same commit (delivery plan, D20).
 
 ### Changes vs Solution Plan (C1–C13 accepted in `spec-v1`; C14–C38, C40 and C42 proposed in v1.1–v1.25, v1.27 and v1.29; C39 and C41 decided in v1.26 and v1.28)
 
@@ -608,10 +608,10 @@ Every criterion has a test in `testing/`; acceptance tests carry `@pytest.mark.a
 
 | # | Question | Who answers | Needed by |
 |---|---|---|---|
-| Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D. **Closed** (D28): demo values, no clinical confirmation for the PoC | Italian colleague via R5 | week 2, day 1 |
+| Q1 | Exact ICD-9-CM, ATC and LOINC codes for HF and T2D. **Closed** (D28): demo values, no clinical confirmation for the PoC | R5 | week 2, day 1 |
 | Q2 | Cost per readmission in EUR and its public source. **In part answered** (D61, 2 Nov 2026): the demo uses 3,500 euros, a value the lead chose, labelled as assumed; the public source is still open | R5 | week 2 |
-| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14–C21 proposed with D32–D39 (28 Oct 2026) | all, at the sync | week 1 |
-| Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 with the Italian colleague | week 2 |
+| Q3 | Changes C1–C11: accepted as proposed? **Accepted**: C1–C10 by the TL review, C11 with step 1.15 (both 28 Oct 2026). C12 and C13 accepted with D29 and D31 (28 Oct 2026). C14–C21 proposed with D32–D39 (28 Oct 2026) | the lead | week 1 |
+| Q4 | Dropped threshold: 30 days overdue, or 2 steps overdue at once, right for HF? | R5 | week 2 |
 | Q5 | Daily limit of automatic actions per facility: 50 a sensible default? | R3, R5 | week 2 |
 | Q6 | Do we need calendar dates on screen, or is "Giorno N" enough for the audience? | R5 | week 2 |
 | Q7 | `map_comuni`: what `adherence_pct` measures and when `alarm` is true (**answered by C18**, step 2.2); `worklist_today`: the type of `pathways` and the values of `outcome` (**answered by C20**, step 2.4) | R2, R4 | closed |

@@ -1,6 +1,6 @@
 # Simulator sketch
 
-Owner: R1. Delivery plan step 0.10. Last updated: 28 Oct 2026.
+Owner: R1. Delivery plan step 0.10. Last updated: 23 Nov 2026.
 
 This page fixes the real-world numbers the simulator is built on: which comuni belong to which ASST, how many people live there by age and sex, and which readmission range the outcome model must hit. Step 1.10 turns it into `src/sim/data/comuni.csv`; steps 1.12 and 1.13 add facilities and distances.
 
@@ -91,7 +91,7 @@ The indicator is PNE "Scompenso cardiaco congestizio: riammissioni ospedaliere a
 
 Definition gap, already in the limitations (SPEC §5.2): we count an unplanned admission within 30 days after an HF discharge. The PNE computes the outcome from the index admission date, with its own risk adjustment.
 
-Not found: PNE values for the hospitals of ATS Val Padana. The PNE portal (pne.agenas.it) is interactive, so R5 can read them by hand if the team wants a local reference.
+Not found: PNE values for the hospitals of ATS Val Padana. The PNE portal (pne.agenas.it) is interactive, so they can be read by hand if a local reference is wanted.
 
 ## 5. Sources
 

@@ -1,6 +1,6 @@
 # Problem brief
 
-Owner: R5. Delivery plan step 0.11. Last updated: 28 Oct 2026. Source: [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §2–§4 and §17.
+Owner: R5. Delivery plan step 0.11. Last updated: 23 Nov 2026. Source: [Solution Plan](../docs/CarePath-AI-Solution-Plan.pdf) §2–§4 and §17.
 
 ## 1. The problem in one sentence
 
@@ -78,7 +78,7 @@ Every metric is computed by code from the simulation and compared with and witho
 | Time from PDTA text to active pathway model | timer, option B | AC16: under 60 s |
 | Time from admission request to assigned bed | timer, optional layer | AC18: under 3 s |
 
-The euro figures and the effect of each intervention rest on probabilities the team sets in the simulator config. The demo says so at the start (D24), and the limitations list every such assumption.
+The euro figures and the effect of each intervention rest on probabilities set by hand in the simulator config. The demo says so at the start (D24), and the limitations list every such assumption.
 
 ## 7. Scope
 
